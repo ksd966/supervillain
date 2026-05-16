@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dnevnik Bola i Zdravlja</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --teal:      #0d9488;
+    --teal-light:#99f6e4;
+    --teal-dark: #0f766e;
+    --warm:      #fef3c7;
+    --warm-dark: #fde68a;
+    --rose:      #f43f5e;
+    --gray-soft: #f8fafc;
+  }
+
+  * { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0fdfa; color: #134e4a; margin:0; }
+
+  /* Nav */
+  .nav-tab { cursor:pointer; padding:10px 20px; border-radius:8px 8px 0 0; font-weight:600; transition:all .2s; color:#5eead4; }
+  .nav-tab.active { background:#fff; color:#0f766e; box-shadow:0 -2px 8px #0001; }
+  .nav-tab:hover:not(.active) { background:#ccfbf1; color:#0d9488; }
+
+  /* Pain slider */
+  .pain-slider { -webkit-appearance:none; width:100%; height:8px; border-radius:4px; outline:none; cursor:pointer; }
+  .pain-slider::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; border-radius:50%; background:#0d9488; cursor:pointer; border:2px solid #fff; box-shadow:0 1px 4px #0003; }
+
+  /* Body map */
+  .body-region { cursor:pointer; transition:fill .2s; }
+  .body-region:hover { opacity:.8; }
+  .body-region.selected-low    { fill:#fde68a !important; }
+  .body-region.selected-mid    { fill:#f97316 !important; }
+  .body-region.selected-high   { fill:#ef4444 !important; }
+  .body-region.selected-none   { }
+
+  /* Cards */
+  .card { background:#fff; border-radius:16px; box-shadow:0 2px 12px #0d948818; padding:20px; margin-bottom:16px; }
+  .card-title { font-size:1rem; font-weight:700; color:#0f766e; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+
+  /* Pills */
+  .pill { display:inline-block; padding:4px 12px; border-radius:999px; font-size:.8rem; font-weight:600; cursor:pointer; border:2px solid transparent; transition:all .2s; }
+  .pill.active { background:#0d9488; color:#fff; border-color:#0d9488; }
+  .pill:not(.active) { background:#f0fdfa; color:#0d9488; border-color:#99f6e4; }
+  .pill:hover:not(.active) { border-color:#0d9488; }
+
+  /* Buttons */
+  .btn-primary { background:#0d9488; color:#fff; border:none; padding:10px 24px; border-radius:10px; font-weight:700; cursor:pointer; font-size:.95rem; transition:all .2s; }
+  .btn-primary:hover { background:#0f766e; transform:translateY(-1px); box-shadow:0 4px 12px #0d948840; }
+  .btn-secondary { background:#f0fdfa; color:#0d9488; border:2px solid #99f6e4; padding:8px 18px; border-radius:10px; font-weight:600; cursor:pointer; font-size:.9rem; transition:all .2s; }
+  .btn-secondary:hover { border-color:#0d9488; background:#ccfbf1; }
+  .btn-danger { background:#fff0f3; color:#f43f5e; border:2px solid #fecdd3; padding:8px 18px; border-radius:10px; font-weight:600; cursor:pointer; font-size:.9rem; }
+  .btn-danger:hover { background:#ffe4e6; }
+
+  /* Inputs */
+  .inp { width:100%; padding:8px 12px; border:2px solid #ccfbf1; border-radius:8px; font-size:.95rem; outline:none; transition:border .2s; color:#134e4a; background:#f0fdfa; }
+  .inp:focus { border-color:#0d9488; background:#fff; }
+  select.inp { cursor:pointer; }
+
+  /* Medication check */
+  .med-check { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:10px; border:2px solid #e2e8f0; cursor:pointer; transition:all .2s; }
+  .med-check.taken { background:#f0fdf4; border-color:#86efac; }
+  .med-check input[type=checkbox] { width:18px; height:18px; accent-color:#0d9488; cursor:pointer; }
+
+  /* Pain level colors */
+  .level-0 { color:#94a3b8; } .level-1,.level-2 { color:#22c55e; }
+  .level-3,.level-4 { color:#eab308; } .level-5,.level-6 { color:#f97316; }
+  .level-7,.level-8 { color:#ef4444; } .level-9,.level-10 { color:#9f1239; }
+
+  /* History chart */
+  .chart-wrap { position:relative; height:220px; }
+
+  /* Print styles */
+  @media print {
+    .no-print { display:none !important; }
+    .print-page { page-break-before: always; }
+    body { background:#fff; }
+    .card { box-shadow:none; border:1px solid #e2e8f0; }
+  }
+
+  /* Animations */
+  .fade-in { animation: fadeIn .3s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+  /* Tooltip */
+  .tooltip { position:relative; }
+  .tooltip:hover::after { content: attr(data-tip); position:absolute; bottom:110%; left:50%; transform:translateX(-50%); background:#134e4a; color:#fff; padding:4px 8px; border-radius:6px; font-size:.78rem; white-space:nowrap; pointer-events:none; z-index:10; }
+
+  .section-hidden { display:none; }
+
+  /* Stars for sleep quality */
+  .star { font-size:1.4rem; cursor:pointer; color:#d1d5db; transition:color .15s; }
+  .star.lit { color:#f59e0b; }
+
+  /* Notification badge */
+  .badge { background:#f43f5e; color:#fff; font-size:.7rem; font-weight:700; border-radius:999px; padding:1px 6px; min-width:18px; text-align:center; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     HEADER
+══════════════════════════════════════════════════════════ -->
+<div style="background:linear-gradient(135deg,#0f766e,#0d9488); padding:16px 20px 0; position:sticky; top:0; z-index:100; box-shadow:0 2px 16px #0d948840;">
+  <div style="max-width:720px; margin:0 auto;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+      <div>
+        <div style="color:#ccfbf1; font-size:.8rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase;">Dnevnik zdravlja</div>
+        <h1 style="color:#fff; margin:0; font-size:1.4rem; font-weight:700;" id="today-display"></h1>
+      </div>
+      <div style="text-align:right;">
+        <div style="color:#5eead4; font-size:.8rem;">Reumatoidni artritis</div>
+        <div style="color:#5eead4; font-size:.8rem;">Fibromijalgija · Discus hernija</div>
+      </div>
+    </div>
+    <!-- Tabs -->
+    <div style="display:flex; gap:4px; overflow-x:auto; padding-bottom:0;">
+      <div class="nav-tab active" onclick="showTab('danas')" id="tab-danas">📋 Danas</div>
+      <div class="nav-tab" onclick="showTab('lekovi')" id="tab-lekovi">💊 Lekovi</div>
+      <div class="nav-tab" onclick="showTab('istorija')" id="tab-istorija">📈 Istorija</div>
+      <div class="nav-tab" onclick="showTab('izvestaj')" id="tab-izvestaj">📄 Izveštaj</div>
+    </div>
+  </div>
+</div>
+
+<div style="max-width:720px; margin:0 auto; padding:20px 16px 60px;">
+
+<!-- ═══════════════════════════════════════════════════════
+     TAB: DANAS
+══════════════════════════════════════════════════════════ -->
+<div id="section-danas" class="fade-in">
+
+  <!-- Vreme unosa -->
+  <div class="card" style="padding:14px 20px;">
+    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+      <span style="font-weight:700; color:#0f766e;">Unos za:</span>
+      <div style="display:flex; gap:6px;">
+        <span class="pill active" id="pill-jutro" onclick="setVremeUnosa('jutro')">🌅 Jutro</span>
+        <span class="pill" id="pill-podne" onclick="setVremeUnosa('podne')">☀️ Podne</span>
+        <span class="pill" id="pill-vece" onclick="setVremeUnosa('vece')">🌙 Veče</span>
+      </div>
+      <span style="margin-left:auto; color:#94a3b8; font-size:.85rem;" id="entry-status">Nije uneseno</span>
+    </div>
+  </div>
+
+  <!-- Mapa tela + intenzitet -->
+  <div class="card">
+    <div class="card-title">🗺️ Gde te boli? (klikni na telo)</div>
+    <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start;">
+
+      <!-- SVG telo -->
+      <div style="flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:6px;">
+        <svg width="130" height="280" viewBox="0 0 130 280" id="body-svg">
+          <!-- Glava -->
+          <ellipse class="body-region" id="reg-glava" cx="65" cy="22" rx="18" ry="20" fill="#99f6e4" stroke="#0d9488" stroke-width="1.5" onclick="clickRegion('glava')" data-label="Glava"/>
+          <!-- Vrat -->
+          <rect class="body-region" id="reg-vrat" x="56" y="42" width="18" height="16" rx="4" fill="#5eead4" stroke="#0d9488" stroke-width="1.5" onclick="clickRegion('vrat')" data-label="Vrat (C hernija)"/>
+          <!-- Ramena levo -->
+          <ellipse class="body-region" id="reg-rame-l" cx="28" cy="68" rx="16" ry="11" fill="#99f6e4" stroke="#0d9488" stroke-width="1.5" onclick="clickRegion('rame-l')" data-label="Levo rame"/>
+          <!-- Ramena desno -->
+          <ellipse class="body-region" id="reg-rame-d" cx="102" cy="68" rx="16" ry="11" fill="#99f6e4" stroke="#0d9488" stroke-width="1.5" onclick="clickRegion('rame-d')" data-label="Desno rame"/>
+          <!-- Gornji torzo / grudni koš -->
+          <rect class="body-region" id="reg-ledja-g" x="42" y="58" width="46" height="40" rx="6" fill="#99f6e4" stroke="#0d9488" stroke-width="1.5" onclick="clickRegion('ledja-g')" data-label="Gornja leđa (Th)"/>
+          <!-- Donji torzo / lumbalni -->
+          <rect class="body-region" id="reg-ledja-l" x="42" y="98" width="46" height="36" rx="6" fill="#5eead4" stroke="#0d9488" stroke-width="1.5" onclick="clickRegion('ledja-l')" data-label="Lumbalna leđa (L hernija)"/>
+          <!-- Leva ruka gornja -->
+          <rect class="body-region" id="reg-ruka-l-g" x="10" y="68" width="16" height="36" rx="6" fill="#99f6e4" stroke="#0d9488" stroke-width="1.5" onclick="clickRegion('ruka-l-g')" data-label="Leva nadlaktica"/>
+          <!-- Desna ruka gornja -->
+          <rect class="body-region" id="reg-ruka-d-g" x="104" y="68" width="16" height="36" rx="6" fill="#99f6e4" stroke="#0d9488" stroke-width="1.5" onclick="clickRegion('ruka-d-g')" data-label="Desna nadlaktica"/>
+          <!-- Leva ruka donja + šaka -->
+          <rect class="body-region" id="reg-ruka-l-d" x="6" y="106" width="14" height="32" rx="5" fill="#99f6e4" stroke="#0d9488" stroke-width="1.5" onclick="clickRegion('ruka-l-d')" data-label="Leva podlaktica i šaka"/>
+          <!-- Desna ruka donja + šaka -->
+          <rect class="body-region" id="reg-ruka-d-d" x="110" y="106" width="14" height="32" rx="5" fill="#99f6e4" stroke="#0d9488" stroke-width="1.5" onclick="clickRegion('ruka-d-d')" data-label="Desna podlaktica i šaka"/>
+          <!-- Kuk levi -->
+          <rect class="body-region" id="reg-kuk-l" x="42" y="134" width="20" height="24" rx="4" fill="#99f6e4" stroke="#0d9488" stroke-width="1.5" onclick="clickRegion('kuk-l')" data-label="Levi kuk"/>
+          <!-- Kuk desni -->
+          <rect class="body-region" id="reg-kuk-d" x="68" y="134" width="20" height="24" rx="4" fill="#99f6e4" stroke="#0d9488" stroke-width="1.5" onclick="clickRegion('kuk-d')" data-label="Desni kuk"/>
+          <!-- Levo koleno i bedro -->
+          <rect class="body-region" id="reg-noga-l-g" x="43" y="158" width="18" height="44" rx="5" fill="#99f6e4" stroke="#0d9488" stroke-width="1.5" onclick="clickRegion('noga-l-g')" data-label="Levo bedro i koleno"/>
+          <!-- Desno koleno i bedro -->
+          <rect class="body-region" id="reg-noga-d-g" x="69" y="158" width="18" height="44" rx="5" fill="#99f6e4" stroke="#0d9488" stroke-width="1.5" onclick="clickRegion('noga-d-g')" data-label="Desno bedro i koleno"/>
+          <!-- Leva potkolenica + stopalo -->
+          <rect class="body-region" id="reg-noga-l-d" x="44" y="204" width="16" height="44" rx="5" fill="#99f6e4" stroke="#0d9488" stroke-width="1.5" onclick="clickRegion('noga-l-d')" data-label="Leva potkolenica i stopalo"/>
+          <!-- Desna potkolenica + stopalo -->
+          <rect class="body-region" id="reg-noga-d-d" x="70" y="204" width="16" height="44" rx="5" fill="#99f6e4" stroke="#0d9488" stroke-width="1.5" onclick="clickRegion('noga-d-d')" data-label="Desna potkolenica i stopalo"/>
+          <!-- Labele -->
+          <text x="65" y="250" text-anchor="middle" fill="#0f766e" font-size="8" font-weight="600">← klikni →</text>
+        </svg>
+        <div style="font-size:.72rem; color:#64748b; text-align:center; max-width:130px;">Klikni na deo tela da postaviš bol</div>
+      </div>
+
+      <!-- Panel za izabrani region -->
+      <div style="flex:1; min-width:180px;">
+        <div id="region-panel" style="display:none;">
+          <div style="font-weight:700; color:#0f766e; font-size:1rem; margin-bottom:8px;" id="region-name">Vrat</div>
+          <div style="font-size:.85rem; color:#64748b; margin-bottom:10px;">Intenzitet bola (0 = nema, 10 = nepodnošljiv)</div>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+            <input type="range" min="0" max="10" value="0" class="pain-slider" id="region-slider" oninput="updateRegionPain(this.value)">
+            <span style="font-weight:700; font-size:1.3rem; min-width:28px; text-align:center;" id="region-value">0</span>
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;">
+            <span style="font-size:.75rem; color:#22c55e;">0-2 Blago</span>
+            <span style="font-size:.75rem; color:#f97316;">3-6 Umereno</span>
+            <span style="font-size:.75rem; color:#ef4444;">7-10 Jako</span>
+          </div>
+          <div style="font-size:.8rem; color:#94a3b8;">Tip bola (opcionalno):</div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;" id="pain-type-btns">
+            <span class="pill" style="font-size:.78rem; padding:3px 10px;" onclick="togglePainType('probadajuci')">Probadajući</span>
+            <span class="pill" style="font-size:.78rem; padding:3px 10px;" onclick="togglePainType('tupi')">Tupi</span>
+            <span class="pill" style="font-size:.78rem; padding:3px 10px;" onclick="togglePainType('peckajuci')">Peckajući</span>
+            <span class="pill" style="font-size:.78rem; padding:3px 10px;" onclick="togglePainType('trnjenje')">Trnjenje</span>
+            <span class="pill" style="font-size:.78rem; padding:3px 10px;" onclick="togglePainType('ukrucenost')">Ukrućenost</span>
+          </div>
+        </div>
+        <div id="region-hint" style="color:#94a3b8; font-size:.9rem; padding-top:30px;">
+          ← Klikni na deo tela da uneseš bol
+        </div>
+
+        <!-- Aktivne lokacije bola -->
+        <div id="active-pains-list" style="margin-top:16px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Simptomi specifični za dijagnoze -->
+  <div class="card">
+    <div class="card-title">🔬 Simptomi po dijagnozama</div>
+
+    <!-- RA -->
+    <div style="background:#fff7ed; border-radius:10px; padding:14px; margin-bottom:12px; border-left:3px solid #f97316;">
+      <div style="font-weight:700; font-size:.85rem; color:#c2410c; margin-bottom:10px;">🦴 Reumatoidni artritis</div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:.85rem; color:#64748b; display:block; margin-bottom:4px;">Jutarnja ukočenost — koliko dugo traje?</label>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;" id="ukocenost-btns">
+          <span class="pill" style="font-size:.8rem;" onclick="selectUkocenost('0')">Nema</span>
+          <span class="pill" style="font-size:.8rem;" onclick="selectUkocenost('15')">15 min</span>
+          <span class="pill" style="font-size:.8rem;" onclick="selectUkocenost('30')">30 min</span>
+          <span class="pill" style="font-size:.8rem;" onclick="selectUkocenost('60')">1 sat</span>
+          <span class="pill" style="font-size:.8rem;" onclick="selectUkocenost('120')">2+ sata</span>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:.85rem; color:#64748b; display:block; margin-bottom:4px;">Oticanje zglobova</label>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;" id="oticanje-btns">
+          <span class="pill" style="font-size:.8rem;" onclick="selectOticanje('nema')">Nema</span>
+          <span class="pill" style="font-size:.8rem;" onclick="selectOticanje('blago')">Blago</span>
+          <span class="pill" style="font-size:.8rem;" onclick="selectOticanje('umereno')">Umereno</span>
+          <span class="pill" style="font-size:.8rem;" onclick="selectOticanje('jako')">Jako</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fibromijalgija -->
+    <div style="background:#fdf4ff; border-radius:10px; padding:14px; margin-bottom:12px; border-left:3px solid #a855f7;">
+      <div style="font-weight:700; font-size:.85rem; color:#7e22ce; margin-bottom:10px;">🧠 Fibromijalgija</div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:.85rem; color:#64748b; display:block; margin-bottom:4px;">Nivo umora danas: <span id="umor-val" style="font-weight:700; color:#a855f7;">0</span>/10</label>
+        <input type="range" min="0" max="10" value="0" class="pain-slider" style="accent-color:#a855f7;" id="umor-slider" oninput="document.getElementById('umor-val').textContent=this.value; saveCurrentEntry()">
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:.85rem; color:#64748b; display:block; margin-bottom:4px;">Kognitivne smetnje (maglina u glavi)</label>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;" id="maglina-btns">
+          <span class="pill" style="font-size:.8rem;" onclick="selectMaglina('nema')">Nema</span>
+          <span class="pill" style="font-size:.8rem;" onclick="selectMaglina('blaga')">Blaga</span>
+          <span class="pill" style="font-size:.8rem;" onclick="selectMaglina('umerena')">Umerena</span>
+          <span class="pill" style="font-size:.8rem;" onclick="selectMaglina('jaka')">Jaka</span>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:.85rem; color:#64748b; display:block; margin-bottom:4px;">Osetljivost na dodir / allodynija</label>
+        <div style="display:flex; gap:6px;" id="allodynia-btns">
+          <span class="pill" style="font-size:.8rem;" onclick="selectAllodynia('nema')">Nema</span>
+          <span class="pill" style="font-size:.8rem;" onclick="selectAllodynia('blaga')">Blaga</span>
+          <span class="pill" style="font-size:.8rem;" onclick="selectAllodynia('jaka')">Jaka</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Discus hernija -->
+    <div style="background:#f0f9ff; border-radius:10px; padding:14px; border-left:3px solid #0ea5e9;">
+      <div style="font-weight:700; font-size:.85rem; color:#0369a1; margin-bottom:10px;">🦷 Discus hernija</div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:.85rem; color:#64748b; display:block; margin-bottom:4px;">Bol/trnjenje pri pokretu glave (C hernija): <span id="c-val" style="font-weight:700; color:#0ea5e9;">0</span>/10</label>
+        <input type="range" min="0" max="10" value="0" class="pain-slider" style="accent-color:#0ea5e9;" id="c-slider" oninput="document.getElementById('c-val').textContent=this.value; saveCurrentEntry()">
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:.85rem; color:#64748b; display:block; margin-bottom:4px;">Bol pri sedenju/stajanju (L hernija): <span id="l-val" style="font-weight:700; color:#0ea5e9;">0</span>/10</label>
+        <input type="range" min="0" max="10" value="0" class="pain-slider" style="accent-color:#0ea5e9;" id="l-slider" oninput="document.getElementById('l-val').textContent=this.value; saveCurrentEntry()">
+      </div>
+      <div>
+        <label style="font-size:.85rem; color:#64748b; display:block; margin-bottom:4px;">Iscijadični bol (isijava u nogu)</label>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;" id="iscijadis-btns">
+          <span class="pill" style="font-size:.8rem;" onclick="selectIscijadis('nema')">Nema</span>
+          <span class="pill" style="font-size:.8rem;" onclick="selectIscijadis('levo')">Levo</span>
+          <span class="pill" style="font-size:.8rem;" onclick="selectIscijadis('desno')">Desno</span>
+          <span class="pill" style="font-size:.8rem;" onclick="selectIscijadis('oba')">Oba</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- San i faktori -->
+  <div class="card">
+    <div class="card-title">🌙 San i dnevni faktori</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+      <div>
+        <label style="font-size:.85rem; color:#64748b; display:block; margin-bottom:4px;">Sati spavanja</label>
+        <input type="number" min="0" max="24" step="0.5" value="" placeholder="npr. 7.5" class="inp" id="san-sati" oninput="saveCurrentEntry()">
+      </div>
+      <div>
+        <label style="font-size:.85rem; color:#64748b; display:block; margin-bottom:4px;">Kvalitet sna</label>
+        <div style="display:flex; gap:4px; padding-top:6px;" id="star-container">
+          <span class="star" data-v="1" onclick="setStars(1)">★</span>
+          <span class="star" data-v="2" onclick="setStars(2)">★</span>
+          <span class="star" data-v="3" onclick="setStars(3)">★</span>
+          <span class="star" data-v="4" onclick="setStars(4)">★</span>
+          <span class="star" data-v="5" onclick="setStars(5)">★</span>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:.85rem; color:#64748b; display:block; margin-bottom:4px;">Aktivnost dana</label>
+        <select class="inp" id="aktivnost-sel" onchange="saveCurrentEntry()">
+          <option value="">-- Izaberi --</option>
+          <option value="odmor">Odmor / krevet</option>
+          <option value="laka">Laka (šetnja, kućni poslovi)</option>
+          <option value="umerena">Umerena (izlazak, vežbe)</option>
+          <option value="intenzivna">Intenzivna (fizioterapija, napor)</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:.85rem; color:#64748b; display:block; margin-bottom:4px;">Stres nivo: <span id="stres-val">0</span>/10</label>
+        <input type="range" min="0" max="10" value="0" class="pain-slider" style="accent-color:#f43f5e;" id="stres-slider" oninput="document.getElementById('stres-val').textContent=this.value; saveCurrentEntry()">
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <label style="font-size:.85rem; color:#64748b; display:block; margin-bottom:4px;">Vreme / atmosferske prilike</label>
+      <div style="display:flex; gap:6px; flex-wrap:wrap;" id="vreme-btns">
+        <span class="pill" style="font-size:.8rem;" onclick="selectVreme('suncano')">☀️ Sunčano</span>
+        <span class="pill" style="font-size:.8rem;" onclick="selectVreme('oblacno')">⛅ Oblačno</span>
+        <span class="pill" style="font-size:.8rem;" onclick="selectVreme('kisovito')">🌧️ Kišovito</span>
+        <span class="pill" style="font-size:.8rem;" onclick="selectVreme('vetrovno')">💨 Vetrovito</span>
+        <span class="pill" style="font-size:.8rem;" onclick="selectVreme('hladno')">❄️ Hladno</span>
+        <span class="pill" style="font-size:.8rem;" onclick="selectVreme('vlazno')">💧 Vlažno</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Napomene -->
+  <div class="card">
+    <div class="card-title">📝 Napomene</div>
+    <textarea class="inp" id="napomene-ta" rows="3" placeholder="Šta se dogodilo danas? Novi simptomi, aktivnosti, promena lekova..." style="resize:vertical;" oninput="saveCurrentEntry()"></textarea>
+  </div>
+
+  <!-- Lekovi danas -->
+  <div class="card" id="lekovi-danas-card">
+    <div class="card-title">💊 Lekovi za danas <button class="btn-secondary no-print" style="margin-left:auto; font-size:.8rem; padding:4px 10px;" onclick="showTab('lekovi')">+ Uredi listu</button></div>
+    <div id="lekovi-danas-list">
+      <div style="color:#94a3b8; font-size:.9rem;">Nema unesenih lekova. Idi na tab "Lekovi" da dodaš.</div>
+    </div>
+  </div>
+
+  <!-- Sačuvaj -->
+  <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:4px;">
+    <div id="save-status" style="align-self:center; font-size:.85rem; color:#0d9488; display:none;">✓ Sačuvano</div>
+    <button class="btn-primary" onclick="saveCurrentEntry(true)">💾 Sačuvaj unos</button>
+  </div>
+
+</div><!-- end danas -->
+
+<!-- ═══════════════════════════════════════════════════════
+     TAB: LEKOVI
+══════════════════════════════════════════════════════════ -->
+<div id="section-lekovi" class="section-hidden fade-in">
+
+  <div class="card">
+    <div class="card-title">💊 Moji lekovi</div>
+    <div id="lekovi-list-main"></div>
+    <button class="btn-primary" style="margin-top:12px; width:100%;" onclick="showAddMed()">+ Dodaj lek</button>
+  </div>
+
+  <!-- Forma za dodavanje leka -->
+  <div class="card" id="add-med-form" style="display:none; border:2px solid #99f6e4;">
+    <div class="card-title">+ Novi lek</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+      <div>
+        <label style="font-size:.85rem; color:#64748b;">Naziv leka *</label>
+        <input type="text" class="inp" id="new-med-naziv" placeholder="npr. Methotrexate">
+      </div>
+      <div>
+        <label style="font-size:.85rem; color:#64748b;">Doza</label>
+        <input type="text" class="inp" id="new-med-doza" placeholder="npr. 10mg">
+      </div>
+      <div>
+        <label style="font-size:.85rem; color:#64748b;">Učestalost</label>
+        <select class="inp" id="new-med-freq">
+          <option value="dnevno">Dnevno</option>
+          <option value="2x-dnevno">2x dnevno</option>
+          <option value="3x-dnevno">3x dnevno</option>
+          <option value="nedeljno">Nedeljno</option>
+          <option value="po-potrebi">Po potrebi</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:.85rem; color:#64748b;">Vreme uzimanja</label>
+        <input type="text" class="inp" id="new-med-vreme" placeholder="npr. 08:00, 20:00">
+      </div>
+    </div>
+    <div style="margin-bottom:10px;">
+      <label style="font-size:.85rem; color:#64748b;">Napomene</label>
+      <input type="text" class="inp" id="new-med-note" placeholder="uz jelo, bez mlijeka...">
+    </div>
+    <div style="display:flex; gap:8px; justify-content:flex-end;">
+      <button class="btn-secondary" onclick="hideAddMed()">Otkaži</button>
+      <button class="btn-primary" onclick="addMed()">Dodaj lek</button>
+    </div>
+  </div>
+
+  <!-- Info -->
+  <div class="card" style="background:#fef9c3; border:1px solid #fde047;">
+    <div style="font-size:.85rem; color:#713f12; line-height:1.6;">
+      <strong>⚠️ Napomena:</strong> Ova aplikacija ne zamenjuje savjet lekara. Uvijek se konsultujte sa reumatologom ili neurologom o promjenama terapije.
+    </div>
+  </div>
+
+</div><!-- end lekovi -->
+
+<!-- ═══════════════════════════════════════════════════════
+     TAB: ISTORIJA
+══════════════════════════════════════════════════════════ -->
+<div id="section-istorija" class="section-hidden fade-in">
+
+  <div class="card">
+    <div class="card-title">📈 Bol tokom vremena</div>
+    <div style="display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap;">
+      <span class="pill active" id="hist-7" onclick="setHistRange(7)">7 dana</span>
+      <span class="pill" id="hist-30" onclick="setHistRange(30)">30 dana</span>
+      <span class="pill" id="hist-90" onclick="setHistRange(90)">3 meseca</span>
+    </div>
+    <div class="chart-wrap"><canvas id="painChart"></canvas></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">😴 San i umor</div>
+    <div class="chart-wrap"><canvas id="sleepChart"></canvas></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📅 Dnevnici (poslednji unosi)</div>
+    <div id="history-entries"></div>
+  </div>
+
+</div><!-- end istorija -->
+
+<!-- ═══════════════════════════════════════════════════════
+     TAB: IZVEŠTAJ
+══════════════════════════════════════════════════════════ -->
+<div id="section-izvestaj" class="section-hidden fade-in">
+
+  <div class="card no-print" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac;">
+    <div style="font-weight:700; color:#166534; font-size:1rem; margin-bottom:8px;">📄 Izveštaj za lekara</div>
+    <div style="font-size:.85rem; color:#166534; line-height:1.6; margin-bottom:12px;">
+      Generišite PDF izveštaj koji možete ponijeti na pregled. Sadrži: pregled bola, simptome, lekove i trendove.
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <div>
+        <label style="font-size:.8rem; color:#166534;">Period izveštaja:</label>
+        <select class="inp" id="report-period" style="margin-top:4px; background:#fff;">
+          <option value="7">Poslejednjih 7 dana</option>
+          <option value="14">Poslejednjih 14 dana</option>
+          <option value="30" selected>Poslejednjih 30 dana</option>
+        </select>
+      </div>
+      <button class="btn-primary" style="align-self:flex-end;" onclick="printReport()">🖨️ Štampaj / PDF</button>
+    </div>
+  </div>
+
+  <!-- Sadržaj izveštaja -->
+  <div id="report-content">
+    <!-- Generisaće se dinamički -->
+  </div>
+
+</div><!-- end izvestaj -->
+
+</div><!-- end main container -->
+
+<!-- ═══════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════════ -->
+<script>
+// ── State ──────────────────────────────────────────────
+let currentTab = 'danas';
+let vremeUnosa = 'jutro';
+let selectedRegion = null;
+let currentPainTypes = [];
+let histRange = 7;
+let painChart = null;
+let sleepChart = null;
+
+const regionLabels = {
+  'glava':     'Glava',
+  'vrat':      'Vrat (C hernija)',
+  'rame-l':    'Levo rame',
+  'rame-d':    'Desno rame',
+  'ledja-g':   'Gornja leđa',
+  'ledja-l':   'Lumbalna leđa (L hernija)',
+  'ruka-l-g':  'Leva nadlaktica',
+  'ruka-d-g':  'Desna nadlaktica',
+  'ruka-l-d':  'Leva šaka/podlaktica',
+  'ruka-d-d':  'Desna šaka/podlaktica',
+  'kuk-l':     'Levi kuk',
+  'kuk-d':     'Desni kuk',
+  'noga-l-g':  'Levo bedro/koleno',
+  'noga-d-g':  'Desno bedro/koleno',
+  'noga-l-d':  'Leva potkolenica/stopalo',
+  'noga-d-d':  'Desna potkolenica/stopalo',
+};
+
+// ── Storage helpers ────────────────────────────────────
+function getData() { return JSON.parse(localStorage.getItem('bolTracker') || '{}'); }
+function saveData(d) { localStorage.setItem('bolTracker', JSON.stringify(d)); }
+
+function todayKey() { return new Date().toISOString().slice(0,10); }
+
+function getEntry() {
+  const d = getData();
+  const today = todayKey();
+  if (!d[today]) d[today] = {};
+  if (!d[today][vremeUnosa]) d[today][vremeUnosa] = { bol:{}, simptomi:{}, faktori:{}, lekovi:{} };
+  return { data: d, entry: d[today][vremeUnosa], today };
+}
+
+// ── Tab navigation ─────────────────────────────────────
+function showTab(tab) {
+  ['danas','lekovi','istorija','izvestaj'].forEach(t => {
+    document.getElementById('section-' + t).classList.toggle('section-hidden', t !== tab);
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+  });
+  currentTab = tab;
+  if (tab === 'istorija') renderCharts();
+  if (tab === 'izvestaj') renderReport();
+  if (tab === 'lekovi') renderMedsList();
+  if (tab === 'danas') renderLekoviDanas();
+}
+
+// ── Time of day ────────────────────────────────────────
+function setVremeUnosa(v) {
+  vremeUnosa = v;
+  ['jutro','podne','vece'].forEach(x => {
+    document.getElementById('pill-' + x).classList.toggle('active', x === v);
+  });
+  loadEntryIntoUI();
+}
+
+// ── Body map ───────────────────────────────────────────
+function clickRegion(id) {
+  selectedRegion = id;
+  document.getElementById('region-panel').style.display = 'block';
+  document.getElementById('region-hint').style.display = 'none';
+  document.getElementById('region-name').textContent = regionLabels[id] || id;
+
+  const { entry } = getEntry();
+  const pain = entry.bol[id] || { level:0, types:[] };
+  document.getElementById('region-slider').value = pain.level;
+  document.getElementById('region-value').textContent = pain.level;
+  currentPainTypes = pain.types || [];
+  refreshPainTypeBtns();
+
+  // Highlight selected
+  document.querySelectorAll('.body-region').forEach(el => el.style.strokeWidth = '1.5');
+  const el = document.getElementById('reg-' + id);
+  if (el) el.style.strokeWidth = '3';
+}
+
+function updateRegionPain(val) {
+  document.getElementById('region-value').textContent = val;
+  if (!selectedRegion) return;
+  const { data, entry, today } = getEntry();
+  if (!entry.bol[selectedRegion]) entry.bol[selectedRegion] = { level:0, types:[] };
+  entry.bol[selectedRegion].level = parseInt(val);
+  entry.bol[selectedRegion].types = currentPainTypes;
+  saveData(data);
+  updateBodyMapColors();
+  renderActivePains();
+  showSaveStatus();
+}
+
+function togglePainType(t) {
+  const idx = currentPainTypes.indexOf(t);
+  if (idx >= 0) currentPainTypes.splice(idx,1); else currentPainTypes.push(t);
+  refreshPainTypeBtns();
+  if (selectedRegion) {
+    const { data, entry, today } = getEntry();
+    if (entry.bol[selectedRegion]) entry.bol[selectedRegion].types = currentPainTypes;
+    saveData(data);
+  }
+}
+
+function refreshPainTypeBtns() {
+  document.querySelectorAll('#pain-type-btns .pill').forEach(el => {
+    const t = el.getAttribute('onclick').replace("togglePainType('","").replace("')","");
+    el.classList.toggle('active', currentPainTypes.includes(t));
+  });
+}
+
+function updateBodyMapColors() {
+  const { entry } = getEntry();
+  Object.keys(regionLabels).forEach(id => {
+    const el = document.getElementById('reg-' + id);
+    if (!el) return;
+    const level = entry.bol[id]?.level || 0;
+    el.classList.remove('selected-low','selected-mid','selected-high');
+    if (level === 0) { el.style.fill = ''; return; }
+    if (level <= 3) el.style.fill = '#fde68a';
+    else if (level <= 6) el.style.fill = '#f97316';
+    else el.style.fill = '#ef4444';
+  });
+}
+
+function renderActivePains() {
+  const { entry } = getEntry();
+  const list = document.getElementById('active-pains-list');
+  const active = Object.entries(entry.bol).filter(([,v]) => v.level > 0);
+  if (!active.length) { list.innerHTML = ''; return; }
+  list.innerHTML = '<div style="font-size:.8rem; font-weight:700; color:#0f766e; margin-bottom:6px;">Aktivne lokacije bola:</div>' +
+    active.map(([id, v]) => {
+      const color = v.level <= 3 ? '#eab308' : v.level <= 6 ? '#f97316' : '#ef4444';
+      return `<div style="display:flex; justify-content:space-between; align-items:center; padding:4px 8px; background:#f8fafc; border-radius:6px; margin-bottom:4px; font-size:.82rem;">
+        <span>${regionLabels[id]||id}</span>
+        <span style="font-weight:700; color:${color};">${v.level}/10</span>
+      </div>`;
+    }).join('');
+}
+
+// ── Simptom selectors ──────────────────────────────────
+function makeSelector(btnGroupId, field, value) {
+  document.querySelectorAll('#' + btnGroupId + ' .pill').forEach(el => {
+    const v = el.getAttribute('onclick').match(/'([^']+)'/)[1];
+    el.classList.toggle('active', v === value);
+  });
+  const { data, entry } = getEntry();
+  entry.simptomi[field] = value;
+  saveData(data);
+  showSaveStatus();
+}
+
+function selectUkocenost(v) { makeSelector('ukocenost-btns','ukocenost',v); }
+function selectOticanje(v)   { makeSelector('oticanje-btns','oticanje',v); }
+function selectMaglina(v)    { makeSelector('maglina-btns','maglina',v); }
+function selectAllodynia(v)  { makeSelector('allodynia-btns','allodynia',v); }
+function selectIscijadis(v)  { makeSelector('iscijadis-btns','iscijadis',v); }
+function selectVreme(v)      { makeSelector('vreme-btns','vreme',v); }
+
+function setStars(n) {
+  document.querySelectorAll('.star').forEach(el => {
+    el.classList.toggle('lit', parseInt(el.dataset.v) <= n);
+  });
+  const { data, entry } = getEntry();
+  entry.faktori = entry.faktori || {};
+  entry.faktori.kvalitetSna = n;
+  saveData(data);
+  showSaveStatus();
+}
+
+// ── Save current entry ─────────────────────────────────
+function saveCurrentEntry(explicit) {
+  const { data, entry, today } = getEntry();
+  entry.simptomi = entry.simptomi || {};
+  entry.faktori  = entry.faktori  || {};
+  entry.simptomi.umor    = parseInt(document.getElementById('umor-slider').value);
+  entry.simptomi.cHernija = parseInt(document.getElementById('c-slider').value);
+  entry.simptomi.lHernija = parseInt(document.getElementById('l-slider').value);
+  entry.faktori.sanSati  = parseFloat(document.getElementById('san-sati').value) || 0;
+  entry.faktori.stres    = parseInt(document.getElementById('stres-slider').value);
+  entry.faktori.aktivnost = document.getElementById('aktivnost-sel').value;
+  entry.napomene = document.getElementById('napomene-ta').value;
+  entry.savedAt  = new Date().toISOString();
+  saveData(data);
+  updateBodyMapColors();
+  renderActivePains();
+  if (explicit) { showSaveStatus(true); updateEntryStatus(); }
+}
+
+function showSaveStatus(explicit) {
+  const el = document.getElementById('save-status');
+  el.style.display = 'block';
+  el.textContent = explicit ? '✓ Sačuvano!' : '✓ Automatski sačuvano';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.display = 'none'; }, 2500);
+}
+
+function updateEntryStatus() {
+  const { entry } = getEntry();
+  const el = document.getElementById('entry-status');
+  el.textContent = entry.savedAt ? '✓ Uneseno ' + new Date(entry.savedAt).toLocaleTimeString('sr',{hour:'2-digit',minute:'2-digit'}) : 'Nije uneseno';
+  el.style.color = entry.savedAt ? '#0d9488' : '#94a3b8';
+}
+
+// ── Load entry into UI ─────────────────────────────────
+function loadEntryIntoUI() {
+  const { entry } = getEntry();
+  const s = entry.simptomi || {};
+  const f = entry.faktori  || {};
+
+  document.getElementById('umor-slider').value     = s.umor     || 0;
+  document.getElementById('umor-val').textContent  = s.umor     || 0;
+  document.getElementById('c-slider').value        = s.cHernija || 0;
+  document.getElementById('c-val').textContent     = s.cHernija || 0;
+  document.getElementById('l-slider').value        = s.lHernija || 0;
+  document.getElementById('l-val').textContent     = s.lHernija || 0;
+  document.getElementById('stres-slider').value    = f.stres    || 0;
+  document.getElementById('stres-val').textContent = f.stres    || 0;
+  document.getElementById('san-sati').value        = f.sanSati  || '';
+  document.getElementById('aktivnost-sel').value   = f.aktivnost|| '';
+  document.getElementById('napomene-ta').value     = entry.napomene || '';
+
+  // Stars
+  setStars(f.kvalitetSna || 0);
+
+  // Pills
+  if (s.ukocenost) makeSelector('ukocenost-btns','ukocenost', s.ukocenost);
+  else document.querySelectorAll('#ukocenost-btns .pill').forEach(e=>e.classList.remove('active'));
+  if (s.oticanje)  makeSelector('oticanje-btns','oticanje',  s.oticanje);
+  else document.querySelectorAll('#oticanje-btns .pill').forEach(e=>e.classList.remove('active'));
+  if (s.maglina)   makeSelector('maglina-btns','maglina',    s.maglina);
+  else document.querySelectorAll('#maglina-btns .pill').forEach(e=>e.classList.remove('active'));
+  if (s.allodynia) makeSelector('allodynia-btns','allodynia', s.allodynia);
+  else document.querySelectorAll('#allodynia-btns .pill').forEach(e=>e.classList.remove('active'));
+  if (s.iscijadis) makeSelector('iscijadis-btns','iscijadis', s.iscijadis);
+  else document.querySelectorAll('#iscijadis-btns .pill').forEach(e=>e.classList.remove('active'));
+  if (f.vreme)     makeSelector('vreme-btns','vreme',         f.vreme);
+  else document.querySelectorAll('#vreme-btns .pill').forEach(e=>e.classList.remove('active'));
+
+  updateBodyMapColors();
+  renderActivePains();
+  updateEntryStatus();
+}
+
+// ── Medications ────────────────────────────────────────
+function getLekovi() { return JSON.parse(localStorage.getItem('bolLekovi') || '[]'); }
+function saveLekovi(l) { localStorage.setItem('bolLekovi', JSON.stringify(l)); }
+
+function renderMedsList() {
+  const list = getLekovi();
+  const el = document.getElementById('lekovi-list-main');
+  if (!list.length) {
+    el.innerHTML = '<div style="color:#94a3b8; font-size:.9rem; padding:8px 0;">Nema unesenih lekova.</div>';
+    return;
+  }
+  el.innerHTML = list.map((m,i) => `
+    <div style="display:flex; align-items:flex-start; gap:12px; padding:12px; border:2px solid #ccfbf1; border-radius:10px; margin-bottom:8px;">
+      <div style="flex:1;">
+        <div style="font-weight:700; color:#0f766e;">${m.naziv} <span style="font-weight:400; color:#64748b; font-size:.85rem;">${m.doza||''}</span></div>
+        <div style="font-size:.82rem; color:#64748b; margin-top:2px;">${freqLabel(m.freq)} ${m.vreme ? '· ' + m.vreme : ''}</div>
+        ${m.note ? `<div style="font-size:.8rem; color:#94a3b8; margin-top:2px;">📝 ${m.note}</div>` : ''}
+      </div>
+      <button class="btn-danger" style="font-size:.78rem; padding:4px 10px;" onclick="deleteMed(${i})">Obriši</button>
+    </div>
+  `).join('');
+}
+
+function freqLabel(f) {
+  return {dnevno:'Dnevno','2x-dnevno':'2x dnevno','3x-dnevno':'3x dnevno',nedeljno:'Nedeljno','po-potrebi':'Po potrebi'}[f] || f;
+}
+
+function showAddMed() { document.getElementById('add-med-form').style.display = 'block'; }
+function hideAddMed() { document.getElementById('add-med-form').style.display = 'none'; }
+
+function addMed() {
+  const naziv = document.getElementById('new-med-naziv').value.trim();
+  if (!naziv) { alert('Unesite naziv leka.'); return; }
+  const list = getLekovi();
+  list.push({
+    naziv,
+    doza:  document.getElementById('new-med-doza').value.trim(),
+    freq:  document.getElementById('new-med-freq').value,
+    vreme: document.getElementById('new-med-vreme').value.trim(),
+    note:  document.getElementById('new-med-note').value.trim(),
+    id:    Date.now()
+  });
+  saveLekovi(list);
+  hideAddMed();
+  ['new-med-naziv','new-med-doza','new-med-vreme','new-med-note'].forEach(id => document.getElementById(id).value = '');
+  renderMedsList();
+  renderLekoviDanas();
+}
+
+function deleteMed(i) {
+  if (!confirm('Obrisati lek?')) return;
+  const list = getLekovi();
+  list.splice(i,1);
+  saveLekovi(list);
+  renderMedsList();
+  renderLekoviDanas();
+}
+
+function renderLekoviDanas() {
+  const list = getLekovi();
+  const el = document.getElementById('lekovi-danas-list');
+  if (!list.length) {
+    el.innerHTML = '<div style="color:#94a3b8; font-size:.9rem;">Nema unesenih lekova. Idi na tab "Lekovi" da dodaš.</div>';
+    return;
+  }
+  const { data, entry, today } = getEntry();
+  entry.lekovi = entry.lekovi || {};
+  el.innerHTML = list.map((m, i) => {
+    const key = 'lek_' + (m.id || i);
+    const taken = entry.lekovi[key] || false;
+    return `<div class="med-check ${taken?'taken':''}" onclick="toggleMedTaken('${key}', ${i})">
+      <input type="checkbox" ${taken?'checked':''} readonly>
+      <div style="flex:1;">
+        <div style="font-weight:600; font-size:.9rem; color:#134e4a;">${m.naziv} <span style="color:#64748b; font-weight:400;">${m.doza||''}</span></div>
+        <div style="font-size:.78rem; color:#64748b;">${freqLabel(m.freq)} ${m.vreme ? '· ' + m.vreme : ''}</div>
+      </div>
+      ${taken ? '<span style="color:#16a34a; font-size:.8rem; font-weight:700;">✓ Uzeto</span>' : '<span style="color:#94a3b8; font-size:.8rem;">Nije uzeto</span>'}
+    </div>`;
+  }).join('');
+}
+
+function toggleMedTaken(key, i) {
+  const { data, entry } = getEntry();
+  entry.lekovi = entry.lekovi || {};
+  entry.lekovi[key] = !entry.lekovi[key];
+  saveData(data);
+  renderLekoviDanas();
+}
+
+// ── Charts ─────────────────────────────────────────────
+function getLastNDays(n) {
+  const days = [];
+  for (let i = n-1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push(d.toISOString().slice(0,10));
+  }
+  return days;
+}
+
+function avgPainForDay(dayData) {
+  const all = ['jutro','podne','vece'].flatMap(t => {
+    const e = dayData[t];
+    if (!e || !e.bol) return [];
+    return Object.values(e.bol).map(v => v.level || 0).filter(v => v > 0);
+  });
+  return all.length ? (all.reduce((a,b)=>a+b,0)/all.length).toFixed(1) : null;
+}
+
+function renderCharts() {
+  const data = getData();
+  const days = getLastNDays(histRange);
+  const labels = days.map(d => {
+    const [,m,dd] = d.split('-');
+    return dd + '.' + m + '.';
+  });
+
+  const painAvg = days.map(d => data[d] ? avgPainForDay(data[d]) : null);
+  const sleepH  = days.map(d => {
+    const e = data[d];
+    if (!e) return null;
+    const v = ['jutro','podne','vece'].map(t => e[t]?.faktori?.sanSati).find(v => v);
+    return v || null;
+  });
+  const fatigue = days.map(d => {
+    const e = data[d];
+    if (!e) return null;
+    const v = ['jutro','podne','vece'].map(t => e[t]?.simptomi?.umor).find(v => v !== undefined && v !== null);
+    return v !== undefined ? v : null;
+  });
+
+  // Pain chart
+  if (painChart) painChart.destroy();
+  painChart = new Chart(document.getElementById('painChart'), {
+    type:'line',
+    data:{
+      labels,
+      datasets:[{
+        label:'Prosečan bol',
+        data: painAvg,
+        borderColor:'#f97316',
+        backgroundColor:'#f9731620',
+        tension:.4, fill:true, pointRadius:5,
+        pointBackgroundColor:'#f97316', spanGaps:true
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      scales:{
+        y:{ min:0, max:10, ticks:{stepSize:2}, title:{display:true,text:'Intenzitet (0-10)'} }
+      },
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{
+        label: ctx => 'Bol: ' + (ctx.parsed.y ?? '-') + '/10'
+      }}}
+    }
+  });
+
+  // Sleep chart
+  if (sleepChart) sleepChart.destroy();
+  sleepChart = new Chart(document.getElementById('sleepChart'), {
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'Sati spavanja', data:sleepH, backgroundColor:'#0d9488aa', borderColor:'#0d9488', borderWidth:1, yAxisID:'y'},
+        {label:'Umor', data:fatigue, type:'line', borderColor:'#a855f7', backgroundColor:'transparent', tension:.4, pointRadius:4, pointBackgroundColor:'#a855f7', spanGaps:true, yAxisID:'y2'}
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      scales:{
+        y:{ min:0, max:12, title:{display:true,text:'Sati sna'} },
+        y2:{ min:0, max:10, position:'right', title:{display:true,text:'Umor'}, grid:{drawOnChartArea:false} }
+      },
+      plugins:{ legend:{display:true, position:'top'} }
+    }
+  });
+
+  // History list
+  renderHistoryList(data, days);
+}
+
+function setHistRange(n) {
+  histRange = n;
+  [7,30,90].forEach(x => document.getElementById('hist-'+x).classList.toggle('active', x===n));
+  renderCharts();
+}
+
+function renderHistoryList(data, days) {
+  const el = document.getElementById('history-entries');
+  const entries = days.filter(d => data[d]).reverse().slice(0, 20);
+  if (!entries.length) { el.innerHTML = '<div style="color:#94a3b8;">Nema unosa u ovom periodu.</div>'; return; }
+  el.innerHTML = entries.map(d => {
+    const dayData = data[d];
+    const avg = avgPainForDay(dayData);
+    const color = !avg ? '#94a3b8' : avg <= 3 ? '#22c55e' : avg <= 6 ? '#f97316' : '#ef4444';
+    const napomene = ['jutro','podne','vece'].map(t=>dayData[t]?.napomene).filter(Boolean).join(' / ');
+    return `<div style="border-left:3px solid ${color}; padding:8px 12px; margin-bottom:8px; background:#f8fafc; border-radius:0 8px 8px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="font-weight:700; font-size:.9rem; color:#134e4a;">${formatDate(d)}</div>
+        <div style="font-weight:700; color:${color};">${avg ? avg + '/10' : 'Nema bola'}</div>
+      </div>
+      ${napomene ? `<div style="font-size:.8rem; color:#64748b; margin-top:4px;">${napomene}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function formatDate(d) {
+  const [y,m,dd] = d.split('-');
+  const days = ['Ned','Pon','Uto','Sri','Čet','Pet','Sub'];
+  const wd = days[new Date(d).getDay()];
+  return `${wd}, ${dd}.${m}.${y}.`;
+}
+
+// ── Report ─────────────────────────────────────────────
+function renderReport() {
+  const period = parseInt(document.getElementById('report-period').value);
+  const data = getData();
+  const days = getLastNDays(period);
+  const lekovi = getLekovi();
+  const now = new Date();
+
+  // Aggregate
+  const allPains = [];
+  const locationCounts = {};
+  let totalEntries = 0;
+
+  days.forEach(d => {
+    const dayData = data[d];
+    if (!dayData) return;
+    ['jutro','podne','vece'].forEach(t => {
+      const e = dayData[t];
+      if (!e || !e.savedAt) return;
+      totalEntries++;
+      Object.entries(e.bol||{}).forEach(([loc, v]) => {
+        if (v.level > 0) {
+          allPains.push(v.level);
+          locationCounts[loc] = (locationCounts[loc]||0) + 1;
+        }
+      });
+    });
+  });
+
+  const avgPain = allPains.length ? (allPains.reduce((a,b)=>a+b,0)/allPains.length).toFixed(1) : 'N/A';
+  const maxPain = allPains.length ? Math.max(...allPains) : 'N/A';
+  const topLocations = Object.entries(locationCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  document.getElementById('report-content').innerHTML = `
+    <div style="background:#fff; border-radius:16px; padding:24px; box-shadow:0 2px 12px #0001;">
+
+      <div style="text-align:center; margin-bottom:24px; border-bottom:2px solid #e2e8f0; padding-bottom:16px;">
+        <h2 style="margin:0 0 4px; color:#0f766e; font-size:1.4rem;">Medicinski izveštaj — Dnevnik bola</h2>
+        <div style="color:#64748b; font-size:.85rem;">Period: poslejednjih ${period} dana · Generisano: ${now.toLocaleDateString('sr-RS')}</div>
+        <div style="margin-top:8px; font-size:.85rem; color:#94a3b8;">
+          Dijagnoze: Reumatoidni artritis · Fibromijalgija · Discus hernija C i L
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px;">
+        <div style="text-align:center; background:#f0fdfa; border-radius:10px; padding:14px;">
+          <div style="font-size:2rem; font-weight:700; color:#0d9488;">${avgPain}</div>
+          <div style="font-size:.75rem; color:#64748b; margin-top:2px;">Prosečan bol /10</div>
+        </div>
+        <div style="text-align:center; background:#fff7ed; border-radius:10px; padding:14px;">
+          <div style="font-size:2rem; font-weight:700; color:#f97316;">${maxPain}</div>
+          <div style="font-size:.75rem; color:#64748b; margin-top:2px;">Maksimalni bol</div>
+        </div>
+        <div style="text-align:center; background:#f0f9ff; border-radius:10px; padding:14px;">
+          <div style="font-size:2rem; font-weight:700; color:#0ea5e9;">${totalEntries}</div>
+          <div style="font-size:.75rem; color:#64748b; margin-top:2px;">Unosa u periodu</div>
+        </div>
+      </div>
+
+      ${topLocations.length ? `
+      <div style="margin-bottom:20px;">
+        <h3 style="color:#0f766e; font-size:.95rem; margin:0 0 10px;">Najčešće lokacije bola</h3>
+        ${topLocations.map(([loc, cnt]) => `
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+            <div style="flex:1; font-size:.9rem; color:#134e4a;">${regionLabels[loc]||loc}</div>
+            <div style="width:120px; background:#e2e8f0; border-radius:999px; height:8px; overflow:hidden;">
+              <div style="width:${Math.min(100,(cnt/totalEntries)*100)}%; background:#0d9488; height:100%; border-radius:999px;"></div>
+            </div>
+            <div style="font-size:.8rem; color:#64748b; min-width:30px; text-align:right;">${cnt}x</div>
+          </div>
+        `).join('')}
+      </div>
+      ` : ''}
+
+      ${lekovi.length ? `
+      <div style="margin-bottom:20px;">
+        <h3 style="color:#0f766e; font-size:.95rem; margin:0 0 10px;">Trenutna terapija</h3>
+        <table style="width:100%; border-collapse:collapse; font-size:.85rem;">
+          <tr style="background:#f0fdfa;">
+            <th style="text-align:left; padding:6px 10px; border:1px solid #ccfbf1;">Lek</th>
+            <th style="text-align:left; padding:6px 10px; border:1px solid #ccfbf1;">Doza</th>
+            <th style="text-align:left; padding:6px 10px; border:1px solid #ccfbf1;">Učestalost</th>
+            <th style="text-align:left; padding:6px 10px; border:1px solid #ccfbf1;">Vreme</th>
+          </tr>
+          ${lekovi.map(m => `
+            <tr>
+              <td style="padding:6px 10px; border:1px solid #e2e8f0; font-weight:600;">${m.naziv}</td>
+              <td style="padding:6px 10px; border:1px solid #e2e8f0;">${m.doza||'-'}</td>
+              <td style="padding:6px 10px; border:1px solid #e2e8f0;">${freqLabel(m.freq)}</td>
+              <td style="padding:6px 10px; border:1px solid #e2e8f0;">${m.vreme||'-'}</td>
+            </tr>
+          `).join('')}
+        </table>
+      </div>
+      ` : ''}
+
+      <div style="background:#fef9c3; border-radius:10px; padding:12px; margin-top:16px; font-size:.8rem; color:#713f12;">
+        <strong>Napomena:</strong> Ovaj izveštaj je generisan iz pacijentovog dnevnika i služi kao pomoćni dokument za lekarsku konsultaciju.
+        Nije zamjena za kliničku procenu. Molimo konsultujte vašeg reumatologa i neurologa.
+      </div>
+    </div>
+  `;
+}
+
+function printReport() {
+  const period = parseInt(document.getElementById('report-period').value);
+  document.getElementById('report-period').value = period;
+  renderReport();
+  setTimeout(() => window.print(), 300);
+}
+
+// ── Init ───────────────────────────────────────────────
+function init() {
+  // Today display
+  const now = new Date();
+  const days = ['Nedjelja','Ponedjeljak','Utorak','Srijeda','Četvrtak','Petak','Subota'];
+  const months = ['januar','februar','mart','april','maj','juni','juli','august','septembar','oktobar','novembar','decembar'];
+  document.getElementById('today-display').textContent =
+    `${days[now.getDay()]}, ${now.getDate()}. ${months[now.getMonth()]} ${now.getFullYear()}.`;
+
+  // Auto-select time of day
+  const h = now.getHours();
+  if (h >= 6 && h < 12) setVremeUnosa('jutro');
+  else if (h >= 12 && h < 18) setVremeUnosa('podne');
+  else setVremeUnosa('vece');
+
+  loadEntryIntoUI();
+  renderLekoviDanas();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
