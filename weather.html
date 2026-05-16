@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkyWatch Pro — Vremenska Prognoza</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+:root {
+  --glass: rgba(255,255,255,0.06);
+  --glass-border: rgba(255,255,255,0.12);
+  --text-muted: rgba(255,255,255,0.55);
+  --blue: #3b82f6;
+  --cyan: #06b6d4;
+  --purple: #8b5cf6;
+  --amber: #f59e0b;
+  --green: #22c55e;
+  --red: #ef4444;
+  --rain-blue: #93c5fd;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: linear-gradient(160deg, #0d1b2e 0%, #1a2744 40%, #0f1923 100%);
+  color: #fff;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 3s ease;
+}
+
+/* ─── AMBIENT BACKGROUND ─── */
+#sky-bg {
+  position: fixed; inset: 0; z-index: -2;
+  transition: background 3s ease;
+}
+#particle-canvas {
+  position: fixed; inset: 0; z-index: -1;
+  pointer-events: none;
+}
+
+/* ─── HEADER ─── */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 24px;
+  background: rgba(0,0,0,0.25);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--glass-border);
+  position: sticky; top: 0; z-index: 200;
+}
+.loc-btn {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--glass); border: 1px solid var(--glass-border);
+  color: #fff; padding: 9px 18px; border-radius: 999px;
+  cursor: pointer; font-size: 14px; font-weight: 500;
+  transition: background .2s;
+}
+.loc-btn:hover { background: rgba(255,255,255,0.12); }
+.hdr-actions { display: flex; gap: 10px; }
+.icon-btn {
+  background: var(--glass); border: 1px solid var(--glass-border);
+  color: #fff; width: 42px; height: 42px; border-radius: 50%;
+  cursor: pointer; font-size: 18px; display: flex;
+  align-items: center; justify-content: center;
+  transition: background .2s;
+}
+.icon-btn:hover { background: rgba(255,255,255,0.14); }
+.icon-btn.active { background: rgba(59,130,246,0.35); border-color: var(--blue); }
+
+/* ─── HERO ─── */
+.hero {
+  text-align: center;
+  padding: 48px 24px 24px;
+  position: relative;
+}
+.hero-icon {
+  font-size: 96px;
+  display: inline-block;
+  filter: drop-shadow(0 0 40px rgba(255,200,80,.4));
+  animation: float 4s ease-in-out infinite;
+}
+@keyframes float {
+  0%,100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-12px) scale(1.04); }
+}
+.temp-wrap {
+  font-size: 88px; font-weight: 200; letter-spacing: -4px;
+  line-height: 1; margin: 8px 0 4px;
+}
+.temp-wrap sup { font-size: 40px; vertical-align: super; opacity: .65; font-weight: 300; }
+.hero-desc { font-size: 22px; opacity: .8; margin-bottom: 6px; }
+.hero-feels { font-size: 14px; color: var(--text-muted); margin-bottom: 18px; }
+
+.rain-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(59,130,246,0.18);
+  border: 1px solid rgba(59,130,246,0.45);
+  border-radius: 999px; padding: 9px 22px;
+  font-size: 14px; color: var(--rain-blue);
+  animation: pulse-border 2s infinite;
+}
+@keyframes pulse-border {
+  0%,100% { box-shadow: 0 0 0 0 rgba(59,130,246,.3); }
+  50% { box-shadow: 0 0 0 6px rgba(59,130,246,0); }
+}
+
+/* ─── QUICK STATS ─── */
+.stats-row {
+  display: flex; gap: 12px;
+  padding: 0 20px 22px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.stat-chip {
+  flex-shrink: 0; min-width: 86px;
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: 18px; padding: 14px 16px; text-align: center;
+}
+.stat-chip .s-icon { font-size: 22px; margin-bottom: 6px; }
+.stat-chip .s-val { font-size: 15px; font-weight: 600; }
+.stat-chip .s-lbl { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+/* ─── TABS ─── */
+.tabs {
+  display: flex; gap: 6px; padding: 0 20px 20px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.tab {
+  flex-shrink: 0;
+  background: var(--glass); border: 1px solid transparent;
+  color: var(--text-muted); padding: 10px 20px;
+  border-radius: 999px; cursor: pointer; font-size: 14px;
+  transition: all .25s;
+}
+.tab.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+.tab:hover:not(.active) { background: rgba(255,255,255,.1); color: #fff; }
+
+/* ─── CONTENT AREA ─── */
+.content { padding: 0 20px; max-width: 860px; margin: 0 auto; }
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ─── GLASS CARD ─── */
+.card {
+  background: var(--glass); border: 1px solid var(--glass-border);
+  backdrop-filter: blur(20px); border-radius: 20px;
+  padding: 20px; margin-bottom: 16px;
+}
+.card-title {
+  font-size: 12px; letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 14px;
+}
+
+/* ─── RAIN MINUTE BARS ─── */
+.rain-bars-wrap {
+  display: flex; align-items: flex-end; gap: 3px;
+  height: 80px; padding: 0 2px;
+}
+.rbar {
+  flex: 1; border-radius: 4px 4px 0 0;
+  position: relative; cursor: pointer;
+  transition: opacity .2s;
+}
+.rbar:hover { opacity: .75; }
+.rbar[data-tip]:hover::after {
+  content: attr(data-tip);
+  position: absolute; bottom: calc(100% + 6px); left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,.85); color: #fff;
+  padding: 3px 8px; border-radius: 6px; font-size: 11px;
+  white-space: nowrap; pointer-events: none;
+}
+.rain-time-row {
+  display: flex; justify-content: space-between;
+  padding: 6px 2px 0; font-size: 11px; color: var(--text-muted);
+}
+
+/* ─── UV BAR ─── */
+.uv-bar-track {
+  height: 14px; border-radius: 7px;
+  background: linear-gradient(to right, #22c55e 0%, #84cc16 25%, #eab308 45%, #f97316 65%, #ef4444 80%, #7f1d1d 100%);
+  position: relative; margin: 10px 0 6px;
+}
+.uv-dot {
+  position: absolute; top: -4px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.5);
+  transform: translateX(-50%); transition: left 1s ease;
+}
+.uv-scale {
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: var(--text-muted);
+}
+
+/* ─── AQI CIRCLE ─── */
+.aqi-row { display: flex; align-items: center; gap: 20px; }
+.aqi-circle {
+  width: 90px; height: 90px; border-radius: 50%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  flex-shrink: 0; border: 3px solid;
+  font-weight: 700;
+}
+.aqi-num { font-size: 30px; }
+.aqi-lbl { font-size: 11px; opacity: .7; }
+
+/* ─── LIFESTYLE GRID ─── */
+.lifestyle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.life-card {
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: 16px; padding: 16px;
+}
+.life-icon { font-size: 28px; margin-bottom: 8px; }
+.life-name { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.life-badge {
+  display: inline-block; font-size: 12px; padding: 4px 12px;
+  border-radius: 999px; font-weight: 500;
+}
+.ok-good { background: rgba(34,197,94,.2); color: #86efac; }
+.ok-mid  { background: rgba(245,158,11,.2); color: #fcd34d; }
+.ok-bad  { background: rgba(239,68,68,.2); color: #fca5a5; }
+
+/* ─── HOURLY SCROLL ─── */
+.hourly-row {
+  display: flex; gap: 10px; overflow-x: auto;
+  padding-bottom: 6px; scrollbar-width: none;
+  margin-bottom: 18px;
+}
+.h-card {
+  flex-shrink: 0; background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: 16px; padding: 14px 14px; text-align: center; min-width: 78px;
+}
+.h-card.now { background: rgba(59,130,246,.2); border-color: var(--blue); }
+.h-time { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+.h-icon { font-size: 26px; margin-bottom: 8px; }
+.h-temp { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.h-rain { font-size: 12px; color: var(--rain-blue); }
+
+/* ─── 7 DAY FORECAST ─── */
+.day-row {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: 16px; padding: 16px 20px; margin-bottom: 10px;
+}
+.day-name { min-width: 90px; font-size: 15px; font-weight: 500; }
+.day-ico { font-size: 30px; }
+.day-lbl { flex: 1; font-size: 13px; color: var(--text-muted); padding: 0 14px; }
+.day-precip { font-size: 13px; color: var(--rain-blue); text-align: right; min-width: 60px; }
+.day-temps { display: flex; gap: 8px; font-size: 15px; }
+.day-max { font-weight: 700; }
+.day-min { color: var(--text-muted); }
+
+/* ─── MAP ─── */
+#map { height: 420px; border-radius: 18px; overflow: hidden; }
+.map-legend {
+  display: flex; gap: 16px; flex-wrap: wrap;
+  font-size: 13px; color: var(--text-muted); margin-top: 12px;
+}
+.map-legend span { display: flex; align-items: center; gap: 6px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+/* ─── CHARTS ─── */
+.chart-wrap canvas { max-height: 160px; }
+
+/* ─── PRESSURE TREND BADGE ─── */
+.trend-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; padding: 6px 14px; border-radius: 999px; margin-top: 10px;
+}
+.trend-up   { background: rgba(34,197,94,.18); color: #86efac; }
+.trend-down { background: rgba(239,68,68,.18); color: #fca5a5; }
+.trend-flat { background: rgba(156,163,175,.18); color: #d1d5db; }
+
+/* ─── AI CHAT ─── */
+.chat-wrap { display: flex; flex-direction: column; height: 460px; }
+.chat-msgs {
+  flex: 1; overflow-y: auto; padding: 16px;
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: 18px 18px 0 0; display: flex; flex-direction: column; gap: 12px;
+}
+.msg {
+  max-width: 82%; padding: 11px 15px; border-radius: 16px;
+  font-size: 14px; line-height: 1.55;
+}
+.msg.bot { background: rgba(255,255,255,.09); align-self: flex-start; border-bottom-left-radius: 4px; }
+.msg.me  { background: var(--blue); align-self: flex-end; border-bottom-right-radius: 4px; }
+.bot-tag { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; }
+.suggestions {
+  display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 0;
+  background: rgba(0,0,0,.2);
+  border-left: 1px solid var(--glass-border);
+  border-right: 1px solid var(--glass-border);
+  padding: 10px 14px;
+}
+.sug-chip {
+  background: var(--glass); border: 1px solid var(--glass-border);
+  color: var(--text-muted); padding: 7px 14px; border-radius: 999px;
+  font-size: 13px; cursor: pointer; transition: all .2s;
+}
+.sug-chip:hover { background: rgba(59,130,246,.2); border-color: var(--blue); color: #fff; }
+.chat-input-row {
+  display: flex; gap: 8px; padding: 12px 14px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--glass-border); border-top: none;
+  border-radius: 0 0 18px 18px;
+}
+.chat-in {
+  flex: 1; background: var(--glass); border: 1px solid var(--glass-border);
+  color: #fff; padding: 10px 16px; border-radius: 999px; font-size: 14px; outline: none;
+}
+.chat-in::placeholder { color: var(--text-muted); }
+.send-btn {
+  width: 44px; height: 44px; border-radius: 50%; border: none;
+  background: var(--blue); color: #fff; font-size: 18px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .2s;
+}
+.send-btn:hover { background: #2563eb; }
+
+/* ─── LOADING ─── */
+.loader { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+.spin {
+  width: 44px; height: 44px; border: 3px solid rgba(255,255,255,.15);
+  border-top-color: var(--blue); border-radius: 50%;
+  animation: spin .8s linear infinite; margin: 0 auto 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── TOAST ─── */
+.toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+  background: rgba(10,14,30,.95); border: 1px solid var(--glass-border);
+  border-radius: 16px; padding: 13px 22px; font-size: 14px;
+  z-index: 999; backdrop-filter: blur(20px);
+  animation: toast-in .35s ease; max-width: 320px; text-align: center;
+}
+@keyframes toast-in {
+  from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
+}
+
+/* ─── RAIN DROPS (CSS) ─── */
+.drop {
+  position: fixed; width: 2px; pointer-events: none;
+  background: linear-gradient(transparent, rgba(147,197,253,.7));
+  animation: drp linear infinite; z-index: 0;
+}
+@keyframes drp {
+  from { transform: translateY(-80px); }
+  to   { transform: translateY(110vh); }
+}
+
+/* ─── WIND ROSE ─── */
+.wind-rose-wrap {
+  display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+}
+.wind-svg { filter: drop-shadow(0 0 10px rgba(139,92,246,.4)); }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 500px) {
+  .temp-wrap { font-size: 68px; }
+  .lifestyle-grid { grid-template-columns: 1fr; }
+  .day-lbl { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- Ambient sky bg -->
+<div id="sky-bg"></div>
+<canvas id="particle-canvas"></canvas>
+
+<!-- ═══ HEADER ═══ -->
+<header class="header">
+  <button class="loc-btn" onclick="App.locate()">
+    <span>📍</span><span id="loc-name">Otkrivam lokaciju…</span>
+  </button>
+  <div class="hdr-actions">
+    <button class="icon-btn" id="notif-btn" onclick="App.toggleNotif()" title="Notifikacije">🔔</button>
+    <button class="icon-btn" onclick="App.refresh()" title="Osvježi">↻</button>
+  </div>
+</header>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="hero-icon" id="hero-icon">⛅</div>
+  <div class="temp-wrap"><span id="temp">--</span><sup>°C</sup></div>
+  <div class="hero-desc" id="hero-desc">Učitavam…</div>
+  <div class="hero-feels" id="hero-feels">Oseća se kao --°C</div>
+  <div id="rain-pill" class="rain-pill" style="display:none">
+    🌧️ <span id="rain-pill-text">Kiša u prognozi</span>
+  </div>
+</section>
+
+<!-- ═══ QUICK STATS ═══ -->
+<div class="stats-row">
+  <div class="stat-chip">
+    <div class="s-icon">💧</div>
+    <div class="s-val" id="s-hum">--%</div>
+    <div class="s-lbl">Vlažnost</div>
+  </div>
+  <div class="stat-chip">
+    <div class="s-icon" id="s-wind-icon">🌬️</div>
+    <div class="s-val" id="s-wind">-- km/h</div>
+    <div class="s-lbl">Vjetar</div>
+  </div>
+  <div class="stat-chip">
+    <div class="s-icon">☀️</div>
+    <div class="s-val" id="s-uv">--</div>
+    <div class="s-lbl">UV Indeks</div>
+  </div>
+  <div class="stat-chip">
+    <div class="s-icon">🌡️</div>
+    <div class="s-val" id="s-press">-- hPa</div>
+    <div class="s-lbl">Pritisak</div>
+  </div>
+  <div class="stat-chip">
+    <div class="s-icon">🌫️</div>
+    <div class="s-val" id="s-aqi">--</div>
+    <div class="s-lbl">Kval. vazd.</div>
+  </div>
+  <div class="stat-chip">
+    <div class="s-icon">👁️</div>
+    <div class="s-val" id="s-vis">-- km</div>
+    <div class="s-lbl">Vidljivost</div>
+  </div>
+</div>
+
+<!-- ═══ TABS ═══ -->
+<div class="tabs">
+  <button class="tab active" data-tab="now">Sada</button>
+  <button class="tab" data-tab="hourly">Po satima</button>
+  <button class="tab" data-tab="week">7 dana</button>
+  <button class="tab" data-tab="map">🗺 Radar</button>
+  <button class="tab" data-tab="charts">Grafovi</button>
+  <button class="tab" data-tab="ai">🤖 AI Chat</button>
+</div>
+
+<!-- ═══ CONTENT ═══ -->
+<div class="content">
+
+  <!-- NOW -->
+  <div id="panel-now" class="panel active">
+    <div class="card">
+      <div class="card-title">🌧 Kiša — narednih 60 minuta</div>
+      <div class="rain-bars-wrap" id="rain-bars"></div>
+      <div class="rain-time-row">
+        <span>Sada</span><span>+15 min</span><span>+30 min</span><span>+45 min</span><span>+60 min</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">☀️ UV Indeks</div>
+      <div style="display:flex; align-items:center; gap:20px; margin-bottom:14px">
+        <div style="font-size:44px; font-weight:200" id="uv-big">--</div>
+        <div>
+          <div id="uv-cat" style="font-size:18px; font-weight:600">--</div>
+          <div id="uv-tip" style="font-size:13px; color:var(--text-muted); margin-top:4px">--</div>
+        </div>
+      </div>
+      <div class="uv-bar-track"><div class="uv-dot" id="uv-dot" style="left:0%"></div></div>
+      <div class="uv-scale"><span>0</span><span>3</span><span>6</span><span>8</span><span>11+</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🌫️ Kvalitet vazduha (AQI)</div>
+      <div class="aqi-row">
+        <div class="aqi-circle" id="aqi-circle">
+          <div class="aqi-num" id="aqi-num">--</div>
+          <div class="aqi-lbl">AQI</div>
+        </div>
+        <div>
+          <div id="aqi-cat" style="font-size:18px; font-weight:600">--</div>
+          <div id="aqi-tip" style="font-size:13px; color:var(--text-muted); margin-top:6px; max-width:220px">--</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-title" style="padding:0 4px 10px">🌟 Lifestyle saveti</div>
+    <div class="lifestyle-grid" id="lifestyle"></div>
+  </div>
+
+  <!-- HOURLY -->
+  <div id="panel-hourly" class="panel">
+    <div class="hourly-row" id="hourly-cards"></div>
+    <div class="card chart-wrap">
+      <div class="card-title">🌡 Temperatura — 24h</div>
+      <canvas id="chart-temp"></canvas>
+    </div>
+    <div class="card chart-wrap">
+      <div class="card-title">💧 Vjerovatnoća kiše — 24h</div>
+      <canvas id="chart-rain-h"></canvas>
+    </div>
+  </div>
+
+  <!-- WEEK -->
+  <div id="panel-week" class="panel">
+    <div id="week-rows"></div>
+  </div>
+
+  <!-- MAP -->
+  <div id="panel-map" class="panel">
+    <div class="card" style="padding:12px 18px; margin-bottom:12px">
+      <span style="font-size:13px; color:var(--text-muted)">🛰️ Radar padavina — live · RainViewer</span>
+    </div>
+    <div id="map"></div>
+    <div class="map-legend" style="margin-top:12px">
+      <span><span class="dot" style="background:#60a5fa"></span> Lagana kiša</span>
+      <span><span class="dot" style="background:#2563eb"></span> Umjerena kiša</span>
+      <span><span class="dot" style="background:#1d4ed8"></span> Jaka kiša</span>
+      <span><span class="dot" style="background:#7c3aed"></span> Oluja</span>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div id="panel-charts" class="panel">
+    <div class="card chart-wrap">
+      <div class="card-title">🌬️ Vjetar — 24h (km/h)</div>
+      <div class="wind-rose-wrap">
+        <canvas id="chart-wind"></canvas>
+        <div id="wind-rose-info" style="font-size:13px; color:var(--text-muted); line-height:2"></div>
+      </div>
+    </div>
+    <div class="card chart-wrap">
+      <div class="card-title">🌡️ Atmosferski pritisak — 24h (hPa)</div>
+      <canvas id="chart-press"></canvas>
+      <div id="press-trend"></div>
+    </div>
+    <div class="card chart-wrap">
+      <div class="card-title">💧 Vjerovatnoća kiše — 7 dana (%)</div>
+      <canvas id="chart-rain7"></canvas>
+    </div>
+  </div>
+
+  <!-- AI CHAT -->
+  <div id="panel-ai" class="panel">
+    <div class="chat-wrap">
+      <div class="chat-msgs" id="chat-msgs">
+        <div class="msg bot">
+          <div class="bot-tag">🤖 SkyWatch AI</div>
+          Zdravo! Ja sam tvoj AI vremenski asistent. Pitaj me šta god hoćeš o vremenu — da li ide kiša, mogu li na plažu, treba li mi kišobran, idealni uslovi za sport, i mnogo toga!
+        </div>
+      </div>
+      <div class="suggestions" id="sug-row">
+        <button class="sug-chip" onclick="App.sug(this)">🏖️ Mogu li na plažu?</button>
+        <button class="sug-chip" onclick="App.sug(this)">☂️ Treba li kišobran?</button>
+        <button class="sug-chip" onclick="App.sug(this)">🏃 Mogu li trčati?</button>
+        <button class="sug-chip" onclick="App.sug(this)">🍖 Roštilj ovaj vikend?</button>
+        <button class="sug-chip" onclick="App.sug(this)">🚗 Pranje auta danas?</button>
+        <button class="sug-chip" onclick="App.sug(this)">👗 Šta da obučem?</button>
+      </div>
+      <div class="chat-input-row">
+        <input class="chat-in" id="chat-in" placeholder="Pitaj o vremenu…" onkeydown="if(event.key==='Enter') App.chat()"/>
+        <button class="send-btn" onclick="App.chat()">➤</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+<div style="height:50px"></div>
+
+<!-- ═══ SCRIPTS ═══ -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+/* ════════════════════════════════════════════════════
+   SkyWatch Pro — Main Application
+════════════════════════════════════════════════════ */
+
+const WMO = {
+  0:  { label:'Vedro nebo',             icon:'☀️',  sky:'clear'  },
+  1:  { label:'Pretežno vedro',         icon:'🌤️',  sky:'clear'  },
+  2:  { label:'Djelimično oblačno',     icon:'⛅',  sky:'cloudy' },
+  3:  { label:'Oblačno',                icon:'☁️',  sky:'cloudy' },
+  45: { label:'Magla',                  icon:'🌫️',  sky:'cloudy' },
+  48: { label:'Ledena magla',           icon:'🌫️',  sky:'cloudy' },
+  51: { label:'Lagana rosulja',         icon:'🌦️',  sky:'rain'   },
+  53: { label:'Umjerena rosulja',       icon:'🌦️',  sky:'rain'   },
+  55: { label:'Jaka rosulja',           icon:'🌧️',  sky:'rain'   },
+  61: { label:'Lagana kiša',            icon:'🌧️',  sky:'rain'   },
+  63: { label:'Umjerena kiša',          icon:'🌧️',  sky:'rain'   },
+  65: { label:'Jaka kiša',              icon:'🌧️',  sky:'rain'   },
+  71: { label:'Lagan snijeg',           icon:'🌨️',  sky:'snow'   },
+  73: { label:'Umjeren snijeg',         icon:'❄️',   sky:'snow'   },
+  75: { label:'Jak snijeg',             icon:'❄️',   sky:'snow'   },
+  77: { label:'Snježna zrna',           icon:'🌨️',  sky:'snow'   },
+  80: { label:'Pljusak',                icon:'🌦️',  sky:'rain'   },
+  81: { label:'Umjeren pljusak',        icon:'🌧️',  sky:'rain'   },
+  82: { label:'Jak pljusak',            icon:'⛈️',  sky:'storm'  },
+  85: { label:'Snježni pljusak',        icon:'🌨️',  sky:'snow'   },
+  86: { label:'Jak snježni pljusak',    icon:'❄️',   sky:'snow'   },
+  95: { label:'Grmljavinska oluja',     icon:'⛈️',  sky:'storm'  },
+  96: { label:'Oluja s gradom',         icon:'⛈️',  sky:'storm'  },
+  99: { label:'Jaka oluja s gradom',    icon:'🌩️',  sky:'storm'  },
+};
+
+const SKY_GRADIENTS = {
+  clear:  'linear-gradient(160deg, #0d1b2e 0%, #1e3a5f 35%, #1a2744 100%)',
+  cloudy: 'linear-gradient(160deg, #1f2937 0%, #374151 40%, #111827 100%)',
+  rain:   'linear-gradient(160deg, #0f172a 0%, #1e293b 40%, #0a0e1a 100%)',
+  storm:  'linear-gradient(160deg, #020617 0%, #0f172a 40%, #020617 100%)',
+  snow:   'linear-gradient(160deg, #1e2a3a 0%, #2d3f55 40%, #1a2535 100%)',
+};
+
+/* ─── STATE ─── */
+const S = {
+  lat: null, lon: null,
+  wx: null, aqi: null,
+  notif: false,
+  map: null, radar: null,
+  charts: {},
+  drops: [],
+};
+
+/* ─── PARTICLES / RAIN CANVAS ─── */
+const pCanvas = document.getElementById('particle-canvas');
+const pCtx = pCanvas.getContext('2d');
+let drops = [], flakes = [];
+
+function resizeCanvas() {
+  pCanvas.width = window.innerWidth;
+  pCanvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+function animParticles() {
+  pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+
+  // Rain drops
+  drops.forEach(d => {
+    d.y += d.speed;
+    if (d.y > pCanvas.height + 40) { d.y = -40; d.x = Math.random() * pCanvas.width; }
+    pCtx.beginPath();
+    pCtx.strokeStyle = `rgba(147,197,253,${d.alpha})`;
+    pCtx.lineWidth = d.w;
+    pCtx.moveTo(d.x, d.y);
+    pCtx.lineTo(d.x - d.lean, d.y + d.len);
+    pCtx.stroke();
+  });
+
+  // Snow flakes
+  flakes.forEach(f => {
+    f.y += f.speed;
+    f.x += Math.sin(f.angle) * 0.5;
+    f.angle += 0.02;
+    if (f.y > pCanvas.height + 10) { f.y = -10; f.x = Math.random() * pCanvas.width; }
+    pCtx.beginPath();
+    pCtx.fillStyle = `rgba(255,255,255,${f.alpha})`;
+    pCtx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+    pCtx.fill();
+  });
+
+  requestAnimationFrame(animParticles);
+}
+animParticles();
+
+function setWeatherParticles(sky) {
+  drops = []; flakes = [];
+  if (sky === 'rain' || sky === 'storm') {
+    const n = sky === 'storm' ? 120 : 60;
+    for (let i = 0; i < n; i++) drops.push({
+      x: Math.random() * pCanvas.width, y: Math.random() * pCanvas.height,
+      speed: 8 + Math.random() * 10, len: 15 + Math.random() * 20,
+      lean: 3 + Math.random() * 4, w: Math.random() < 0.3 ? 1.5 : 1,
+      alpha: 0.3 + Math.random() * 0.4,
+    });
+  }
+  if (sky === 'snow') {
+    for (let i = 0; i < 60; i++) flakes.push({
+      x: Math.random() * pCanvas.width, y: Math.random() * pCanvas.height,
+      speed: 1 + Math.random() * 2, r: 1 + Math.random() * 3,
+      alpha: 0.4 + Math.random() * 0.5, angle: Math.random() * Math.PI * 2,
+    });
+  }
+}
+
+/* ─── SKY BG ─── */
+function setSky(sky) {
+  document.getElementById('sky-bg').style.background = SKY_GRADIENTS[sky] || SKY_GRADIENTS.clear;
+  setWeatherParticles(sky);
+}
+
+/* ─── HELPERS ─── */
+function wmo(code) { return WMO[code] || { label:'Nepoznato', icon:'🌡️', sky:'clear' }; }
+function round(n) { return Math.round(n); }
+function showToast(msg, ms = 3200) {
+  document.querySelectorAll('.toast').forEach(t => t.remove());
+  const t = Object.assign(document.createElement('div'), { className:'toast', textContent:msg });
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), ms);
+}
+
+/* ─── TABS ─── */
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'map') setTimeout(() => App.initMap(), 120);
+    if (btn.dataset.tab === 'charts') App.renderCharts();
+    if (btn.dataset.tab === 'hourly') App.renderCharts();
+  });
+});
+
+/* ════════════════════════════════════════════════════
+   APP
+════════════════════════════════════════════════════ */
+const App = {
+
+  /* ─── LOCATE ─── */
+  locate() {
+    document.getElementById('loc-name').textContent = 'Tražim lokaciju…';
+    if (!navigator.geolocation) { this.loadWx(43.8476, 18.3564, 'Sarajevo'); return; }
+    navigator.geolocation.getCurrentPosition(
+      pos => { S.lat = pos.coords.latitude; S.lon = pos.coords.longitude; this.reversGeo(); this.loadWx(S.lat, S.lon); },
+      ()  => { this.loadWx(43.8476, 18.3564, 'Sarajevo'); },
+      { timeout:10000, enableHighAccuracy:true }
+    );
+  },
+
+  async reversGeo() {
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${S.lat}&lon=${S.lon}&format=json`);
+      const d = await r.json();
+      const city = d.address.city || d.address.town || d.address.village || d.address.municipality || d.address.county || 'Moja lokacija';
+      document.getElementById('loc-name').textContent = city;
+    } catch { document.getElementById('loc-name').textContent = 'Moja lokacija'; }
+  },
+
+  refresh() { if (S.lat) this.loadWx(S.lat, S.lon); else this.locate(); },
+
+  /* ─── LOAD WEATHER ─── */
+  async loadWx(lat, lon, city = null) {
+    if (city) document.getElementById('loc-name').textContent = city;
+    S.lat = lat; S.lon = lon;
+
+    const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+      `&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,` +
+      `wind_speed_10m,wind_direction_10m,uv_index,surface_pressure,visibility` +
+      `&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,` +
+      `wind_speed_10m,wind_direction_10m,pressure_msl,uv_index` +
+      `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,` +
+      `precipitation_probability_max,uv_index_max,wind_speed_10m_max` +
+      `&timezone=auto&forecast_days=7`;
+
+    const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}` +
+      `&current=pm2_5,european_aqi&timezone=auto`;
+
+    try {
+      const [wxRes, aqiRes] = await Promise.all([fetch(wxUrl), fetch(aqiUrl)]);
+      S.wx  = await wxRes.json();
+      S.aqi = await aqiRes.json();
+      this.renderAll();
+    } catch(e) {
+      showToast('⚠️ Greška pri učitavanju podataka. Provjeri internet vezu.');
+    }
+  },
+
+  /* ─── RENDER ALL ─── */
+  renderAll() {
+    this.renderHero();
+    this.renderStats();
+    this.renderRainBars();
+    this.renderUV();
+    this.renderAQI();
+    this.renderLifestyle();
+    this.renderHourly();
+    this.renderWeek();
+    if (document.getElementById('panel-charts').classList.contains('active') ||
+        document.getElementById('panel-hourly').classList.contains('active')) {
+      this.renderCharts();
+    }
+    if (S.notif) this.checkNotifs();
+  },
+
+  /* ─── HERO ─── */
+  renderHero() {
+    const c = S.wx.current;
+    const w = wmo(c.weather_code);
+    document.getElementById('hero-icon').textContent  = w.icon;
+    document.getElementById('temp').textContent        = round(c.temperature_2m);
+    document.getElementById('hero-desc').textContent  = w.label;
+    document.getElementById('hero-feels').textContent = `Oseća se kao ${round(c.apparent_temperature)}°C`;
+    setSky(w.sky);
+
+    // Rain pill
+    const alert = this._rainAlert();
+    const pill  = document.getElementById('rain-pill');
+    if (alert) { pill.style.display = 'inline-flex'; document.getElementById('rain-pill-text').textContent = alert; }
+    else pill.style.display = 'none';
+  },
+
+  _rainAlert() {
+    if (!S.wx?.hourly) return null;
+    const now   = Date.now();
+    const times = S.wx.hourly.time;
+    const probs = S.wx.hourly.precipitation_probability;
+    for (let i = 0; i < Math.min(times.length, 7); i++) {
+      const t = new Date(times[i]).getTime();
+      if (t < now) continue;
+      const dh = (t - now) / 3.6e6;
+      if (dh > 6) break;
+      if (probs[i] >= 55) {
+        if (dh < 1) return `Kiša za ~${round(dh * 60)} min! ☂️`;
+        return `Kiša za ~${round(dh)}h (${probs[i]}%) ☂️`;
+      }
+    }
+    return null;
+  },
+
+  /* ─── STATS ─── */
+  renderStats() {
+    const c = S.wx.current;
+    document.getElementById('s-hum').textContent   = c.relative_humidity_2m + '%';
+    document.getElementById('s-wind').textContent  = round(c.wind_speed_10m) + ' km/h';
+    document.getElementById('s-uv').textContent    = (c.uv_index || 0).toFixed(1);
+    document.getElementById('s-press').textContent = round(c.surface_pressure) + ' hPa';
+    document.getElementById('s-aqi').textContent   = S.aqi?.current?.european_aqi ?? '--';
+    const vis = c.visibility != null ? (c.visibility / 1000).toFixed(1) + ' km' : '--';
+    document.getElementById('s-vis').textContent   = vis;
+
+    // Wind direction icon
+    const dir = c.wind_direction_10m || 0;
+    const dirs = ['N','NE','E','SE','S','SW','W','NW'];
+    const dLabel = dirs[Math.round(dir / 45) % 8];
+    document.getElementById('s-wind-icon').textContent = { N:'⬆️',NE:'↗️',E:'➡️',SE:'↘️',S:'⬇️',SW:'↙️',W:'⬅️',NW:'↖️' }[dLabel] || '🌬️';
+  },
+
+  /* ─── RAIN BARS ─── */
+  renderRainBars() {
+    const wrap = document.getElementById('rain-bars');
+    wrap.innerHTML = '';
+    if (!S.wx?.hourly) return;
+
+    const now = Date.now(), times = S.wx.hourly.time, probs = S.wx.hourly.precipitation_probability;
+    let ci = 0;
+    times.forEach((t, i) => { if (new Date(t).getTime() <= now) ci = i; });
+    const p0 = probs[ci] || 0, p1 = probs[ci+1] || 0, p2 = probs[ci+2] || 0;
+
+    for (let m = 0; m < 60; m++) {
+      const t = m / 60;
+      let base = t < 0.5 ? p0 + (p1 - p0) * (t * 2) : p1 + (p2 - p1) * ((t - 0.5) * 2);
+      const val = Math.max(0, Math.min(100, base + (Math.random() - 0.5) * 7));
+      const h   = Math.max(4, val * 0.72);
+
+      const color = val >= 70 ? '#2563eb' : val >= 40 ? '#3b82f6' : val >= 15 ? '#93c5fd' : 'rgba(147,197,253,.25)';
+      const bar = document.createElement('div');
+      bar.className = 'rbar';
+      bar.style.cssText = `height:${h}px; background:${color};`;
+      bar.setAttribute('data-tip', `${round(val)}% (+${m}min)`);
+      wrap.appendChild(bar);
+    }
+  },
+
+  /* ─── UV ─── */
+  renderUV() {
+    const uv = S.wx?.current?.uv_index || 0;
+    document.getElementById('uv-big').textContent = uv.toFixed(1);
+    let cat, tip;
+    if (uv < 3)  { cat = 'Nizak';       tip = 'Nema potrebe za zaštitom od sunca.'; }
+    else if (uv < 6)  { cat = 'Umjeren';     tip = 'Preporučuje se SPF 30+.'; }
+    else if (uv < 8)  { cat = 'Visok';       tip = 'SPF 50+, izbjegavaj podne (11–16h).'; }
+    else if (uv < 11) { cat = 'Veoma visok'; tip = '⚠️ Ostani u hladu između 11–16h.'; }
+    else              { cat = 'Ekstreman';   tip = '🚨 Izbjegavaj sunce. SPF 50+ obavezan.'; }
+    document.getElementById('uv-cat').textContent = cat;
+    document.getElementById('uv-tip').textContent = tip;
+    document.getElementById('uv-dot').style.left  = Math.min((uv / 11) * 100, 94) + '%';
+  },
+
+  /* ─── AQI ─── */
+  renderAQI() {
+    const aqi = S.aqi?.current?.european_aqi ?? 0;
+    document.getElementById('aqi-num').textContent = aqi || '--';
+    let cat, tip, col, bdr;
+    if      (aqi <= 20) { cat='Odličan';    tip='Idealno za sve aktivnosti napolju.';                col='rgba(34,197,94,.2)';  bdr='#22c55e'; }
+    else if (aqi <= 40) { cat='Dobar';      tip='Pogodan za sport i boravak napolju.';               col='rgba(132,204,22,.2)'; bdr='#84cc16'; }
+    else if (aqi <= 60) { cat='Umjeren';    tip='Osjetljive osobe trebaju biti oprezne.';            col='rgba(234,179,8,.2)';  bdr='#eab308'; }
+    else if (aqi <= 80) { cat='Loš';        tip='Ograniči boravak napolju, posebno djeca.';          col='rgba(249,115,22,.2)'; bdr='#f97316'; }
+    else                { cat='Veoma loš';  tip='⚠️ Ostani unutra. Nosi masku na otvorenom.';        col='rgba(239,68,68,.2)';  bdr='#ef4444'; }
+    document.getElementById('aqi-cat').textContent = cat;
+    document.getElementById('aqi-tip').textContent = tip;
+    const circle = document.getElementById('aqi-circle');
+    circle.style.background = col; circle.style.borderColor = bdr;
+  },
+
+  /* ─── LIFESTYLE ─── */
+  renderLifestyle() {
+    const c = S.wx.current;
+    const rainNow = this._rainProbNow();
+    const t = c.temperature_2m, wind = c.wind_speed_10m, uv = c.uv_index || 0;
+    const aqi = S.aqi?.current?.european_aqi || 0;
+    const rain24 = S.wx.daily?.precipitation_probability_max?.[0] || 0;
+
+    const acts = [
+      { ico:'🏃', name:'Trčanje', fn: () => {
+        if (rainNow > 65) return ['ok-bad','Kiša — odgodi'];
+        if (t < 0 || t > 36) return ['ok-bad',`Nepovoljna temp. (${round(t)}°C)`];
+        if (wind > 55) return ['ok-mid','Jak vjetar'];
+        if (aqi > 60)  return ['ok-bad','Loš kvalitet vazduha'];
+        return ['ok-good','Idealno za trčanje! 🏃'];
+      }},
+      { ico:'🏖️', name:'Plaža', fn: () => {
+        if (rainNow > 40) return ['ok-bad',`Kiša (${rainNow}%)`];
+        if (t < 22)       return ['ok-bad',`Hladno (${round(t)}°C)`];
+        if (uv > 9)       return ['ok-mid','Jak UV — zaštiti se'];
+        return ['ok-good','Savršeno za plažu! ☀️'];
+      }},
+      { ico:'🚴', name:'Bicikl', fn: () => {
+        if (rainNow > 55) return ['ok-bad','Mokri putevi'];
+        if (wind > 45)    return ['ok-bad','Prejak vjetar'];
+        if (t < 5)        return ['ok-mid','Hladno — obuci se'];
+        return ['ok-good','Odlično za vožnju! 🚴'];
+      }},
+      { ico:'🌿', name:'Piknik/Bašta', fn: () => {
+        if (rainNow > 30) return ['ok-bad','Moguća kiša'];
+        if (t < 12)       return ['ok-bad','Prehladno'];
+        if (t > 14 && t < 32 && wind < 35) return ['ok-good','Idealni uslovi! 🌿'];
+        return ['ok-mid','Prihvatljivo'];
+      }},
+      { ico:'🚗', name:'Pranje auta', fn: () => {
+        if (rainNow > 20) return ['ok-bad','Kiša u prognozi'];
+        const tom = S.wx.daily?.precipitation_probability_max?.[1] || 0;
+        if (tom > 45) return ['ok-mid','Sutra moguća kiša'];
+        return ['ok-good','Pravo vreme za pranje! 🚗'];
+      }},
+      { ico:'☕', name:'Terasa/Kafić', fn: () => {
+        if (rainNow > 50) return ['ok-bad','Kiša — unutra'];
+        if (t < 10)       return ['ok-bad','Prehladno za terasu'];
+        if (wind > 40)    return ['ok-mid','Jak vjetar'];
+        return ['ok-good','Udobno na terasi! ☕'];
+      }},
+    ];
+
+    document.getElementById('lifestyle').innerHTML = acts.map(a => {
+      const [cls, msg] = a.fn();
+      const icon = cls === 'ok-good' ? '✓' : cls === 'ok-bad' ? '✗' : '~';
+      return `<div class="life-card">
+        <div class="life-icon">${a.ico}</div>
+        <div class="life-name">${a.name}</div>
+        <div class="life-badge ${cls}">${icon} ${msg}</div>
+      </div>`;
+    }).join('');
+  },
+
+  _rainProbNow() {
+    if (!S.wx?.hourly) return 0;
+    const now = Date.now(), times = S.wx.hourly.time, probs = S.wx.hourly.precipitation_probability;
+    let ci = 0;
+    times.forEach((t, i) => { if (new Date(t).getTime() <= now) ci = i; });
+    return probs[ci] || 0;
+  },
+
+  /* ─── HOURLY ─── */
+  renderHourly() {
+    const wrap = document.getElementById('hourly-cards');
+    wrap.innerHTML = '';
+    if (!S.wx?.hourly) return;
+    const now = Date.now(), times = S.wx.hourly.time;
+    let count = 0;
+    times.forEach((ts, i) => {
+      if (count >= 25) return;
+      const t = new Date(ts).getTime();
+      if (t < now - 1.8e6) return;
+      const isNow = Math.abs(t - now) < 1.8e6 && count === 0;
+      const w = wmo(S.wx.hourly.weather_code[i]);
+      const card = document.createElement('div');
+      card.className = 'h-card' + (isNow ? ' now' : '');
+      card.innerHTML = `
+        <div class="h-time">${isNow ? 'Sad' : new Date(ts).getHours().toString().padStart(2,'0')+':00'}</div>
+        <div class="h-icon">${w.icon}</div>
+        <div class="h-temp">${round(S.wx.hourly.temperature_2m[i])}°</div>
+        <div class="h-rain">💧 ${S.wx.hourly.precipitation_probability[i]}%</div>
+      `;
+      wrap.appendChild(card); count++;
+    });
+  },
+
+  /* ─── 7 DAY ─── */
+  renderWeek() {
+    const d = S.wx.daily;
+    const dnames = ['Nedjelja','Ponedjeljak','Utorak','Srijeda','Četvrtak','Petak','Subota'];
+    document.getElementById('week-rows').innerHTML = d.time.map((ts, i) => {
+      const dt   = new Date(ts);
+      const name = i === 0 ? 'Danas' : i === 1 ? 'Sutra' : dnames[dt.getDay()];
+      const w    = wmo(d.weather_code[i]);
+      return `<div class="day-row">
+        <div class="day-name">${name}</div>
+        <div class="day-ico">${w.icon}</div>
+        <div class="day-lbl">${w.label}</div>
+        <div class="day-precip">💧 ${d.precipitation_probability_max[i]}%<br><small>${d.precipitation_sum[i].toFixed(1)}mm</small></div>
+        <div class="day-temps">
+          <span class="day-max">${round(d.temperature_2m_max[i])}°</span>
+          <span class="day-min">${round(d.temperature_2m_min[i])}°</span>
+        </div>
+      </div>`;
+    }).join('');
+  },
+
+  /* ─── MAP ─── */
+  initMap() {
+    if (S.map) { S.map.invalidateSize(); return; }
+    const lat = S.lat || 43.85, lon = S.lon || 18.36;
+    S.map = L.map('map').setView([lat, lon], 7);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution:'© OpenStreetMap © CARTO', subdomains:'abcd', maxZoom:18
+    }).addTo(S.map);
+
+    this._loadRadar();
+
+    if (S.lat) {
+      L.circleMarker([lat, lon], {
+        radius:9, fillColor:'#3b82f6', color:'#fff', weight:2, fillOpacity:.95
+      }).addTo(S.map).bindPopup('📍 Vaša lokacija').openPopup();
+    }
+  },
+
+  async _loadRadar() {
+    try {
+      const r = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+      const d = await r.json();
+      const frames = d.radar?.past || [];
+      if (!frames.length) return;
+      const latest = frames[frames.length - 1];
+      if (S.radar) S.map.removeLayer(S.radar);
+      S.radar = L.tileLayer(
+        `https://tilecache.rainviewer.com${latest.path}/256/{z}/{x}/{y}/2/1_1.png`,
+        { opacity:.65, attribution:'RainViewer' }
+      ).addTo(S.map);
+    } catch { /* radar unavailable */ }
+  },
+
+  /* ─── CHARTS ─── */
+  renderCharts() {
+    if (!S.wx?.hourly) return;
+    const now = Date.now(), times = S.wx.hourly.time;
+    let si = 0;
+    times.forEach((t, i) => { if (new Date(t).getTime() <= now) si = i; });
+
+    const labels   = times.slice(si, si+24).map(t => new Date(t).getHours().toString().padStart(2,'0')+'h');
+    const temps    = S.wx.hourly.temperature_2m.slice(si, si+24);
+    const winds    = S.wx.hourly.wind_speed_10m.slice(si, si+24);
+    const presses  = S.wx.hourly.pressure_msl.slice(si, si+24);
+    const rainProb = S.wx.hourly.precipitation_probability.slice(si, si+24);
+    const rain7lab = S.wx.daily.time.map((t,i) => i===0?'Danas':i===1?'Sutra':['Ne','Po','Ut','Sr','Če','Pe','Su'][new Date(t).getDay()]);
+    const rain7    = S.wx.daily.precipitation_probability_max;
+
+    const xScale = { ticks:{color:'rgba(255,255,255,.4)',font:{size:11}}, grid:{color:'rgba(255,255,255,.06)'} };
+    const yScale = { ticks:{color:'rgba(255,255,255,.4)',font:{size:11}}, grid:{color:'rgba(255,255,255,.06)'} };
+    const opts   = { responsive:true, plugins:{legend:{display:false}}, scales:{x:xScale,y:yScale} };
+
+    const make = (id, cfg) => {
+      if (S.charts[id]) S.charts[id].destroy();
+      const el = document.getElementById(id);
+      if (el) S.charts[id] = new Chart(el, cfg);
+    };
+
+    // Temp (hourly panel)
+    make('chart-temp', { type:'line', data:{ labels, datasets:[{
+      data:temps, borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,.12)',
+      fill:true, tension:.4, pointRadius:3, pointBackgroundColor:'#f59e0b'
+    }]}, options:opts });
+
+    // Rain hourly
+    make('chart-rain-h', { type:'bar', data:{ labels, datasets:[{
+      data:rainProb, backgroundColor:'rgba(59,130,246,.55)', borderColor:'#3b82f6',
+      borderWidth:1, borderRadius:4
+    }]}, options:{...opts, scales:{x:xScale,y:{...yScale,max:100}}} });
+
+    // Wind
+    make('chart-wind', { type:'bar', data:{ labels, datasets:[{
+      data:winds, backgroundColor:'rgba(139,92,246,.55)', borderColor:'#8b5cf6',
+      borderWidth:1, borderRadius:4
+    }]}, options:opts });
+
+    // Pressure
+    make('chart-press', { type:'line', data:{ labels, datasets:[{
+      data:presses, borderColor:'#06b6d4', backgroundColor:'rgba(6,182,212,.1)',
+      fill:true, tension:.4, pointRadius:3, pointBackgroundColor:'#06b6d4'
+    }]}, options:{...opts, scales:{x:xScale,y:{...yScale,suggestedMin:980}}} });
+
+    // Pressure trend badge
+    const dp = presses[presses.length-1] - presses[0];
+    const trendEl = document.getElementById('press-trend');
+    if (dp > 2)       trendEl.innerHTML = '<span class="trend-badge trend-up">↑ Pritisak raste — poboljšanje vremena</span>';
+    else if (dp < -2) trendEl.innerHTML = '<span class="trend-badge trend-down">↓ Pritisak pada — kiša se bliži</span>';
+    else              trendEl.innerHTML = '<span class="trend-badge trend-flat">→ Stabilan pritisak</span>';
+
+    // Rain 7 days
+    make('chart-rain7', { type:'bar', data:{ labels:rain7lab, datasets:[{
+      data:rain7, backgroundColor:'rgba(59,130,246,.55)', borderColor:'#3b82f6',
+      borderWidth:1, borderRadius:6
+    }]}, options:{...opts, scales:{x:xScale,y:{...yScale,max:100}}} });
+
+    // Wind rose info
+    const w = S.wx.current;
+    const dirs = ['N','NE','E','SE','S','SW','W','NW'];
+    const dLabel = dirs[Math.round((w.wind_direction_10m||0) / 45) % 8];
+    document.getElementById('wind-rose-info').innerHTML =
+      `Smjer: <strong>${dLabel} (${round(w.wind_direction_10m)}°)</strong><br>` +
+      `Brzina: <strong>${round(w.wind_speed_10m)} km/h</strong><br>` +
+      `${w.wind_speed_10m > 50 ? '⚠️ Jak vjetar!' : w.wind_speed_10m > 30 ? '💨 Umjeren vjetar' : '🍃 Lagani povjetarac'}`;
+  },
+
+  /* ─── NOTIFICATIONS ─── */
+  toggleNotif() {
+    if (!S.notif) {
+      if (!('Notification' in window)) { showToast('Tvoj browser ne podržava notifikacije.'); return; }
+      Notification.requestPermission().then(p => {
+        if (p === 'granted') {
+          S.notif = true;
+          document.getElementById('notif-btn').classList.add('active');
+          showToast('✅ Notifikacije aktivirane!');
+          this.checkNotifs();
+        } else showToast('Notifikacije odbijene u browseru.');
+      });
+    } else {
+      S.notif = false;
+      document.getElementById('notif-btn').classList.remove('active');
+      showToast('Notifikacije isključene.');
+    }
+  },
+
+  checkNotifs() {
+    if (!S.wx || !S.notif) return;
+    const msgs = [];
+    const now  = Date.now(), times = S.wx.hourly.time, probs = S.wx.hourly.precipitation_probability;
+    for (let i = 0; i < times.length; i++) {
+      const t = new Date(times[i]).getTime();
+      if (t < now) continue;
+      const dh = (t - now) / 3.6e6;
+      if (dh > 2) break;
+      if (probs[i] >= 70) { msgs.push(`🌧️ Kiša za ~${round(dh*60)} min! Uzmi kišobran.`); break; }
+    }
+    const uv   = S.wx.current.uv_index  || 0;
+    const wind = S.wx.current.wind_speed_10m || 0;
+    if (uv   >= 8)  msgs.push(`☀️ Jak UV (${uv.toFixed(1)})! Zaštiti se.`);
+    if (wind >= 65) msgs.push(`💨 Jak vjetar (${round(wind)} km/h)! Budi oprezan.`);
+    msgs.forEach((msg, i) => setTimeout(() => new Notification('SkyWatch Pro ⛅', { body:msg }), i * 2500));
+  },
+
+  /* ─── AI CHAT ─── */
+  sug(el) { document.getElementById('chat-in').value = el.textContent.slice(2); this.chat(); },
+
+  chat() {
+    const inp = document.getElementById('chat-in');
+    const txt = inp.value.trim(); if (!txt) return;
+    this._addMsg(txt, 'me'); inp.value = '';
+    setTimeout(() => this._addMsg(this._aiReply(txt), 'bot'), 550);
+  },
+
+  _addMsg(text, role) {
+    const box = document.getElementById('chat-msgs');
+    const el  = document.createElement('div');
+    el.className = 'msg ' + role;
+    el.innerHTML = role === 'bot'
+      ? `<div class="bot-tag">🤖 SkyWatch AI</div>${text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}`
+      : text;
+    box.appendChild(el);
+    box.scrollTop = box.scrollHeight;
+  },
+
+  _aiReply(q) {
+    if (!S.wx) return 'Čekam podatke o vremenu…';
+    const lq   = q.toLowerCase();
+    const c    = S.wx.current;
+    const t    = round(c.temperature_2m);
+    const rain = this._rainProbNow();
+    const wind = round(c.wind_speed_10m);
+    const uv   = c.uv_index || 0;
+    const aqi  = S.aqi?.current?.european_aqi || 0;
+    const w    = wmo(c.weather_code);
+
+    if (/kiša|pada|kišobran|umbrella/.test(lq)) {
+      if (rain >= 70) return `🌧️ **Da, uzmi kišobran!** Šansa za kišu je ${rain}%. ${w.label} trenutno.`;
+      if (rain >= 40) return `⚠️ Ima ${rain}% šanse za kišu — ponesi kišobran za svaki slučaj.`;
+      return `☀️ Vjerovatno ne trebaš kišobran — samo ${rain}% šanse za kišu. Uživaj!`;
+    }
+
+    if (/plaž|kupan|more|swim/.test(lq)) {
+      if (rain > 40) return `🌧️ Nije idealno za plažu — ${rain}% šanse za kišu danas.`;
+      if (t < 22)    return `🌡️ Malo hladno za plažu (${t}°C). Čekaj toplije dane.`;
+      if (uv > 9)    return `⚠️ Plaža je moguća, ali UV je **${uv.toFixed(1)}** — veoma visok! SPF 50+ obavezan, hlad između 11–16h.`;
+      return `🏖️ **Savršeno za plažu!** Temperatura ${t}°C, ${rain}% kiše. Uživaj!`;
+    }
+
+    if (/trčan|trčat|sport|trening|jogging|run/.test(lq)) {
+      if (rain > 60)  return `🌧️ Kiša (${rain}%) — bolje trčati u teretani ili čekati sutra.`;
+      if (t > 36)     return `🌡️ Previše vruće (${t}°C). Ako moraš — rano jutro ili kasno veče.`;
+      if (t < 0)      return `❄️ Veoma hladno (${t}°C). Ako trčiš — više slojeva odjeće, pazi na led.`;
+      if (aqi > 60)   return `😷 Loš kvalitet vazduha (AQI ${aqi}). Savjetujem sport unutra.`;
+      if (wind > 55)  return `💨 Jak vjetar (${wind} km/h) — biraj zaštićene rute.`;
+      return `🏃 **Odlično za sport!** ${t}°C, ${wind} km/h vjetar, ${rain}% kiše. Pravo vreme!`;
+    }
+
+    if (/roštilj|roštilj|bbq|piknik|picnic/.test(lq)) {
+      const wk = S.wx.daily;
+      const sat = wk ? `${round(wk.temperature_2m_max[5])}°C, ${wk.precipitation_probability_max[5]}% kiše` : '--';
+      const sun = wk ? `${round(wk.temperature_2m_max[6])}°C, ${wk.precipitation_probability_max[6]}% kiše` : '--';
+      if (/vikend/.test(lq)) return `📅 **Vikend prognoza:**\n• Subota: ${sat}\n• Nedjelja: ${sun}`;
+      if (rain > 30)  return `🌧️ Nije idealno za roštilj — ${rain}% kiše. Provjeri vikend prognozu.`;
+      if (wind > 45)  return `💨 Jak vjetar (${wind} km/h) — može ugasiti vatru.`;
+      if (t > 14 && t < 33) return `🍖 **Savršeno za roštilj!** ${t}°C, ${rain}% kiše. Dobar tek!`;
+      return `🍖 Prihvatljivo za roštilj. ${t}°C — uzmi u obzir temperaturu.`;
+    }
+
+    if (/auto|pranj|wash/.test(lq)) {
+      if (rain > 20)  return `🚗 Nemoj prati auto danas — ${rain}% šanse za kišu.`;
+      const tom = S.wx.daily?.precipitation_probability_max?.[1] || 0;
+      if (tom > 45)   return `🚗 Danas OK, ali sutra moguća kiša (${tom}%). Uradi rano ujutru.`;
+      return `🚗 **Savršeno za pranje auta!** Suvo vreme očekuje se narednih dana.`;
+    }
+
+    if (/obuć|obuci|odjeć|wear|outfit/.test(lq)) {
+      if (t < 0)  return `🧥 Debeli kaput, kapa i rukavice obavezni. Ispod nule!`;
+      if (t < 10) return `🧥 Topla jakna i šal. Osvježavajuće (${t}°C).`;
+      if (t < 18) return `👕 Džemper ili lakša jakna. Lagano (${t}°C).`;
+      if (t < 27) return `👕 Majica, eventualno tanki sako za veče. Ugodno ${t}°C.`;
+      return `👙 Ljetna odjeća! ${t}°C — vruće i ${w.label.toLowerCase()}.`;
+    }
+
+    if (/vikend|subota|nedjelj/.test(lq)) {
+      const wk = S.wx.daily;
+      if (!wk) return 'Nema podataka za vikend.';
+      const s = `${round(wk.temperature_2m_max[5])}°C, ${wk.precipitation_probability_max[5]}% kiše`;
+      const n = `${round(wk.temperature_2m_max[6])}°C, ${wk.precipitation_probability_max[6]}% kiše`;
+      return `📅 **Vikend prognoza:**\n• Subota: ${s}\n• Nedjelja: ${n}`;
+    }
+
+    if (/kakvo|vreme|vrij|prognoza|danas/.test(lq)) {
+      return `${w.icon} Trenutno: **${w.label}**, ${t}°C (oseća se ${round(c.apparent_temperature)}°C). Vlažnost ${c.relative_humidity_2m}%, vjetar ${wind} km/h, kiša: ${rain}%.`;
+    }
+
+    return `Trenutno je ${w.icon} ${w.label}, ${t}°C. Pitaj me o specifičnoj aktivnosti — plaža, sport, roštilj, vožnja, odjeća... Rado ću dati savjet na osnovu prognoze! 😊`;
+  },
+};
+
+/* ═══ START ═══ */
+App.locate();
+setInterval(() => App.refresh(), 600000);
+</script>
+</body>
+</html>
