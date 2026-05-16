@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS DOMINION</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;0,700;1,300;1,600&family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        display: ['Cormorant Garamond', 'Georgia', 'serif'],
+        body: ['Space Grotesk', 'system-ui', 'sans-serif'],
+      }
+    }
+  }
+}
+</script>
+<style>
+  /* ── OKLCH Color System ── */
+  :root {
+    --bg-base:       oklch(7%  0.008 22);
+    --bg-surface:    oklch(10% 0.010 22);
+    --bg-elevated:   oklch(13% 0.012 22);
+    --crimson:       oklch(45% 0.210 22);
+    --crimson-bright:oklch(55% 0.220 22);
+    --crimson-glow:  oklch(50% 0.230 22);
+    --gold:          oklch(76% 0.175 78);
+    --gold-dim:      oklch(62% 0.130 78);
+    --text-primary:  oklch(93% 0.005 85);
+    --text-secondary:oklch(65% 0.008 85);
+    --text-muted:    oklch(42% 0.006 85);
+    --border:        oklch(18% 0.014 22);
+    --border-bright: oklch(28% 0.025 22);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* ── Custom Cursor ── */
+  #cursor {
+    position: fixed; top: 0; left: 0; z-index: 9999;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--crimson-bright);
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    transition: width 0.2s, height 0.2s, background 0.2s;
+    mix-blend-mode: difference;
+  }
+  #cursor-ring {
+    position: fixed; top: 0; left: 0; z-index: 9998;
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 1px solid var(--crimson);
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    transition: transform 0.12s ease-out, width 0.3s, height 0.3s, border-color 0.3s;
+  }
+  body:has(a:hover) #cursor, body:has(button:hover) #cursor { width: 16px; height: 16px; }
+  body:has(a:hover) #cursor-ring, body:has(button:hover) #cursor-ring {
+    width: 48px; height: 48px; border-color: var(--gold);
+  }
+
+  /* ── Noise Grain Overlay ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 9990;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.028;
+    pointer-events: none;
+  }
+
+  /* ── Navigation ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 28px 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: linear-gradient(to bottom, var(--bg-base), transparent);
+  }
+  .nav-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem; font-weight: 600; letter-spacing: 0.4em;
+    color: var(--text-primary); text-decoration: none; text-transform: uppercase;
+  }
+  .nav-links { display: flex; gap: 40px; list-style: none; }
+  .nav-links a {
+    font-size: 0.72rem; font-weight: 400; letter-spacing: 0.2em;
+    color: var(--text-secondary); text-decoration: none; text-transform: uppercase;
+    transition: color 0.3s;
+    position: relative;
+  }
+  .nav-links a::after {
+    content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 1px;
+    background: var(--gold); transition: width 0.3s;
+  }
+  .nav-links a:hover { color: var(--text-primary); }
+  .nav-links a:hover::after { width: 100%; }
+
+  /* ── Hero ── */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 120px 48px 80px;
+    position: relative; overflow: hidden;
+  }
+  .hero-eyebrow {
+    font-size: 0.68rem; font-weight: 500; letter-spacing: 0.4em;
+    color: var(--crimson-bright); text-transform: uppercase;
+    margin-bottom: 32px;
+    opacity: 0; animation: fadeUp 0.8s 0.2s ease forwards;
+  }
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(4.5rem, 12vw, 11rem);
+    font-weight: 300; line-height: 0.92;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+  }
+  .hero-title .line {
+    display: block; overflow: hidden;
+  }
+  .hero-title .line span {
+    display: block;
+    opacity: 0; transform: translateY(110%);
+    animation: revealUp 1s ease forwards;
+  }
+  .hero-title .line:nth-child(1) span { animation-delay: 0.4s; }
+  .hero-title .line:nth-child(2) span { animation-delay: 0.55s; }
+  .hero-title .line:nth-child(3) span { animation-delay: 0.70s; }
+  .hero-title em {
+    font-style: italic; color: var(--crimson-bright);
+  }
+  .hero-sub {
+    font-size: 0.9rem; font-weight: 300; line-height: 1.8;
+    color: var(--text-secondary); max-width: 440px;
+    margin-top: 48px; margin-left: 4px;
+    opacity: 0; animation: fadeUp 0.8s 1.1s ease forwards;
+  }
+  .hero-actions {
+    display: flex; gap: 20px; align-items: center;
+    margin-top: 52px;
+    opacity: 0; animation: fadeUp 0.8s 1.3s ease forwards;
+  }
+
+  /* ── Decorative line ── */
+  .hero-divider {
+    position: absolute; right: 80px; top: 50%;
+    transform: translateY(-50%);
+    width: 1px; height: 45vh;
+    background: linear-gradient(to bottom, transparent, var(--border-bright), transparent);
+    opacity: 0; animation: fadeIn 1.5s 1.5s ease forwards;
+  }
+  .hero-stat-col {
+    position: absolute; right: 120px; top: 50%;
+    transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 40px;
+    opacity: 0; animation: fadeIn 1s 1.8s ease forwards;
+  }
+  .hero-stat { text-align: right; }
+  .hero-stat-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.8rem; font-weight: 600; line-height: 1;
+    color: var(--text-primary);
+  }
+  .hero-stat-num span { color: var(--crimson-bright); }
+  .hero-stat-label {
+    font-size: 0.62rem; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--text-muted); margin-top: 4px;
+  }
+
+  /* ── Buttons ── */
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 32px;
+    background: var(--crimson);
+    color: var(--text-primary);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.72rem; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase;
+    border: none; cursor: none; text-decoration: none;
+    position: relative; overflow: hidden;
+    transition: background 0.3s;
+  }
+  .btn-primary::before {
+    content: ''; position: absolute; inset: 0;
+    background: var(--crimson-bright);
+    transform: translateX(-101%);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .btn-primary:hover::before { transform: translateX(0); }
+  .btn-primary span { position: relative; z-index: 1; }
+  .btn-ghost {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 32px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.72rem; font-weight: 400; letter-spacing: 0.2em; text-transform: uppercase;
+    border: 1px solid var(--border-bright); cursor: none; text-decoration: none;
+    transition: color 0.3s, border-color 0.3s;
+  }
+  .btn-ghost:hover { color: var(--text-primary); border-color: var(--text-muted); }
+
+  /* ── Marquee ── */
+  .marquee-wrap {
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 0; overflow: hidden;
+    background: var(--bg-surface);
+  }
+  .marquee-track {
+    display: flex; gap: 0;
+    animation: marquee 28s linear infinite;
+    width: max-content;
+  }
+  .marquee-item {
+    display: flex; align-items: center; gap: 32px;
+    padding: 0 32px;
+    font-size: 0.68rem; letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--text-muted); white-space: nowrap;
+  }
+  .marquee-dot {
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--crimson); flex-shrink: 0;
+  }
+
+  /* ── Section ── */
+  section { padding: 140px 48px; }
+  .section-label {
+    font-size: 0.65rem; font-weight: 500; letter-spacing: 0.4em; text-transform: uppercase;
+    color: var(--crimson-bright); margin-bottom: 20px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .section-label::before {
+    content: ''; display: block; width: 32px; height: 1px; background: var(--crimson);
+  }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.8rem, 5vw, 5rem);
+    font-weight: 300; line-height: 1.08; letter-spacing: -0.01em;
+    color: var(--text-primary); max-width: 720px;
+  }
+  .section-title em { font-style: italic; color: var(--gold); }
+
+  /* ── Capabilities Grid ── */
+  .caps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    margin-top: 80px;
+    border: 1px solid var(--border);
+  }
+  .cap-card {
+    background: var(--bg-base);
+    padding: 48px 40px;
+    position: relative; overflow: hidden;
+    transition: background 0.4s;
+  }
+  .cap-card::before {
+    content: ''; position: absolute; bottom: 0; left: 0;
+    width: 100%; height: 2px;
+    background: linear-gradient(to right, var(--crimson), transparent);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .cap-card:hover { background: var(--bg-elevated); }
+  .cap-card:hover::before { transform: scaleX(1); }
+  .cap-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.9rem; font-weight: 600; color: var(--crimson);
+    margin-bottom: 32px; letter-spacing: 0.1em;
+  }
+  .cap-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem; font-weight: 600; line-height: 1.1;
+    color: var(--text-primary); margin-bottom: 16px;
+  }
+  .cap-desc {
+    font-size: 0.82rem; line-height: 1.85; color: var(--text-secondary);
+  }
+  .cap-arrow {
+    position: absolute; bottom: 40px; right: 40px;
+    font-size: 1.4rem; color: var(--border-bright);
+    transition: color 0.3s, transform 0.3s;
+  }
+  .cap-card:hover .cap-arrow { color: var(--gold); transform: translate(4px, -4px); }
+
+  /* ── Manifesto ── */
+  .manifesto {
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .manifesto-inner {
+    max-width: 860px; margin: 0 auto; text-align: center;
+  }
+  .manifesto-quote {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 4vw, 3.8rem);
+    font-weight: 300; font-style: italic;
+    line-height: 1.3; letter-spacing: -0.01em;
+    color: var(--text-primary);
+  }
+  .manifesto-quote strong {
+    font-style: normal; font-weight: 600;
+    background: linear-gradient(135deg, var(--crimson-bright), var(--gold));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .manifesto-attr {
+    margin-top: 40px;
+    font-size: 0.68rem; letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* ── Plans Section ── */
+  .plans-list { margin-top: 80px; }
+  .plan-row {
+    display: grid; grid-template-columns: 80px 1fr auto;
+    align-items: center; gap: 40px;
+    padding: 40px 0;
+    border-bottom: 1px solid var(--border);
+    position: relative; overflow: hidden;
+    cursor: none;
+    transition: padding-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .plan-row::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 2px; background: var(--crimson);
+    transform: scaleY(0); transform-origin: top;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .plan-row:hover { padding-left: 20px; }
+  .plan-row:hover::before { transform: scaleY(1); }
+  .plan-index {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem; color: var(--text-muted); text-align: right;
+  }
+  .plan-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.6rem, 3vw, 2.6rem);
+    font-weight: 300; color: var(--text-primary);
+    transition: color 0.3s;
+  }
+  .plan-row:hover .plan-name { color: var(--gold); }
+  .plan-status {
+    font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase;
+    padding: 6px 14px; border: 1px solid var(--border-bright);
+    color: var(--text-muted); white-space: nowrap;
+    transition: border-color 0.3s, color 0.3s;
+  }
+  .plan-status.active {
+    border-color: var(--crimson); color: var(--crimson-bright);
+  }
+  .plan-row:hover .plan-status { border-color: var(--gold-dim); color: var(--gold); }
+
+  /* ── Recruitment CTA ── */
+  .cta {
+    text-align: center;
+    background: var(--bg-base);
+    position: relative; overflow: hidden;
+  }
+  .cta::before {
+    content: 'JOIN';
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28vw; font-weight: 700;
+    color: var(--bg-elevated);
+    pointer-events: none; user-select: none;
+    letter-spacing: -0.05em; line-height: 1;
+  }
+  .cta-inner { position: relative; z-index: 1; }
+  .cta-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3rem, 8vw, 8rem);
+    font-weight: 300; line-height: 1; letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin-bottom: 32px;
+  }
+  .cta-title em { font-style: italic; color: var(--crimson-bright); }
+  .cta-sub {
+    font-size: 0.85rem; color: var(--text-secondary);
+    max-width: 360px; margin: 0 auto 52px; line-height: 1.8;
+  }
+
+  /* ── Footer ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--bg-surface);
+  }
+  .footer-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.95rem; font-weight: 600; letter-spacing: 0.4em;
+    color: var(--text-secondary); text-transform: uppercase;
+  }
+  .footer-copy {
+    font-size: 0.65rem; letter-spacing: 0.15em;
+    color: var(--text-muted); text-transform: uppercase;
+  }
+
+  /* ── Scroll indicator ── */
+  .scroll-indicator {
+    position: absolute; bottom: 48px; left: 48px;
+    display: flex; align-items: center; gap: 16px;
+    opacity: 0; animation: fadeIn 1s 2.2s ease forwards;
+  }
+  .scroll-line {
+    width: 1px; height: 56px;
+    background: linear-gradient(to bottom, var(--crimson), transparent);
+    animation: scrollPulse 2s 2.5s ease-in-out infinite;
+  }
+  .scroll-text {
+    font-size: 0.62rem; letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--text-muted); writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+
+  /* ── Animated background ── */
+  .hero-bg {
+    position: absolute; inset: 0; z-index: -1; overflow: hidden;
+  }
+  .orb {
+    position: absolute; border-radius: 50%; filter: blur(100px);
+    animation: orbFloat 12s ease-in-out infinite alternate;
+  }
+  .orb-1 {
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, oklch(30% 0.18 22 / 0.18), transparent 70%);
+    top: -200px; right: -100px;
+  }
+  .orb-2 {
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, oklch(40% 0.12 22 / 0.10), transparent 70%);
+    bottom: 0; left: 10%;
+    animation-delay: -6s; animation-duration: 14s;
+  }
+
+  /* ── Keyframes ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes revealUp {
+    from { opacity: 0; transform: translateY(110%); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+  @keyframes orbFloat {
+    from { transform: translate(0, 0) scale(1); }
+    to   { transform: translate(40px, -30px) scale(1.08); }
+  }
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.4; transform: scaleY(1); }
+    50%       { opacity: 1;   transform: scaleY(1.3); }
+  }
+
+  /* ── Intersection observer reveal ── */
+  .reveal {
+    opacity: 0; transform: translateY(32px);
+    transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+  .reveal-delay-4 { transition-delay: 0.4s; }
+  .reveal-delay-5 { transition-delay: 0.5s; }
+
+  /* ── Responsive ── */
+  @media (max-width: 1024px) {
+    nav { padding: 24px 32px; }
+    .hero { padding: 100px 32px 80px; }
+    .hero-stat-col { display: none; }
+    .hero-divider  { display: none; }
+    section { padding: 100px 32px; }
+    .caps-grid { grid-template-columns: 1fr; }
+    footer { padding: 32px; flex-direction: column; gap: 16px; text-align: center; }
+  }
+  @media (max-width: 640px) {
+    nav { padding: 20px 20px; }
+    .nav-links { display: none; }
+    .hero { padding: 100px 20px 60px; }
+    section { padding: 80px 20px; }
+    .hero-actions { flex-direction: column; align-items: flex-start; }
+    .plan-row { grid-template-columns: 40px 1fr; }
+    .plan-status { display: none; }
+    footer { padding: 24px 20px; }
+    .cta { padding: 80px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Nexus Dominion</a>
+  <ul class="nav-links">
+    <li><a href="#capabilities">Capabilities</a></li>
+    <li><a href="#plans">Operations</a></li>
+    <li><a href="#join">Recruitment</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+
+  <p class="hero-eyebrow">Est. MMXXV · Global Dominion Initiative</p>
+
+  <h1 class="hero-title">
+    <span class="line"><span>The World</span></span>
+    <span class="line"><span>Was Never <em>Yours</em></span></span>
+    <span class="line"><span>To Keep.</span></span>
+  </h1>
+
+  <p class="hero-sub">
+    We are the architects of a new order. Precision, power, and purpose —
+    wielded without apology. The future does not negotiate.
+  </p>
+
+  <div class="hero-actions">
+    <a href="#join" class="btn-primary"><span>Begin Recruitment</span><span>→</span></a>
+    <a href="#plans" class="btn-ghost">View Operations</a>
+  </div>
+
+  <div class="scroll-indicator">
+    <div class="scroll-line"></div>
+    <span class="scroll-text">Scroll</span>
+  </div>
+
+  <div class="hero-divider"></div>
+  <div class="hero-stat-col">
+    <div class="hero-stat">
+      <div class="hero-stat-num">47<span>+</span></div>
+      <div class="hero-stat-label">Nations Compromised</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">∞</div>
+      <div class="hero-stat-label">Ambition</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">0<span>%</span></div>
+      <div class="hero-stat-label">Mercy</div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <!-- duplicated for infinite scroll -->
+    <div class="marquee-item"><div class="marquee-dot"></div>Global Surveillance</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Weapons Research</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Mind Control Division</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Orbital Systems</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Economic Warfare</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Shadow Diplomacy</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Biological Leverage</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Quantum Encryption</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Global Surveillance</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Weapons Research</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Mind Control Division</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Orbital Systems</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Economic Warfare</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Shadow Diplomacy</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Biological Leverage</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Quantum Encryption</div>
+  </div>
+</div>
+
+<!-- CAPABILITIES -->
+<section id="capabilities">
+  <div class="section-label reveal">Capabilities</div>
+  <h2 class="section-title reveal reveal-delay-1">
+    Instruments of <em>inevitable</em> change
+  </h2>
+
+  <div class="caps-grid">
+    <div class="cap-card reveal reveal-delay-1">
+      <div class="cap-num">01</div>
+      <h3 class="cap-title">Global Surveillance Network</h3>
+      <p class="cap-desc">208 satellite nodes. 14 billion endpoints. Every whisper, every transaction — catalogued, analyzed, leveraged. Information is the only currency that never devalues.</p>
+      <div class="cap-arrow">↗</div>
+    </div>
+    <div class="cap-card reveal reveal-delay-2">
+      <div class="cap-num">02</div>
+      <h3 class="cap-title">Advanced Weaponization</h3>
+      <p class="cap-desc">Three generations beyond what governments declassify. Our R&D division operates without ethical review boards — a distinct competitive advantage.</p>
+      <div class="cap-arrow">↗</div>
+    </div>
+    <div class="cap-card reveal reveal-delay-3">
+      <div class="cap-num">03</div>
+      <h3 class="cap-title">Economic Architecture</h3>
+      <p class="cap-desc">Seventeen central banks. Forty-two currency instruments. When we realign capital flows, recessions become strategic tools rather than inconveniences.</p>
+      <div class="cap-arrow">↗</div>
+    </div>
+    <div class="cap-card reveal reveal-delay-1">
+      <div class="cap-num">04</div>
+      <h3 class="cap-title">Shadow Diplomacy</h3>
+      <p class="cap-desc">Elected officials are temporary. Institutions are permanent. We operate at the institutional level — the layer where real decisions are made, unobserved.</p>
+      <div class="cap-arrow">↗</div>
+    </div>
+    <div class="cap-card reveal reveal-delay-2">
+      <div class="cap-num">05</div>
+      <h3 class="cap-title">Cognitive Dominance</h3>
+      <p class="cap-desc">Narrative is control. We author the stories that populations tell themselves — subtly, at scale, with precision that renders conventional propaganda quaint.</p>
+      <div class="cap-arrow">↗</div>
+    </div>
+    <div class="cap-card reveal reveal-delay-3">
+      <div class="cap-num">06</div>
+      <h3 class="cap-title">Quantum Infrastructure</h3>
+      <p class="cap-desc">Post-encryption era operations. Our systems communicate in mathematical dimensions current technology cannot access. We decoded the future; you are still learning the alphabet.</p>
+      <div class="cap-arrow">↗</div>
+    </div>
+  </div>
+</section>
+
+<!-- MANIFESTO -->
+<section class="manifesto">
+  <div class="manifesto-inner">
+    <blockquote class="manifesto-quote reveal">
+      "The powerful have always ruled — we simply <strong>remove the pretense</strong>
+      of otherwise. Clarity is a kindness."
+    </blockquote>
+    <p class="manifesto-attr reveal reveal-delay-1">— Director, Nexus Dominion · Undisclosed Location</p>
+  </div>
+</section>
+
+<!-- OPERATIONS -->
+<section id="plans">
+  <div class="section-label reveal">Current Operations</div>
+  <h2 class="section-title reveal reveal-delay-1">Active <em>initiatives</em></h2>
+
+  <div class="plans-list">
+    <div class="plan-row reveal">
+      <div class="plan-index">I</div>
+      <div class="plan-name">Project Obsidian Veil</div>
+      <div class="plan-status active">Active</div>
+    </div>
+    <div class="plan-row reveal reveal-delay-1">
+      <div class="plan-index">II</div>
+      <div class="plan-name">Operation Silent Meridian</div>
+      <div class="plan-status active">Active</div>
+    </div>
+    <div class="plan-row reveal reveal-delay-2">
+      <div class="plan-index">III</div>
+      <div class="plan-name">The Carthage Protocol</div>
+      <div class="plan-status">Phase 2</div>
+    </div>
+    <div class="plan-row reveal reveal-delay-3">
+      <div class="plan-index">IV</div>
+      <div class="plan-name">Kronos Financial Reset</div>
+      <div class="plan-status">Pending</div>
+    </div>
+    <div class="plan-row reveal reveal-delay-4">
+      <div class="plan-index">V</div>
+      <div class="plan-name">The Elysium Succession</div>
+      <div class="plan-status">Classified</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="join" class="cta">
+  <div class="cta-inner">
+    <h2 class="cta-title reveal">
+      Are you <em>exceptional</em><br>enough?
+    </h2>
+    <p class="cta-sub reveal reveal-delay-1">
+      We do not recruit the ambitious. We recruit the inevitable.
+      If you require motivation to apply, you are not who we seek.
+    </p>
+    <div class="reveal reveal-delay-2">
+      <a href="#" class="btn-primary"><span>Submit Your Dossier</span><span>→</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Nexus Dominion</div>
+  <div class="footer-copy">© MMXXV · All dominions reserved · Encrypted comms only</div>
+</footer>
+
+<script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const ring   = document.getElementById('cursor-ring');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  function animateCursor() {
+    cursor.style.left = mx + 'px';
+    cursor.style.top  = my + 'px';
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px';
+    ring.style.top  = ry + 'px';
+    requestAnimationFrame(animateCursor);
+  }
+  animateCursor();
+
+  // Intersection Observer for reveal animations
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
