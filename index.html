@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NEXUS DOMINION</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;0,700;1,300;1,600&family=Dancing+Script:wght@700&family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;0,700;1,300;1,600&family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
 tailwind.config = {
@@ -488,46 +488,6 @@ tailwind.config = {
   .reveal-delay-4 { transition-delay: 0.4s; }
   .reveal-delay-5 { transition-delay: 0.5s; }
 
-  /* ── Handwriting Animation ── */
-  .hw-section {
-    padding: 80px 48px;
-    text-align: center;
-    background: var(--bg-surface);
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    overflow: hidden;
-  }
-  .hw-svg {
-    width: 100%;
-    max-width: 860px;
-    overflow: visible;
-  }
-  .hw-text {
-    font-family: 'Dancing Script', cursive;
-    font-size: 72px;
-    font-weight: 700;
-    fill: transparent;
-    stroke: var(--gold);
-    stroke-width: 1.2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-  .hw-text.hw-animate {
-    animation:
-      hw-draw 3.6s cubic-bezier(0.4, 0, 0.2, 1) forwards,
-      hw-fill  0.8s 3.4s ease forwards;
-  }
-  @keyframes hw-draw {
-    to { stroke-dashoffset: 0; }
-  }
-  @keyframes hw-fill {
-    to { fill: oklch(76% 0.175 78 / 0.35); }
-  }
-  @media (max-width: 640px) {
-    .hw-section { padding: 60px 20px; }
-    .hw-text { font-size: 42px; }
-  }
-
   /* ── Responsive ── */
   @media (max-width: 1024px) {
     nav { padding: 24px 32px; }
@@ -694,13 +654,6 @@ tailwind.config = {
   </div>
 </section>
 
-<!-- HANDWRITING -->
-<div class="hw-section">
-  <svg class="hw-svg" viewBox="0 0 1100 140" xmlns="http://www.w3.org/2000/svg">
-    <text class="hw-text" x="550" y="108" text-anchor="middle">Power needs no permission.</text>
-  </svg>
-</div>
-
 <!-- OPERATIONS -->
 <section id="plans">
   <div class="section-label reveal">Current Operations</div>
@@ -784,26 +737,6 @@ tailwind.config = {
     });
   }, { threshold: 0.12 });
   document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-  // Handwriting animation — wait for Dancing Script to load
-  document.fonts.ready.then(() => {
-    const hwText = document.querySelector('.hw-text');
-    if (!hwText) return;
-    const len = hwText.getComputedTextLength();
-    hwText.style.strokeDasharray = len;
-    hwText.style.strokeDashoffset = len;
-
-    const hwSection = document.querySelector('.hw-section');
-    const hwObserver = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          hwText.classList.add('hw-animate');
-          hwObserver.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.4 });
-    hwObserver.observe(hwSection);
-  });
 </script>
 </body>
 </html>
