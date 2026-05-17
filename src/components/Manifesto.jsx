@@ -10,8 +10,7 @@ export default function Manifesto() {
     }}>
       <div style={{ maxWidth: 860, margin: '0 auto', textAlign: 'center' }}>
         <Reveal>
-          <blockquote style={{
-            fontFamily: "'Cormorant Garamond', serif",
+          <blockquote className="serif" style={{
             fontSize: 'clamp(2rem, 4vw, 3.8rem)',
             fontWeight: 300, fontStyle: 'italic',
             lineHeight: 1.3, letterSpacing: '-0.01em',
@@ -23,11 +22,7 @@ export default function Manifesto() {
           </blockquote>
         </Reveal>
         <Reveal delay={0.1}>
-          <p style={{
-            marginTop: 40,
-            fontSize: '0.68rem', letterSpacing: '0.3em', textTransform: 'uppercase',
-            color: 'var(--text-muted)',
-          }}>
+          <p style={{ marginTop: 40, fontSize: '0.68rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
             — Direktor, ViGo Transfer · Pariz, Francuska
           </p>
         </Reveal>

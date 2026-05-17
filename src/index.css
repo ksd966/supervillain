@@ -147,6 +147,10 @@ body:has(button:hover) .cursor-ring { width: 48px; height: 48px; border-color: v
 .nav-link:hover { color: var(--text-primary); }
 .nav-link:hover::after { width: 100%; }
 
+/* ── Typography utilities ── */
+.serif { font-family: 'Cormorant Garamond', serif; }
+.section { padding: 140px 48px; }
+
 /* ── Section label ── */
 .section-label {
   font-size: 0.65rem; font-weight: 500;

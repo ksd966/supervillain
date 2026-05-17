@@ -9,19 +9,17 @@ export default function Cursor() {
     const onMove = e => { pos.current.mx = e.clientX; pos.current.my = e.clientY }
     document.addEventListener('mousemove', onMove)
 
+    const dot  = dotRef.current
+    const ring = ringRef.current
     let raf
     const animate = () => {
       const p = pos.current
-      if (dotRef.current) {
-        dotRef.current.style.left = p.mx + 'px'
-        dotRef.current.style.top  = p.my + 'px'
-      }
+      dot.style.left  = p.mx + 'px'
+      dot.style.top   = p.my + 'px'
       p.rx += (p.mx - p.rx) * 0.12
       p.ry += (p.my - p.ry) * 0.12
-      if (ringRef.current) {
-        ringRef.current.style.left = p.rx + 'px'
-        ringRef.current.style.top  = p.ry + 'px'
-      }
+      ring.style.left = p.rx + 'px'
+      ring.style.top  = p.ry + 'px'
       raf = requestAnimationFrame(animate)
     }
     animate()
