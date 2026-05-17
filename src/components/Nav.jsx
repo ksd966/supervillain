@@ -1,28 +1,28 @@
-import ViGoMark from './ViGoMark'
-
 export default function Nav() {
   return (
     <nav style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-      padding: '28px 48px',
+      padding: '16px 24px',
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      background: 'linear-gradient(to bottom, var(--bg-base), transparent)',
+      background: '#000',
     }}>
-      <a href="#" style={{
-        display: 'flex', alignItems: 'center', gap: '12px',
-        fontFamily: "'Cormorant Garamond', serif",
-        fontSize: '1.05rem', fontWeight: 600, letterSpacing: '0.3em',
-        color: 'var(--text-primary)', textDecoration: 'none', textTransform: 'uppercase',
-      }}>
-        <ViGoMark />
-        <span>ViGo Transfer</span>
-      </a>
-
-      <ul className="nav-links" style={{ display: 'flex', gap: '40px', listStyle: 'none' }}>
-        <li><a href="#capabilities" className="nav-link">Usluge</a></li>
-        <li><a href="#plans"        className="nav-link">Rute</a></li>
-        <li><a href="#join"         className="nav-link">Rezervacija</a></li>
-      </ul>
+      <div style={{
+        fontFamily: "'Barlow', sans-serif",
+        fontWeight: 800, fontSize: '2.1rem',
+        color: '#F5C000', fontStyle: 'italic',
+        letterSpacing: '-0.02em', lineHeight: 1,
+      }}>VG</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <a href="https://vigotransfers.com/shop/" style={{
+          background: '#F5C000', color: '#000',
+          padding: '12px 22px',
+          fontFamily: "'Barlow', sans-serif",
+          fontWeight: 700, fontSize: '0.85rem',
+          letterSpacing: '0.06em', textTransform: 'uppercase',
+          textDecoration: 'none', display: 'inline-block',
+        }}>REZERVIŠI</a>
+        <div style={{ color: '#fff', fontSize: '1.4rem', lineHeight: 1 }}>≡</div>
+      </div>
     </nav>
   )
 }

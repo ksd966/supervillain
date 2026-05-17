@@ -1,72 +1,102 @@
-const anim = (name, dur, delay, ease = 'ease') =>
-  ({ opacity: 0, animation: `${name} ${dur} ${delay} ${ease} forwards` })
+import { useState, useEffect } from 'react'
 
-const orbBase = {
-  position: 'absolute', borderRadius: '50%', filter: 'blur(100px)',
-  animation: 'orbFloat 12s ease-in-out infinite alternate',
-}
-
-const titleLines = [
-  { text: 'Svet', delay: '0.4s' },
-  { text: <>Nikada Nije Bio <em style={{ color: 'var(--crimson-bright)' }}>Tvoj</em></>, delay: '0.55s' },
-  { text: 'Da Ga Čuvaš.', delay: '0.70s' },
-]
-
-const stats = [
-  { num: <>5<span style={{ color: 'var(--crimson-bright)' }}>+</span></>, label: 'Godina Iskustva' },
-  { num: <>3K<span style={{ color: 'var(--crimson-bright)' }}>+</span></>, label: 'Zadovoljnih Putnika' },
-  { num: '3', label: 'Aerodroma' },
+const slides = [
+  {
+    photo: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1400&q=80',
+    label: 'USLUGA',
+    accent: 'KOJU ZASLUŽUJEŠ',
+    text: 'Rezervišite vaš aerodromski transfer do Pariza sa ViGo Transfer — pouzdan izbor za CDG, Orly i Beauvais.',
+    cta: 'REZERVIŠITE',
+  },
+  {
+    photo: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1400&q=80',
+    label: 'REZERVIŠITE',
+    accent: 'AERODROMSKI TRANSFER',
+    text: 'Fiksne cene, praćenje letova i 100% garancija dolaska na vreme. Bez iznenađenja.',
+    cta: 'SAZNAJTE VIŠE',
+  },
+  {
+    photo: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1400&q=80',
+    label: 'VOZITE SA',
+    accent: 'VIGO TRANSFER',
+    text: 'Licencirani, profesionalni vozači koji vam stoje na usluzi od aerodroma do vaše adrese.',
+    cta: 'SAZNAJTE VIŠE',
+  },
 ]
 
 export default function Hero() {
+  const [idx, setIdx] = useState(0)
+
+  useEffect(() => {
+    const t = setInterval(() => setIdx(i => (i + 1) % slides.length), 5500)
+    return () => clearInterval(t)
+  }, [])
+
+  const prev = () => setIdx(i => (i - 1 + slides.length) % slides.length)
+  const next = () => setIdx(i => (i + 1) % slides.length)
+  const s = slides[idx]
+
   return (
-    <section style={{
-      minHeight: '100vh',
-      display: 'flex', flexDirection: 'column', justifyContent: 'center',
-      padding: '120px 48px 80px',
-      position: 'relative', overflow: 'hidden',
-    }}>
-      <div style={{ position: 'absolute', inset: 0, zIndex: -1, overflow: 'hidden' }}>
-        <div style={{ ...orbBase, width: 600, height: 600, background: 'radial-gradient(circle, oklch(30% 0.18 22 / 0.18), transparent 70%)', top: -200, right: -100 }} />
-        <div style={{ ...orbBase, width: 400, height: 400, background: 'radial-gradient(circle, oklch(40% 0.12 22 / 0.10), transparent 70%)', bottom: 0, left: '10%', animationDuration: '14s', animationDelay: '-6s' }} />
+    <section style={{ minHeight: '100vh', position: 'relative', background: '#000', overflow: 'hidden' }}>
+      {slides.map((sl, i) => (
+        <div key={i} style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: `url(${sl.photo})`,
+          backgroundSize: 'cover', backgroundPosition: 'center',
+          opacity: i === idx ? 0.55 : 0,
+          transition: 'opacity 1s ease',
+        }} />
+      ))}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'linear-gradient(to top, #000 30%, rgba(0,0,0,0.15) 70%)',
+      }} />
+
+      <div style={{ position: 'absolute', top: 80, left: 24, zIndex: 10 }}>
+        <div style={{
+          color: '#F5C000', fontSize: '0.9rem', fontWeight: 700,
+          fontFamily: "'Barlow', sans-serif", letterSpacing: '0.05em', marginBottom: 10,
+        }}>
+          {idx + 1} / {slides.length}
+        </div>
+        <div style={{ display: 'flex', gap: 20 }}>
+          <button onClick={prev} style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: '#F5C000', fontSize: '1.6rem', padding: 0, lineHeight: 1,
+          }}>‹</button>
+          <button onClick={next} style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: '#F5C000', fontSize: '1.6rem', padding: 0, lineHeight: 1,
+          }}>›</button>
+        </div>
       </div>
 
-      <p style={{ fontSize: '0.68rem', fontWeight: 500, letterSpacing: '0.4em', color: 'var(--crimson-bright)', textTransform: 'uppercase', marginBottom: 32, ...anim('fadeUp', '0.8s', '0.2s') }}>
-        Osn. MMXXV · Pouzdan Transfer do Pariza
-      </p>
-
-      <h1 className="serif" style={{ fontSize: 'clamp(4.5rem, 12vw, 11rem)', fontWeight: 300, lineHeight: 0.92, letterSpacing: '-0.02em', color: 'var(--text-primary)', marginBottom: 16 }}>
-        {titleLines.map((line, i) => (
-          <span key={i} style={{ display: 'block', overflow: 'hidden' }}>
-            <span style={{ display: 'block', ...anim('revealUp', '1s', line.delay) }}>{line.text}</span>
-          </span>
-        ))}
-      </h1>
-
-      <p style={{ fontSize: '0.9rem', fontWeight: 300, lineHeight: 1.8, color: 'var(--text-secondary)', maxWidth: 440, marginTop: 48, marginLeft: 4, ...anim('fadeUp', '0.8s', '1.1s') }}>
-        Mi smo arhitekte pouzdanog transfera. Preciznost, komfor i svrha —
-        bez izgovora. Pariz vas čeka.
-      </p>
-
-      <div className="hero-actions" style={{ display: 'flex', gap: 20, alignItems: 'center', marginTop: 52, ...anim('fadeUp', '0.8s', '1.3s') }}>
-        <a href="#join" className="btn-primary"><span>Rezerviši Transfer</span><span>→</span></a>
-        <a href="#plans" className="btn-ghost">Pogledaj Rute</a>
-      </div>
-
-      <div style={{ position: 'absolute', bottom: 48, left: 48, display: 'flex', alignItems: 'center', gap: 16, ...anim('fadeIn', '1s', '2.2s') }}>
-        <div style={{ width: 1, height: 56, background: 'linear-gradient(to bottom, var(--crimson), transparent)', animation: 'scrollPulse 2s 2.5s ease-in-out infinite' }} />
-        <span style={{ fontSize: '0.62rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--text-muted)', writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Dalje</span>
-      </div>
-
-      <div className="hero-divider" style={{ position: 'absolute', right: 80, top: '50%', transform: 'translateY(-50%)', width: 1, height: '45vh', background: 'linear-gradient(to bottom, transparent, var(--border-bright), transparent)', ...anim('fadeIn', '1.5s', '1.5s') }} />
-
-      <div className="hero-stat-col" style={{ position: 'absolute', right: 120, top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: 40, ...anim('fadeIn', '1s', '1.8s') }}>
-        {stats.map((s, i) => (
-          <div key={i} style={{ textAlign: 'right' }}>
-            <div className="serif" style={{ fontSize: '2.8rem', fontWeight: 600, lineHeight: 1, color: 'var(--text-primary)' }}>{s.num}</div>
-            <div style={{ fontSize: '0.62rem', letterSpacing: '0.25em', textTransform: 'uppercase', color: 'var(--text-muted)', marginTop: 4 }}>{s.label}</div>
-          </div>
-        ))}
+      <div style={{ position: 'absolute', bottom: 60, left: 24, right: 24, zIndex: 10 }}>
+        <h1 style={{
+          fontFamily: "'Barlow', sans-serif",
+          fontWeight: 800, textTransform: 'uppercase',
+          fontSize: 'clamp(3rem, 14vw, 8rem)',
+          lineHeight: 0.88, color: '#fff', marginBottom: 20,
+        }}>
+          {s.label}<br />
+          <span style={{ color: '#F5C000' }}>{s.accent}</span>
+        </h1>
+        <p style={{
+          color: 'rgba(255,255,255,0.72)', fontSize: '1rem',
+          lineHeight: 1.65, maxWidth: 420, marginBottom: 32, fontWeight: 300,
+        }}>
+          {s.text}
+        </p>
+        <a href="https://vigotransfers.com/shop/" style={{
+          display: 'inline-flex', alignItems: 'center', gap: 12,
+          background: '#F5C000', color: '#000',
+          padding: '16px 28px',
+          fontFamily: "'Barlow', sans-serif",
+          fontWeight: 700, letterSpacing: '0.06em',
+          textTransform: 'uppercase', textDecoration: 'none', fontSize: '0.95rem',
+        }}>
+          {s.cta} <span>→</span>
+        </a>
       </div>
     </section>
   )

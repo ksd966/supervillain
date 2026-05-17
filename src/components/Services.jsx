@@ -1,65 +1,79 @@
-import Reveal from './Reveal'
-import SectionHeader from './SectionHeader'
+import { useState } from 'react'
 
 const services = [
   {
-    num: '01',
-    title: 'Mreža Aerodromskih Transfera',
-    desc: 'Tri pariška aerodroma. Nula kompromisa. Beauvais, Charles de Gaulle, Orly — svaka pista pokrivena, svaki dolazak predviđen. Fiksna cena. Direktno do vaše adrese.',
+    photo: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=900&q=80',
+    title: 'AERODROMSKI TRANSFERI',
+    sub: 'Premium, inkluzivni aerodromski transferi za CDG, Orly i Beauvais.',
   },
   {
-    num: '02',
-    title: 'Privatni Transfer',
-    desc: 'Vaše vozilo. Vaš raspored. Vozni park od 4 do 8 sedišta, proveren i akreditovan. Vozači govore engleski i prate status vašeg leta pre sletanja.',
+    photo: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=80',
+    title: 'MEET & GREET USLUGA',
+    sub: 'Vozač vas dočekuje u Arrivals sa tablom sa vašim imenom.',
   },
   {
-    num: '03',
-    title: 'Grupni Transfer',
-    desc: 'Od 30€ po osobi. Matematika zajedničke preciznosti — oni koji biraju drugačije plaćaju više za znatno manje. Od Beauvaisa do Pariza, bez zaobilaznica i kašnjenja.',
-  },
-  {
-    num: '04',
-    title: 'Diznilend Direktno',
-    desc: 'Direktno do ulaza. Bez shuttle veza, bez nepoznatog tranzita, bez izgubljenih minuta sa prtljagom. Dovozimo vas tačno tamo gde iskustvo počinje.',
-  },
-  {
-    num: '05',
-    title: 'Rute do Znamenitosti',
-    desc: 'Versaj. Luvr. Ajfelov toranj. Mi organizujemo vaš polazak i povratak. Vi samo stižete — sve ostalo je već u pokretu.',
-  },
-  {
-    num: '06',
-    title: 'Licencirani i Sertifikovani',
-    desc: 'Sertifikovani od Ministarstva transporta Francuske. 5+ godina rada. 3.000+ putnika koji su izabrali sigurnost pre svega. Naša licenca nije formalnost — to je standard.',
+    photo: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0729?w=900&q=80',
+    title: 'PRIVATNI TRANSFER',
+    sub: 'Ekskluzivno vozilo samo za vas. Komfor bez kompromisa.',
   },
 ]
 
 export default function Services() {
-  return (
-    <section id="capabilities" className="section">
-      <SectionHeader label="Usluge">
-        Svaka pista. Svaka <em style={{ color: 'var(--gold)' }}>destinacija.</em>
-      </SectionHeader>
+  const [idx, setIdx] = useState(0)
+  const prev = () => setIdx(i => (i - 1 + services.length) % services.length)
+  const next = () => setIdx(i => (i + 1) % services.length)
+  const s = services[idx]
 
-      <div className="caps-grid">
-        {services.map((s, i) => (
-          <Reveal key={s.num} delay={(i % 3 + 1) * 0.1}>
-            <div className="cap-card">
-              <div className="serif" style={{
-                fontSize: '0.9rem', fontWeight: 600,
-                color: 'var(--crimson)', marginBottom: 32, letterSpacing: '0.1em',
-              }}>{s.num}</div>
-              <h3 className="serif" style={{
-                fontSize: '1.8rem', fontWeight: 600, lineHeight: 1.1,
-                color: 'var(--text-primary)', marginBottom: 16,
-              }}>{s.title}</h3>
-              <p style={{
-                fontSize: '0.82rem', lineHeight: 1.85, color: 'var(--text-secondary)',
-              }}>{s.desc}</p>
-              <div className="cap-arrow">↗</div>
-            </div>
-          </Reveal>
-        ))}
+  return (
+    <section style={{ background: '#000' }}>
+      <div style={{
+        padding: '16px 24px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        borderBottom: '1px solid #1a1a1a',
+      }}>
+        <span style={{
+          color: '#F5C000', fontWeight: 700, fontSize: '0.9rem',
+          fontFamily: "'Barlow', sans-serif",
+        }}>
+          {idx + 1} / {services.length}
+        </span>
+        <div style={{ display: 'flex', gap: 24 }}>
+          <button onClick={prev} style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: '#F5C000', fontSize: '1.5rem', padding: 0, lineHeight: 1,
+          }}>‹</button>
+          <button onClick={next} style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: '#F5C000', fontSize: '1.5rem', padding: 0, lineHeight: 1,
+          }}>›</button>
+        </div>
+      </div>
+
+      <div style={{ width: '100%', aspectRatio: '4/3', overflow: 'hidden' }}>
+        <img
+          src={s.photo}
+          alt={s.title}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'opacity 0.5s' }}
+        />
+      </div>
+
+      <div style={{ padding: '32px 24px 48px', borderBottom: '1px solid #1a1a1a' }}>
+        <h3 style={{
+          fontFamily: "'Barlow', sans-serif", fontWeight: 800,
+          fontSize: 'clamp(1.8rem, 6vw, 3rem)',
+          textTransform: 'uppercase', color: '#fff',
+          lineHeight: 0.95, marginBottom: 12,
+        }}>{s.title}</h3>
+        <p style={{
+          color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem',
+          lineHeight: 1.65, marginBottom: 20,
+        }}>{s.sub}</p>
+        <a href="https://vigotransfers.com/shop/" style={{
+          color: '#fff', fontWeight: 700, fontSize: '0.78rem',
+          letterSpacing: '0.1em', textTransform: 'uppercase',
+          textDecoration: 'none', fontFamily: "'Barlow', sans-serif",
+          display: 'inline-flex', alignItems: 'center', gap: 8,
+        }}>SAZNAJ VIŠE ›</a>
       </div>
     </section>
   )
