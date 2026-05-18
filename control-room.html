@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS DOMINION // CONTROL CENTER</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;0,700;1,300;1,600&family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-base:        oklch(7%  0.008 22);
+  --bg-surface:     oklch(10% 0.010 22);
+  --bg-elevated:    oklch(13% 0.012 22);
+  --bg-panel:       oklch(9%  0.009 22);
+  --crimson:        oklch(45% 0.210 22);
+  --crimson-bright: oklch(55% 0.220 22);
+  --gold:           oklch(76% 0.175 78);
+  --gold-dim:       oklch(62% 0.130 78);
+  --green:          oklch(65% 0.18 142);
+  --green-dim:      oklch(45% 0.12 142);
+  --text-primary:   oklch(93% 0.005 85);
+  --text-secondary: oklch(65% 0.008 85);
+  --text-muted:     oklch(42% 0.006 85);
+  --border:         oklch(18% 0.014 22);
+  --border-bright:  oklch(28% 0.025 22);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 300;
+  overflow: hidden;
+}
+
+/* Scanlines */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 9000;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    oklch(0% 0 0 / 0.025) 2px, oklch(0% 0 0 / 0.025) 4px
+  );
+  pointer-events: none;
+}
+
+/* Grain */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 9001;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.022;
+  pointer-events: none;
+}
+
+/* ── Top Bar ── */
+.top-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 52px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px;
+  gap: 24px;
+}
+.top-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.88rem; font-weight: 600; letter-spacing: 0.4em;
+  text-transform: uppercase; color: var(--text-primary); text-decoration: none;
+  white-space: nowrap;
+}
+.top-logo span { color: var(--crimson-bright); }
+.top-center {
+  display: flex; align-items: center; gap: 20px;
+}
+.live-badge {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--green);
+}
+.live-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green);
+  animation: livePulse 1.5s ease-in-out infinite;
+}
+.divider { width: 1px; height: 18px; background: var(--border-bright); }
+.alert-badge {
+  font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase;
+  padding: 4px 10px; border: 1px solid var(--crimson);
+  color: var(--crimson-bright);
+  animation: flicker 3s ease-in-out infinite;
+}
+.top-right {
+  font-family: 'Courier New', monospace;
+  font-size: 0.68rem; color: var(--text-muted);
+  letter-spacing: 0.08em; white-space: nowrap;
+}
+
+/* ── Grid ── */
+.grid {
+  position: fixed;
+  top: 52px; bottom: 0; left: 0; right: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1.3fr 1.3fr;
+  gap: 1px;
+  background: var(--border);
+}
+
+/* ── Panel ── */
+.panel {
+  background: var(--bg-panel);
+  padding: 18px 22px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  position: relative;
+}
+.panel-label {
+  font-size: 0.58rem; font-weight: 500; letter-spacing: 0.35em;
+  text-transform: uppercase; color: var(--text-muted);
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0;
+}
+.panel-label::before {
+  content: ''; display: block; width: 18px; height: 1px;
+  background: var(--crimson); flex-shrink: 0;
+}
+
+/* ── Stat Panels ── */
+.stat-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(3rem, 4.5vw, 5.5rem);
+  font-weight: 600; line-height: 1;
+  color: var(--text-primary);
+  flex: 1; display: flex; align-items: center;
+}
+.stat-value .cr { color: var(--crimson-bright); }
+.stat-value .go { color: var(--gold); }
+.stat-footer {
+  margin-top: auto;
+}
+.stat-change {
+  font-size: 0.62rem; letter-spacing: 0.1em;
+  color: var(--green); margin-bottom: 3px;
+}
+.stat-sub {
+  font-size: 0.6rem; color: var(--text-muted); letter-spacing: 0.08em;
+}
+
+/* Threat meter */
+.threat-big {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(3rem, 4.5vw, 5rem);
+  font-weight: 700; color: var(--crimson-bright); line-height: 1;
+}
+.threat-row {
+  display: flex; align-items: baseline; gap: 14px;
+  margin-bottom: 12px;
+}
+.threat-tag {
+  font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase;
+  padding: 3px 8px; border: 1px solid var(--crimson);
+  color: var(--crimson-bright);
+  animation: flicker 2s ease-in-out infinite;
+}
+.bar-track {
+  width: 100%; height: 4px; background: var(--bg-elevated);
+  border-radius: 2px; overflow: hidden; margin-bottom: 8px;
+}
+.bar-fill {
+  height: 100%; width: 0%;
+  border-radius: 2px;
+  transition: width 2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.bar-fill.cr {
+  background: linear-gradient(to right, var(--crimson), var(--crimson-bright));
+  box-shadow: 0 0 10px oklch(50% 0.23 22 / 0.5);
+}
+.bar-fill.go { background: linear-gradient(to right, var(--gold-dim), var(--gold)); }
+.bar-fill.gr { background: linear-gradient(to right, var(--green-dim), var(--green)); }
+.segments {
+  display: flex; gap: 2px;
+}
+.seg {
+  flex: 1; height: 3px; border-radius: 1px;
+  background: var(--bg-elevated);
+  transition: background 0.3s;
+}
+.seg.on    { background: var(--crimson); }
+.seg.on.hi { background: var(--crimson-bright); }
+
+/* ── Feed ── */
+.panel-feed { grid-column: span 2; }
+.feed-wrap {
+  flex: 1; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: flex-end;
+}
+.feed-line {
+  font-family: 'Courier New', monospace;
+  font-size: 0.7rem; line-height: 1.85;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 5px 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  animation: feedIn 0.3s ease forwards;
+}
+.feed-ts  { color: var(--text-muted); margin-right: 14px; }
+.feed-tag { margin-right: 10px; font-size: 0.6rem; letter-spacing: 0.08em; }
+.t-cr { color: var(--crimson-bright); }
+.t-go { color: var(--gold); }
+.t-gr { color: var(--green); }
+.feed-cursor {
+  display: inline-block; width: 7px; height: 13px;
+  background: var(--gold); vertical-align: middle;
+  margin-left: 2px;
+  animation: blink 1s step-end infinite;
+}
+
+/* ── Systems ── */
+.sys-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 0; border-bottom: 1px solid var(--border);
+  animation: slideIn 0.4s ease forwards; opacity: 0;
+}
+.sys-name { font-size: 0.68rem; letter-spacing: 0.06em; color: var(--text-secondary); }
+.sys-status { display: flex; align-items: center; gap: 6px; }
+.s-dot { width: 6px; height: 6px; border-radius: 50%; }
+.s-text { font-size: 0.58rem; letter-spacing: 0.15em; text-transform: uppercase; }
+.st-online  .s-dot { background: var(--green); animation: sPulse 2s ease-in-out infinite; }
+.st-warn    .s-dot { background: var(--gold);  animation: sPulse 1s ease-in-out infinite; }
+.st-crit    .s-dot { background: var(--crimson-bright); animation: sPulse 0.5s ease-in-out infinite; }
+.st-online  .s-text { color: var(--green); }
+.st-warn    .s-text { color: var(--gold); }
+.st-crit    .s-text { color: var(--crimson-bright); }
+
+/* ── Resources ── */
+.res-row { margin-bottom: 16px; }
+.res-head {
+  display: flex; justify-content: space-between;
+  font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 6px;
+  letter-spacing: 0.06em;
+}
+.res-pct { color: var(--gold); font-weight: 500; }
+
+/* ── Ops ── */
+.panel-ops { grid-column: span 2; }
+.ops-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; flex: 1;
+}
+.op-card {
+  border: 1px solid var(--border);
+  padding: 14px 16px;
+  display: flex; flex-direction: column;
+  position: relative; overflow: hidden;
+  animation: slideIn 0.5s ease forwards; opacity: 0;
+}
+.op-card::after {
+  content: ''; position: absolute; top: 0; left: 0;
+  width: 2px; height: 0%;
+  background: var(--crimson);
+  transition: height 1.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.op-card.loaded::after { height: 100%; }
+.op-code {
+  font-size: 0.55rem; letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 5px;
+}
+.op-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem; font-weight: 600; color: var(--text-primary);
+  margin-bottom: 10px; flex: 1;
+}
+.op-footer { display: flex; align-items: center; gap: 12px; }
+.op-prog-wrap { flex: 1; }
+.op-prog-track {
+  width: 100%; height: 2px; background: var(--bg-elevated); border-radius: 1px; overflow: hidden;
+}
+.op-prog-fill {
+  height: 100%; width: 0%;
+  background: var(--crimson); border-radius: 1px;
+  transition: width 2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.op-pct { font-size: 0.6rem; color: var(--text-muted); margin-top: 4px; }
+.op-badge {
+  font-size: 0.52rem; letter-spacing: 0.15em; text-transform: uppercase;
+  padding: 3px 7px; border: 1px solid; white-space: nowrap;
+}
+.b-active   { border-color: var(--crimson); color: var(--crimson-bright); }
+.b-phase2   { border-color: var(--gold-dim); color: var(--gold); }
+.b-pending  { border-color: var(--border-bright); color: var(--text-muted); }
+
+/* ── Keyframes ── */
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.3; transform: scale(0.6); }
+}
+@keyframes flicker {
+  0%, 88%, 100% { opacity: 1; }
+  90%            { opacity: 0.3; }
+  93%            { opacity: 1; }
+  96%            { opacity: 0.2; }
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+@keyframes feedIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes sPulse {
+  0%, 100% { box-shadow: 0 0 0 0 currentColor; }
+  50%       { box-shadow: 0 0 5px 2px currentColor; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="top-bar">
+  <a href="index.html" class="top-logo">Nexus <span>Dominion</span></a>
+  <div class="top-center">
+    <div class="live-badge"><div class="live-dot"></div>Live Feed Active</div>
+    <div class="divider"></div>
+    <div class="alert-badge">⚠ Alert Level: Critical</div>
+    <div class="divider"></div>
+    <div style="font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-muted)">Control Center</div>
+  </div>
+  <div class="top-right" id="ts">--:--:-- UTC</div>
+</header>
+
+<!-- MAIN GRID -->
+<main class="grid">
+
+  <!-- R1: Threat -->
+  <div class="panel">
+    <div class="panel-label">Threat Index</div>
+    <div class="threat-row">
+      <div class="threat-big" id="threat-n">0</div>
+      <div class="threat-tag">Critical</div>
+    </div>
+    <div class="bar-track"><div class="bar-fill cr" id="threat-bar"></div></div>
+    <div class="segments" id="threat-segs"></div>
+    <div class="stat-footer" style="margin-top:10px">
+      <div class="stat-sub">Global threat assessment — updated live</div>
+    </div>
+  </div>
+
+  <!-- R1: Nations -->
+  <div class="panel">
+    <div class="panel-label">Nations Compromised</div>
+    <div class="stat-value"><span id="nations-n" class="cr">0</span><span class="cr">+</span></div>
+    <div class="stat-footer">
+      <div class="stat-change">↑ 3 this quarter</div>
+      <div class="stat-sub">Active leverage maintained</div>
+    </div>
+  </div>
+
+  <!-- R1: Assets -->
+  <div class="panel">
+    <div class="panel-label">Assets Deployed</div>
+    <div class="stat-value"><span id="assets-n" class="go">0</span></div>
+    <div class="stat-footer">
+      <div class="stat-change">↑ 12 this cycle</div>
+      <div class="stat-sub">Field operatives — all sectors</div>
+    </div>
+  </div>
+
+  <!-- R2: Feed -->
+  <div class="panel panel-feed">
+    <div class="panel-label">Live Intel Feed <div class="feed-cursor"></div></div>
+    <div class="feed-wrap" id="feed"></div>
+  </div>
+
+  <!-- R2: Systems -->
+  <div class="panel">
+    <div class="panel-label">System Status</div>
+    <div id="sys-list"></div>
+  </div>
+
+  <!-- R3: Resources -->
+  <div class="panel">
+    <div class="panel-label">Resource Allocation</div>
+    <div id="res-list"></div>
+  </div>
+
+  <!-- R3: Operations -->
+  <div class="panel panel-ops">
+    <div class="panel-label">Active Operations</div>
+    <div class="ops-grid" id="ops"></div>
+  </div>
+
+</main>
+
+<script>
+// Timestamp
+const tsEl = document.getElementById('ts');
+setInterval(() => {
+  tsEl.textContent = new Date().toUTCString().split(' ')[4] + ' UTC';
+}, 1000);
+tsEl.textContent = new Date().toUTCString().split(' ')[4] + ' UTC';
+
+// Counter
+function counter(el, target, ms = 2200) {
+  const t0 = performance.now();
+  (function tick(t) {
+    const p = Math.min((t - t0) / ms, 1);
+    const e = 1 - Math.pow(1 - p, 4);
+    el.textContent = Math.floor(e * target);
+    if (p < 1) requestAnimationFrame(tick);
+    else el.textContent = target;
+  })(t0);
+}
+
+// Threat
+const THREAT = 87;
+counter(document.getElementById('threat-n'), THREAT, 2500);
+setTimeout(() => { document.getElementById('threat-bar').style.width = THREAT + '%'; }, 150);
+const segsEl = document.getElementById('threat-segs');
+for (let i = 0; i < 20; i++) {
+  const s = document.createElement('div');
+  const active = i < Math.floor(THREAT / 5);
+  s.className = 'seg' + (active ? (i >= 14 ? ' on hi' : ' on') : '');
+  segsEl.appendChild(s);
+}
+
+// Stats
+counter(document.getElementById('nations-n'), 47, 2000);
+counter(document.getElementById('assets-n'), 1842, 2400);
+
+// Systems
+[
+  ['Satellite Array — Sector 7',   'online', 'Online'],
+  ['Quantum Encryption Layer',     'online', 'Online'],
+  ['Neural Surveillance Grid',     'online', 'Online'],
+  ['Financial Leverage Protocol',  'warn',   'Degraded'],
+  ['Shadow Comms Channel α',       'online', 'Online'],
+  ['Orbital Platform — Node 3',    'crit',   'Alert'],
+  ['Cognitive Broadcast Array',    'warn',   'Partial'],
+].forEach(([name, cls, label], i) => {
+  const row = document.createElement('div');
+  row.className = 'sys-row';
+  row.style.animationDelay = (i * 75) + 'ms';
+  row.innerHTML = `<span class="sys-name">${name}</span>
+    <span class="sys-status st-${cls}">
+      <span class="s-dot"></span>
+      <span class="s-text">${label}</span>
+    </span>`;
+  document.getElementById('sys-list').appendChild(row);
+});
+
+// Resources
+[
+  ['Funding Allocation',     78, 'go'],
+  ['Human Capital',          92, 'cr'],
+  ['Computational Capacity', 61, 'gr'],
+  ['Intelligence Coverage',  84, 'go'],
+  ['Tactical Readiness',     95, 'cr'],
+].forEach(([name, pct, cls]) => {
+  const row = document.createElement('div');
+  row.className = 'res-row';
+  row.innerHTML = `<div class="res-head"><span>${name}</span><span class="res-pct">${pct}%</span></div>
+    <div class="bar-track"><div class="bar-fill ${cls}" data-p="${pct}"></div></div>`;
+  document.getElementById('res-list').appendChild(row);
+});
+setTimeout(() => {
+  document.querySelectorAll('#res-list .bar-fill').forEach(el => {
+    el.style.width = el.dataset.p + '%';
+  });
+}, 300);
+
+// Operations
+[
+  ['OP-α', 'Project Obsidian Veil',       'b-active',  'Active',  67],
+  ['OP-β', 'Operation Silent Meridian',   'b-active',  'Active',  43],
+  ['OP-γ', 'The Carthage Protocol',       'b-phase2',  'Phase 2', 51],
+  ['OP-δ', 'Kronos Financial Reset',      'b-pending', 'Pending', 18],
+].forEach(([code, name, bcls, blabel, pct], i) => {
+  const card = document.createElement('div');
+  card.className = 'op-card';
+  card.style.animationDelay = (i * 90) + 'ms';
+  card.innerHTML = `<div class="op-code">${code}</div>
+    <div class="op-name">${name}</div>
+    <div class="op-footer">
+      <div class="op-prog-wrap">
+        <div class="op-prog-track"><div class="op-prog-fill" data-p="${pct}"></div></div>
+        <div class="op-pct">${pct}% complete</div>
+      </div>
+      <div class="op-badge ${bcls}">${blabel}</div>
+    </div>`;
+  document.getElementById('ops').appendChild(card);
+  setTimeout(() => card.classList.add('loaded'), 250 + i * 100);
+});
+setTimeout(() => {
+  document.querySelectorAll('.op-prog-fill').forEach(el => {
+    el.style.width = el.dataset.p + '%';
+  });
+}, 400);
+
+// Live Feed
+const msgs = [
+  { cls: 't-go', tag: 'INTEL',    text: 'MERIDIAN asset confirmed at Brussels summit — extraction window: 6h' },
+  { cls: 't-gr', tag: 'SYS',      text: 'Satellite array realignment complete — eastern coverage +12%' },
+  { cls: 't-cr', tag: 'CRITICAL', text: 'Unexpected probe detected — Node 3 firewall engaged, monitoring' },
+  { cls: 't-go', tag: 'INTEL',    text: 'Meridian Bank compliance secured — financial leverage executed' },
+  { cls: 't-gr', tag: 'SYS',      text: 'Cognitive broadcast cycle 7 initiated — estimated reach: 340M' },
+  { cls: 't-go', tag: 'INTEL',    text: 'Director confirms Elysium Succession enters Phase 1 — stand by' },
+  { cls: 't-cr', tag: 'CRITICAL', text: 'Agent SIGMA dark for 18h — counterintelligence flagged' },
+  { cls: 't-gr', tag: 'SYS',      text: 'Quantum encryption rekeyed — all shadow comms nominal' },
+  { cls: 't-go', tag: 'INTEL',    text: 'Asset NIGHTHAWK delivered package — Carthage Protocol proceeds' },
+  { cls: 't-cr', tag: 'CRITICAL', text: 'Opposition movement in Sector 4 — response team deployed' },
+  { cls: 't-gr', tag: 'SYS',      text: 'Orbital realignment complete — Node 1 back online' },
+  { cls: 't-go', tag: 'INTEL',    text: 'Economic leverage point identified: HELIOS CAPITAL — flagged' },
+];
+
+const feedEl = document.getElementById('feed');
+let msgIdx = 0;
+
+function addLine(msg) {
+  const ts = new Date().toUTCString().split(' ')[4];
+  const line = document.createElement('div');
+  line.className = 'feed-line';
+  line.innerHTML = `<span class="feed-ts">${ts}</span><span class="feed-tag ${msg.cls}">[${msg.tag}]</span>`;
+  const txt = document.createElement('span');
+  line.appendChild(txt);
+  feedEl.prepend(line);
+  while (feedEl.children.length > 9) feedEl.removeChild(feedEl.lastChild);
+
+  let i = 0;
+  const iv = setInterval(() => {
+    txt.textContent += msg.text[i++];
+    if (i >= msg.text.length) clearInterval(iv);
+  }, 20);
+}
+
+// Seed
+for (let i = 0; i < 6; i++) {
+  setTimeout(() => { addLine(msgs[msgIdx++ % msgs.length]); }, i * 550);
+}
+setInterval(() => { addLine(msgs[msgIdx++ % msgs.length]); }, 4800);
+</script>
+</body>
+</html>
