@@ -4,24 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#FFFFFF">
-<title>Client Video Production Guide · Studio</title>
+<title>Client Video Production Manual · V1.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #FFFFFF;
-    --bg-alt: #F7F8FA;
-    --text: #0F172A;
+    --bg-grid: #FAFBFC;
+    --bg-spec: #F4F6F9;
+    --text: #0B1220;
+    --text-soft: #334155;
     --muted: #64748B;
     --line: #E2E8F0;
-    --accent: #0052CC;
-    --accent-soft: #EAF1FB;
+    --line-soft: #EFF2F6;
+    --blue: #0052CC;
+    --blue-soft: #EAF1FB;
+    --blue-dark: #003D99;
     --green: #047857;
-    --green-bg: #F0FDF4;
     --red: #B91C1C;
-    --red-bg: #FEF2F2;
-    --max: 760px;
+    --sidebar-w: 280px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -29,405 +31,677 @@
 
   body {
     font-family: 'DM Sans', -apple-system, system-ui, sans-serif;
-    font-size: 16px;
+    font-size: 15.5px;
     line-height: 1.6;
     color: var(--text);
     background: var(--bg);
     -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
+    background-image:
+      linear-gradient(var(--line-soft) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+    background-size: 32px 32px;
+    background-position: -1px -1px;
   }
 
   .mono {
     font-family: 'DM Mono', ui-monospace, monospace;
-    font-size: 12px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 0.02em;
   }
 
-  /* PROGRESS */
-  .progress {
-    position: fixed; top: 0; left: 0;
-    width: 100%; height: 2px;
-    z-index: 100;
-  }
-  .progress-fill {
-    height: 100%; background: var(--accent);
-    width: 0%; transition: width 0.1s linear;
-  }
-
-  /* TOP NAV */
+  /* TOP BAR */
   .topbar {
     position: sticky; top: 0;
-    background: rgba(255,255,255,0.85);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--line);
     z-index: 50;
-    padding: 14px 20px;
+    padding: 12px 20px;
+  }
+  .topbar-inner {
+    max-width: 1240px;
+    margin: 0 auto;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
+  }
+  .topbar-left {
+    display: flex; align-items: center; gap: 12px;
+    font-family: 'DM Mono', monospace;
     font-size: 12px;
   }
-  .topbar-brand {
-    font-family: 'DM Mono', monospace;
-    font-weight: 500;
-    color: var(--text);
-    letter-spacing: 0.02em;
-  }
-  .topbar-meta {
-    font-family: 'DM Mono', monospace;
-    color: var(--muted);
-  }
-
-  /* HERO */
-  .hero {
-    padding: 80px 24px 60px;
-    max-width: var(--max);
-    margin: 0 auto;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .hero-label {
+  .topbar-logo {
+    width: 22px; height: 22px;
+    background: var(--text);
+    color: white;
+    border-radius: 5px;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    background: var(--accent-soft);
-    color: var(--accent);
-    padding: 6px 12px;
-    border-radius: 6px;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .topbar-crumb {
+    color: var(--muted);
+  }
+  .topbar-crumb b { color: var(--text); font-weight: 500; }
+  .topbar-right {
     font-family: 'DM Mono', monospace;
     font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    margin-bottom: 32px;
-  }
-  .hero-label::before {
-    content: '';
-    width: 6px; height: 6px;
-    background: var(--accent);
-    border-radius: 50%;
-  }
-
-  .hero-title {
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    font-size: clamp(36px, 8vw, 64px);
-    line-height: 1.05;
-    letter-spacing: -0.03em;
-    margin-bottom: 24px;
-    color: var(--text);
-  }
-  .hero-title span {
-    color: var(--accent);
-  }
-
-  .hero-desc {
-    font-size: 18px;
-    line-height: 1.55;
     color: var(--muted);
-    max-width: 560px;
-    margin-bottom: 48px;
-  }
-
-  .hero-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    border-top: 1px solid var(--line);
-    padding-top: 32px;
-  }
-  .hero-stat {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
+    gap: 14px;
   }
-  .hero-stat-num {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 32px;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    color: var(--text);
+  .topbar-step { color: var(--blue); font-weight: 500; }
+
+  /* LAYOUT */
+  .layout {
+    max-width: 1240px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: var(--sidebar-w) 1fr;
   }
-  .hero-stat-label {
+  @media (max-width: 960px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    border-right: 1px solid var(--line);
+    padding: 32px 20px;
+    position: sticky;
+    top: 47px;
+    height: calc(100vh - 47px);
+    overflow-y: auto;
+    background: var(--bg);
+  }
+  @media (max-width: 960px) {
+    .sidebar { display: none; }
+  }
+  .sidebar-head {
     font-family: 'DM Mono', monospace;
     font-size: 11px;
     color: var(--muted);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+    padding-left: 8px;
+  }
+  .sidebar nav { display: flex; flex-direction: column; gap: 2px; }
+  .sidebar a {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 10px;
+    color: var(--text-soft);
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .sidebar a:hover { background: var(--bg-spec); color: var(--text); }
+  .sidebar a.active {
+    background: var(--blue-soft);
+    color: var(--blue);
+    font-weight: 500;
+  }
+  .sidebar a.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 8px; bottom: 8px;
+    width: 2px;
+    background: var(--blue);
+    border-radius: 2px;
+  }
+  .sidebar a .num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    min-width: 20px;
+  }
+  .sidebar a.active .num { color: var(--blue); }
+
+  .sidebar-divider {
+    height: 1px;
+    background: var(--line);
+    margin: 24px 0;
+  }
+  .sidebar-meta {
+    padding: 0 10px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .sidebar-meta-row {
+    display: flex; justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--line-soft);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+  }
+  .sidebar-meta-row:last-child { border-bottom: none; }
+  .sidebar-meta-row span:last-child { color: var(--text); }
+
+  /* CONTENT */
+  .content {
+    padding: 0 32px 80px;
+    background: var(--bg);
+    min-width: 0;
+  }
+  @media (max-width: 960px) {
+    .content { padding: 0 20px 60px; }
+    body { background-size: 24px 24px; }
+  }
+
+  /* DOC HEADER */
+  .doc-header {
+    padding: 48px 0 32px;
+    border-bottom: 1px solid var(--line);
+  }
+  .doc-kicker {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--blue);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+  }
+  .doc-title {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: clamp(30px, 5.5vw, 42px);
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    margin-bottom: 16px;
+  }
+  .doc-desc {
+    font-size: 16.5px;
+    color: var(--text-soft);
+    line-height: 1.55;
+    max-width: 640px;
+    margin-bottom: 28px;
+  }
+  .doc-specs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .doc-spec {
+    background: var(--bg);
+    padding: 12px 16px;
+  }
+  .doc-spec-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  .doc-spec-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
   }
 
   /* SECTION */
-  section.guide {
-    padding: 64px 24px;
-    max-width: var(--max);
-    margin: 0 auto;
+  .step {
+    padding: 56px 0;
     border-bottom: 1px solid var(--line);
+    scroll-margin-top: 60px;
+  }
+  .step-head {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .step-badge {
+    background: var(--text);
+    color: white;
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .step-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .step-title {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: clamp(24px, 4.5vw, 34px);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+  .step-intro {
+    font-size: 16px;
+    color: var(--text-soft);
+    line-height: 1.6;
+    max-width: 620px;
+    margin-bottom: 32px;
   }
 
-  .section-meta {
+  /* WIREFRAME DIAGRAM */
+  .wireframe {
+    background: var(--bg-grid);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+    background-image:
+      linear-gradient(var(--line-soft) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+    background-size: 16px 16px;
+    padding: 32px 16px;
     display: flex;
-    align-items: center;
-    gap: 12px;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+  .wireframe-label {
+    position: absolute;
+    top: 10px; left: 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .wireframe-axis {
+    position: absolute;
+    bottom: 8px; right: 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .wireframe svg { max-width: 100%; height: auto; }
+
+  /* SPEC TABLE */
+  .spec-table {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
     margin-bottom: 24px;
+    background: var(--bg);
+  }
+  .spec-row {
+    display: grid;
+    grid-template-columns: 180px 1fr auto;
+    border-bottom: 1px solid var(--line-soft);
+    font-size: 14px;
+  }
+  .spec-row:last-child { border-bottom: none; }
+  .spec-row:hover { background: var(--bg-spec); }
+  .spec-key {
+    padding: 12px 16px;
     font-family: 'DM Mono', monospace;
     font-size: 12px;
     color: var(--muted);
     text-transform: uppercase;
     letter-spacing: 0.04em;
+    background: var(--bg-spec);
+    display: flex;
+    align-items: center;
   }
-  .section-num {
-    background: var(--text);
-    color: var(--bg);
-    padding: 4px 10px;
-    border-radius: 4px;
-    font-weight: 500;
-  }
-  .section-num.accent { background: var(--accent); }
-
-  .section-title {
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    font-size: clamp(28px, 6vw, 44px);
-    line-height: 1.1;
-    letter-spacing: -0.025em;
-    margin-bottom: 20px;
+  .spec-val {
+    padding: 12px 16px;
     color: var(--text);
-  }
-
-  .section-intro {
-    font-size: 17px;
-    line-height: 1.6;
-    color: var(--muted);
-    margin-bottom: 36px;
-    max-width: 560px;
-  }
-
-  /* DIAGRAM */
-  .diagram {
-    background: var(--bg-alt);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 32px 20px;
-    margin: 28px 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 240px;
-    position: relative;
-    overflow: hidden;
-  }
-  .diagram::before {
-    content: 'FIG.';
-    position: absolute;
-    top: 12px; left: 16px;
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.08em;
-  }
-  .diagram[data-num]::after {
-    content: attr(data-num);
-    position: absolute;
-    top: 12px; left: 38px;
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.08em;
-  }
-  .diagram svg { max-width: 100%; height: auto; }
-
-  /* PANELS */
-  .panels {
-    display: grid;
-    gap: 14px;
-    margin: 28px 0;
-  }
-  @media (min-width: 720px) {
-    .panels { grid-template-columns: 1fr 1fr; }
-  }
-
-  .panel {
-    border-radius: 10px;
-    padding: 22px;
-    border: 1px solid var(--line);
-    background: var(--bg);
-  }
-  .panel.good {
-    border-color: rgba(4, 120, 87, 0.25);
-    background: var(--green-bg);
-  }
-  .panel.bad {
-    border-color: rgba(185, 28, 28, 0.25);
-    background: var(--red-bg);
-  }
-
-  .panel-header {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-weight: 500;
-    margin-bottom: 16px;
   }
-  .panel.good .panel-header { color: var(--green); }
-  .panel.bad .panel-header { color: var(--red); }
-
-  .panel-badge {
-    display: inline-flex;
-    width: 18px; height: 18px;
+  .spec-val code {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    background: var(--bg-spec);
+    padding: 2px 6px;
     border-radius: 4px;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 11px;
-    font-weight: 700;
-    font-family: 'DM Sans', sans-serif;
+    color: var(--blue-dark);
   }
-  .panel.good .panel-badge { background: var(--green); }
-  .panel.bad .panel-badge { background: var(--red); }
+  .spec-tag {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+  }
+  .spec-tag.required { color: var(--red); }
+  .spec-tag.opt { color: var(--muted); }
+  @media (max-width: 600px) {
+    .spec-row { grid-template-columns: 1fr; }
+    .spec-key { padding-bottom: 4px; }
+    .spec-val { padding-top: 4px; padding-bottom: 8px; }
+    .spec-tag { padding-top: 0; padding-bottom: 12px; }
+  }
 
-  .panel ul { list-style: none; }
-  .panel li {
+  /* TABS */
+  .tabs {
+    display: flex;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 4px;
+    margin-bottom: 16px;
+    background: var(--bg-spec);
+    width: fit-content;
+  }
+  .tab {
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-radius: 5px;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tab.active {
+    background: var(--bg);
+    color: var(--text);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+  .tab .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+  }
+  .tab[data-type="do"].active .dot { background: var(--green); }
+  .tab[data-type="dont"].active .dot { background: var(--red); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .checklist {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line-soft);
     font-size: 14.5px;
     line-height: 1.5;
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
   }
-  .panel li::before {
-    content: '—';
-    color: var(--muted);
+  .checklist-item:last-child { border-bottom: none; }
+  .checklist-item .icon {
     flex-shrink: 0;
+    width: 20px; height: 20px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    margin-top: 1px;
   }
-  .panel li:last-child { border-bottom: none; }
-  .panel li strong { font-weight: 600; }
+  .checklist-item.do .icon { background: var(--green); }
+  .checklist-item.dont .icon { background: var(--red); }
+  .checklist-item strong { font-weight: 600; }
+  .checklist-item code {
+    font-family: 'DM Mono', monospace;
+    font-size: 12.5px;
+    background: var(--blue-soft);
+    color: var(--blue-dark);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
 
-  .note {
-    background: var(--accent-soft);
-    border-left: 3px solid var(--accent);
-    padding: 14px 18px;
-    border-radius: 0 8px 8px 0;
-    margin: 24px 0;
-    font-size: 14.5px;
+  /* CALLOUT */
+  .callout {
+    display: flex;
+    gap: 12px;
+    background: var(--blue-soft);
+    border: 1px solid rgba(0, 82, 204, 0.15);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 20px;
+    font-size: 14px;
     color: var(--text);
   }
-  .note-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-weight: 500;
-    margin-right: 8px;
-  }
-
-  /* CONCLUSION */
-  .conclusion {
-    background: var(--text);
-    color: var(--bg);
-    padding: 80px 24px;
-  }
-  .conclusion-inner {
-    max-width: var(--max);
-    margin: 0 auto;
-  }
-  .conclusion-label {
+  .callout-icon {
+    flex-shrink: 0;
+    width: 18px; height: 18px;
+    background: var(--blue);
+    color: white;
+    border-radius: 4px;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    color: #93C5FD;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: serif;
+  }
+  .callout strong { color: var(--blue-dark); }
+
+  /* FINAL CHECKLIST */
+  .summary {
+    padding: 64px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .summary-card {
+    background: var(--text);
+    color: white;
+    border-radius: 12px;
+    padding: 32px;
+  }
+  .summary-tag {
     font-family: 'DM Mono', monospace;
     font-size: 11px;
+    color: #93C5FD;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: 24px;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
   }
-  .conclusion-label::before {
-    content: '';
-    width: 6px; height: 6px;
-    background: #93C5FD;
-    border-radius: 50%;
-  }
-  .conclusion-title {
+  .summary-title {
     font-family: 'DM Sans', sans-serif;
     font-weight: 600;
-    font-size: clamp(28px, 6vw, 48px);
-    line-height: 1.1;
-    letter-spacing: -0.025em;
-    margin-bottom: 28px;
+    font-size: 24px;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
   }
-  .conclusion-title span { color: #93C5FD; }
-  .conclusion-text {
+  .summary-desc {
     color: rgba(255,255,255,0.7);
-    margin-bottom: 48px;
-    font-size: 17px;
-    line-height: 1.6;
-    max-width: 560px;
+    font-size: 14.5px;
+    margin-bottom: 24px;
   }
-  .conclusion-grid {
-    display: grid;
-    gap: 1px;
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 10px;
-    overflow: hidden;
+  .summary-list {
+    list-style: none;
   }
-  @media (min-width: 720px) {
-    .conclusion-grid { grid-template-columns: 1fr 1fr; }
+  .summary-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    font-size: 14.5px;
   }
-  .conclusion-card {
-    background: var(--text);
-    padding: 24px;
+  .summary-item:last-child { border-bottom: none; }
+  .summary-check {
+    flex-shrink: 0;
+    width: 22px; height: 22px;
+    border: 1.5px solid rgba(255,255,255,0.3);
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
   }
-  .conclusion-card-num {
+  .summary-check.checked {
+    background: var(--blue);
+    border-color: var(--blue);
+  }
+  .summary-check.checked::after {
+    content: '✓';
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .summary-item .step-no {
     font-family: 'DM Mono', monospace;
     font-size: 11px;
     color: #93C5FD;
-    margin-bottom: 8px;
-    letter-spacing: 0.04em;
+    min-width: 24px;
   }
-  .conclusion-card-title {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 8px;
+  .summary-item .text {
+    flex: 1;
   }
-  .conclusion-card-text {
-    font-size: 14px;
+  .summary-item .text strong { font-weight: 600; }
+  .summary-progress {
+    margin-top: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
     color: rgba(255,255,255,0.6);
-    line-height: 1.55;
+  }
+  .summary-progress-bar {
+    flex: 1;
+    margin: 0 16px;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .summary-progress-fill {
+    height: 100%;
+    background: var(--blue);
+    width: 0%;
+    transition: width 0.3s ease;
   }
 
+  /* FOOTER */
   footer {
+    padding: 32px 20px;
     background: var(--text);
-    color: rgba(255,255,255,0.4);
+    color: rgba(255,255,255,0.5);
     text-align: center;
-    padding: 24px;
     font-family: 'DM Mono', monospace;
     font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    border-top: 1px solid rgba(255,255,255,0.08);
+    letter-spacing: 0.05em;
+  }
+
+  /* MOBILE TOC DRAWER */
+  .mobile-nav {
+    display: none;
+    position: fixed;
+    bottom: 20px; left: 20px; right: 20px;
+    background: var(--text);
+    color: white;
+    border-radius: 12px;
+    padding: 12px 16px;
+    z-index: 99;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+  }
+  @media (max-width: 960px) {
+    .mobile-nav { display: flex; }
+  }
+  .mobile-nav-current {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .mobile-nav-num {
+    background: var(--blue);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  .mobile-drawer {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(11,18,32,0.4);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    align-items: flex-end;
+  }
+  .mobile-drawer.open { display: flex; }
+  .mobile-drawer-content {
+    background: var(--bg);
+    width: 100%;
+    border-radius: 16px 16px 0 0;
+    padding: 20px;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  .mobile-drawer-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .mobile-drawer-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .mobile-drawer-close {
+    background: var(--bg-spec);
+    border: none;
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--text);
+  }
+  .mobile-drawer a {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px;
+    text-decoration: none;
+    color: var(--text);
+    border-radius: 8px;
+    font-size: 15px;
+  }
+  .mobile-drawer a:hover { background: var(--bg-spec); }
+  .mobile-drawer a .num {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    min-width: 24px;
   }
 
   /* ANIMATIONS */
-  .section {
+  .step {
     opacity: 0;
     transform: translateY(20px);
     transition: opacity 0.6s, transform 0.6s;
   }
-  .section.in-view {
+  .step.in-view {
     opacity: 1;
     transform: translateY(0);
   }
-
   @keyframes pulse {
     0%, 100% { opacity: 0.3; }
     50% { opacity: 1; }
@@ -435,712 +709,828 @@
   @keyframes draw {
     to { stroke-dashoffset: 0; }
   }
-  @keyframes fadeIn {
-    to { opacity: 1; }
-  }
+  @keyframes fadeIn { to { opacity: 1; } }
   @keyframes wave {
     0%, 100% { transform: scaleY(0.4); }
     50% { transform: scaleY(1); }
   }
   .anim-pulse { animation: pulse 1.6s ease-in-out infinite; }
   .anim-draw {
-    stroke-dasharray: 200;
-    stroke-dashoffset: 200;
+    stroke-dasharray: 300;
+    stroke-dashoffset: 300;
   }
-  .section.in-view .anim-draw {
-    animation: draw 1.2s ease-out forwards;
+  .step.in-view .anim-draw {
+    animation: draw 1.4s ease-out forwards;
   }
-  .section.in-view .anim-draw-2 {
-    animation: draw 1.2s 0.4s ease-out forwards;
+  .step.in-view .anim-draw-2 {
+    animation: draw 1.4s 0.4s ease-out forwards;
   }
   .fade-target { opacity: 0; }
-  .section.in-view .fade-target {
+  .step.in-view .fade-target {
     animation: fadeIn 0.7s 0.5s ease-out forwards;
   }
-  .section.in-view .fade-target-2 {
-    animation: fadeIn 0.7s 0.9s ease-out forwards;
+  .step.in-view .fade-target-2 {
+    animation: fadeIn 0.7s 1s ease-out forwards;
   }
   .wave-bar {
     transform-origin: center;
     animation: wave 1.2s ease-in-out infinite;
   }
   .wave-bar:nth-child(1) { animation-delay: 0s; }
-  .wave-bar:nth-child(2) { animation-delay: 0.15s; }
-  .wave-bar:nth-child(3) { animation-delay: 0.3s; }
-  .wave-bar:nth-child(4) { animation-delay: 0.45s; }
-  .wave-bar:nth-child(5) { animation-delay: 0.6s; }
-  .wave-bar:nth-child(6) { animation-delay: 0.75s; }
-
-  /* TOC */
-  .toc-toggle {
-    position: fixed;
-    bottom: 20px; right: 20px;
-    background: var(--accent);
-    color: white;
-    width: 48px; height: 48px;
-    border-radius: 10px;
-    border: none;
-    cursor: pointer;
-    z-index: 99;
-    font-family: 'DM Mono', monospace;
-    font-size: 16px;
-    font-weight: 500;
-    box-shadow: 0 4px 16px rgba(0, 82, 204, 0.25);
-    transition: transform 0.2s;
-  }
-  .toc-toggle:hover { transform: scale(1.05); }
-
-  .toc {
-    position: fixed;
-    bottom: 78px; right: 20px;
-    background: var(--bg);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 8px;
-    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.12);
-    z-index: 99;
-    display: none;
-    max-height: 70vh;
-    overflow-y: auto;
-    min-width: 220px;
-  }
-  .toc.open { display: block; }
-  .toc-head {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 8px 12px 6px;
-  }
-  .toc a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 12px;
-    color: var(--text);
-    text-decoration: none;
-    font-size: 14px;
-    border-radius: 6px;
-    transition: background 0.15s;
-  }
-  .toc a:hover { background: var(--bg-alt); color: var(--accent); }
-  .toc a .num {
-    font-family: 'DM Mono', monospace;
-    color: var(--muted);
-    font-size: 11px;
-    min-width: 18px;
-  }
+  .wave-bar:nth-child(2) { animation-delay: 0.12s; }
+  .wave-bar:nth-child(3) { animation-delay: 0.24s; }
+  .wave-bar:nth-child(4) { animation-delay: 0.36s; }
+  .wave-bar:nth-child(5) { animation-delay: 0.48s; }
+  .wave-bar:nth-child(6) { animation-delay: 0.6s; }
 </style>
 </head>
 <body>
 
-<div class="progress"><div class="progress-fill" id="progressFill"></div></div>
-
 <nav class="topbar">
-  <span class="topbar-brand">CVPG / V1.0</span>
-  <span class="topbar-meta">10 SEKCIJA · ~8 MIN</span>
+  <div class="topbar-inner">
+    <div class="topbar-left">
+      <span class="topbar-logo">C</span>
+      <span class="topbar-crumb">Manual <span style="color: var(--line); margin: 0 4px;">/</span> <b>Video Production · V1.0</b></span>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-step" id="topStep">STEP 00/10</span>
+      <span id="topPct">0%</span>
+    </div>
+  </div>
 </nav>
 
-<!-- HERO -->
-<header class="hero">
-  <span class="hero-label">Client Guide</span>
-  <h1 class="hero-title">Vodič za snimanje<br>video <span>materijala</span>.</h1>
-  <p class="hero-desc">Standard za snimanje materijala — deset koraka do jasnog, upotrebljivog snimka. Cilj nije savršeno snimanje, već čist materijal koji možemo da obradimo u postprodukciji.</p>
+<div class="layout">
 
-  <div class="hero-stats">
-    <div class="hero-stat">
-      <div class="hero-stat-num">10</div>
-      <div class="hero-stat-label">Sekcija</div>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-head">Sadržaj</div>
+    <nav id="sideNav">
+      <a href="#s01"><span class="num">01</span>Princip</a>
+      <a href="#s02"><span class="num">02</span>Svetlo</a>
+      <a href="#s03"><span class="num">03</span>Kamera</a>
+      <a href="#s04"><span class="num">04</span>Audio</a>
+      <a href="#s05"><span class="num">05</span>Kadar</a>
+      <a href="#s06"><span class="num">06</span>Govor</a>
+      <a href="#s07"><span class="num">07</span>Odeća</a>
+      <a href="#s08"><span class="num">08</span>Prostor</a>
+      <a href="#s09"><span class="num">09</span>Outdoor</a>
+      <a href="#s10"><span class="num">10</span>Isporuka</a>
+      <a href="#summary"><span class="num">▣</span>Checklist</a>
+    </nav>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-meta">
+      <div class="sidebar-meta-row"><span>VERZIJA</span><span>V1.0</span></div>
+      <div class="sidebar-meta-row"><span>GODINA</span><span>2026</span></div>
+      <div class="sidebar-meta-row"><span>FORMAT</span><span>9:16 / 16:9</span></div>
+      <div class="sidebar-meta-row"><span>ISPORUKA</span><span>Drive</span></div>
     </div>
-    <div class="hero-stat">
-      <div class="hero-stat-num">8m</div>
-      <div class="hero-stat-label">Čitanje</div>
-    </div>
-    <div class="hero-stat">
-      <div class="hero-stat-num">V1</div>
-      <div class="hero-stat-label">2026</div>
-    </div>
-  </div>
-</header>
+  </aside>
 
-<!-- 01 PRINCIP -->
-<section class="guide section" id="s01">
-  <div class="section-meta"><span class="section-num accent">01</span><span>Princip</span></div>
-  <h2 class="section-title">Snimak ne mora biti perfektan.</h2>
-  <p class="section-intro">Greške, pauze i ponavljanja su normalni deo procesa i ne utiču na krajnji kvalitet videa — sve se obrađuje u postprodukciji.</p>
+  <!-- CONTENT -->
+  <main class="content">
 
-  <div class="diagram" data-num="01">
-    <svg viewBox="0 0 320 200" width="320">
-      <rect x="40" y="30" width="240" height="140" rx="4" fill="none" stroke="#0F172A" stroke-width="1.5"/>
-      <circle cx="160" cy="100" r="26" fill="#0F172A"/>
-      <rect x="130" y="126" width="60" height="40" rx="3" fill="#0F172A"/>
-      <circle cx="65" cy="50" r="5" fill="#B91C1C" class="anim-pulse"/>
-      <text x="78" y="55" font-family="DM Mono" font-size="11" font-weight="500" fill="#B91C1C">REC</text>
-      <g class="fade-target">
-        <rect x="200" y="48" width="64" height="44" rx="6" fill="white" stroke="#0F172A" stroke-width="1.5"/>
-        <path d="M 220 92 L 224 86 L 228 92 Z" fill="white" stroke="#0F172A" stroke-width="1.5"/>
-        <circle cx="220" cy="70" r="2.5" fill="#0F172A"/>
-        <circle cx="232" cy="70" r="2.5" fill="#0F172A"/>
-        <circle cx="244" cy="70" r="2.5" fill="#0F172A"/>
-      </g>
-    </svg>
-  </div>
-
-  <div class="panels">
-    <div class="panel good">
-      <div class="panel-header"><span class="panel-badge">✓</span>Ako pogrešiš</div>
-      <ul>
-        <li>Zastani kratko</li>
-        <li>Ponovi rečenicu</li>
-        <li>Nastavi dalje</li>
-      </ul>
-    </div>
-    <div class="panel bad">
-      <div class="panel-header"><span class="panel-badge">✕</span>Nemoj</div>
-      <ul>
-        <li>Prekidati snimanje</li>
-        <li>Brisati materijal</li>
-        <li>Snimati ispočetka</li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="note"><span class="note-label">NOTE</span>Sve se rešava u postprodukciji. Pusti kameru da snima.</div>
-</section>
-
-<!-- 02 SVETLO -->
-<section class="guide section" id="s02">
-  <div class="section-meta"><span class="section-num">02</span><span>Svetlo</span></div>
-  <h2 class="section-title">Lice okrenuto ka izvoru svetla.</h2>
-  <p class="section-intro">Kvalitet svetla direktno utiče na izgled videa. Cilj je da lice bude ravnomerno osvetljeno, bez jakih senki.</p>
-
-  <div class="diagram" data-num="02">
-    <svg viewBox="0 0 320 200" width="320">
-      <g>
-        <circle cx="40" cy="100" r="16" fill="#FCD34D"/>
-        <g stroke="#FCD34D" stroke-width="1.5" class="anim-draw">
-          <line x1="58" y1="100" x2="105" y2="100"/>
-          <line x1="58" y1="90" x2="105" y2="85"/>
-          <line x1="58" y1="110" x2="105" y2="115"/>
-        </g>
-        <circle cx="120" cy="100" r="14" fill="#0F172A"/>
-        <rect x="106" y="114" width="28" height="22" rx="3" fill="#0F172A"/>
-        <text x="80" y="172" font-family="DM Mono" font-size="9" fill="#047857" text-anchor="middle" font-weight="500">PRAVILNO</text>
-      </g>
-      <line x1="160" y1="30" x2="160" y2="170" stroke="#E2E8F0" stroke-dasharray="3 3"/>
-      <g>
-        <circle cx="280" cy="100" r="16" fill="#FCD34D"/>
-        <g stroke="#FCD34D" stroke-width="1.5" class="anim-draw-2">
-          <line x1="262" y1="100" x2="215" y2="100"/>
-          <line x1="262" y1="90" x2="215" y2="85"/>
-          <line x1="262" y1="110" x2="215" y2="115"/>
-        </g>
-        <circle cx="200" cy="100" r="14" fill="#64748B" opacity="0.5"/>
-        <rect x="186" y="114" width="28" height="22" rx="3" fill="#64748B" opacity="0.5"/>
-        <text x="240" y="172" font-family="DM Mono" font-size="9" fill="#B91C1C" text-anchor="middle" font-weight="500">CONTRE-JOUR</text>
-      </g>
-    </svg>
-  </div>
-
-  <div class="panels">
-    <div class="panel good">
-      <div class="panel-header"><span class="panel-badge">✓</span>Preporučeno</div>
-      <ul>
-        <li>Lice okrenuto ka <strong>prirodnom svetlu</strong></li>
-        <li>Razmak od izvora <strong>1–2 metra</strong></li>
-        <li>Prozor kao primarni izvor</li>
-      </ul>
-    </div>
-    <div class="panel bad">
-      <div class="panel-header"><span class="panel-badge">✕</span>Izbegavati</div>
-      <ul>
-        <li>Jak izvor svetla iza leđa</li>
-        <li>Plafonsko gornje svetlo</li>
-        <li>Mešanje toplog i hladnog svetla</li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<!-- 03 KAMERA -->
-<section class="guide section" id="s03">
-  <div class="section-meta"><span class="section-num">03</span><span>Kamera</span></div>
-  <h2 class="section-title">Kamera u visini očiju.</h2>
-  <p class="section-intro">Kamera treba da simulira prirodnu liniju pogleda — kao da osoba razgovara sa nekim u istom prostoru.</p>
-
-  <div class="diagram" data-num="03">
-    <svg viewBox="0 0 320 220" width="320">
-      <circle cx="220" cy="80" r="16" fill="#0F172A"/>
-      <rect x="200" y="96" width="40" height="60" rx="3" fill="#0F172A"/>
-      <line x1="80" y1="80" x2="200" y2="80" stroke="#047857" stroke-width="1.5" stroke-dasharray="4 4" class="anim-draw"/>
-      <text x="140" y="72" font-family="DM Mono" font-size="9" fill="#047857" font-weight="500">LINIJA POGLEDA</text>
-      <g class="fade-target">
-        <rect x="60" y="68" width="32" height="24" rx="2" fill="#0F172A"/>
-        <circle cx="76" cy="80" r="6" fill="#FFFFFF"/>
-        <text x="76" y="110" font-family="DM Mono" font-size="9" fill="#047857" text-anchor="middle" font-weight="500">EYE LEVEL</text>
-      </g>
-      <g class="fade-target-2">
-        <line x1="95" y1="180" x2="200" y2="180" stroke="#64748B" stroke-width="1"/>
-        <line x1="95" y1="176" x2="95" y2="184" stroke="#64748B"/>
-        <line x1="200" y1="176" x2="200" y2="184" stroke="#64748B"/>
-        <text x="148" y="198" font-family="DM Mono" font-size="10" fill="#64748B" text-anchor="middle">1.0–1.5m</text>
-      </g>
-      <g opacity="0.4">
-        <rect x="60" y="148" width="28" height="20" rx="2" fill="#B91C1C"/>
-        <circle cx="74" cy="158" r="5" fill="#FFFFFF"/>
-        <text x="74" y="178" font-family="DM Mono" font-size="8" fill="#B91C1C" text-anchor="middle" font-weight="500">LOW ANGLE</text>
-      </g>
-    </svg>
-  </div>
-
-  <div class="panels">
-    <div class="panel good">
-      <div class="panel-header"><span class="panel-badge">✓</span>Standard</div>
-      <ul>
-        <li>Kamera u <strong>visini očiju</strong></li>
-        <li>Udaljenost <strong>1–1.5 m</strong></li>
-        <li>Telefon na <strong>stativu</strong></li>
-        <li>Koristi <strong>zadnju kameru</strong> telefona</li>
-      </ul>
-    </div>
-    <div class="panel bad">
-      <div class="panel-header"><span class="panel-badge">✕</span>Izbegavati</div>
-      <ul>
-        <li>Snimanje iz donjeg ugla</li>
-        <li>Držanje telefona u ruci</li>
-        <li>Selfie kameru</li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<!-- 04 AUDIO -->
-<section class="guide section" id="s04">
-  <div class="section-meta"><span class="section-num">04</span><span>Audio</span></div>
-  <h2 class="section-title">Tiha prostorija, blizak mikrofon.</h2>
-  <p class="section-intro">Zvuk je jednako važan kao i slika. Tiha prostorija je preduslov svemu ostalom.</p>
-
-  <div class="diagram" data-num="04">
-    <svg viewBox="0 0 320 200" width="320">
-      <rect x="148" y="60" width="24" height="50" rx="10" fill="#0F172A"/>
-      <rect x="155" y="115" width="10" height="30" fill="#0F172A"/>
-      <rect x="135" y="142" width="50" height="6" rx="2" fill="#0F172A"/>
-      <g transform="translate(160, 85)">
-        <rect class="wave-bar" x="-78" y="-8" width="6" height="16" fill="#0052CC" rx="1"/>
-        <rect class="wave-bar" x="-64" y="-14" width="6" height="28" fill="#0052CC" rx="1"/>
-        <rect class="wave-bar" x="-50" y="-22" width="6" height="44" fill="#0052CC" rx="1"/>
-        <rect class="wave-bar" x="44" y="-22" width="6" height="44" fill="#0052CC" rx="1"/>
-        <rect class="wave-bar" x="58" y="-14" width="6" height="28" fill="#0052CC" rx="1"/>
-        <rect class="wave-bar" x="72" y="-8" width="6" height="16" fill="#0052CC" rx="1"/>
-      </g>
-      <g class="fade-target">
-        <line x1="50" y1="170" x2="148" y2="170" stroke="#047857" stroke-width="1.2"/>
-        <line x1="50" y1="166" x2="50" y2="174" stroke="#047857"/>
-        <line x1="148" y1="166" x2="148" y2="174" stroke="#047857"/>
-        <text x="99" y="188" font-family="DM Mono" font-size="10" fill="#047857" text-anchor="middle" font-weight="500">10–20 cm</text>
-      </g>
-    </svg>
-  </div>
-
-  <div class="panels">
-    <div class="panel good">
-      <div class="panel-header"><span class="panel-badge">✓</span>Preporučeno</div>
-      <ul>
-        <li>Tiha prostorija, bez buke</li>
-        <li>Mikrofon <strong>10–20 cm</strong> od usta</li>
-        <li>Test snimak <strong>5–10 s</strong> pre snimanja</li>
-      </ul>
-    </div>
-    <div class="panel bad">
-      <div class="panel-header"><span class="panel-badge">✕</span>Izbegavati</div>
-      <ul>
-        <li>Klima uređaje i ventilatore</li>
-        <li>Otvorene prozore u buci</li>
-        <li>Prostorije sa odjekom</li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<!-- 05 KADAR -->
-<section class="guide section" id="s05">
-  <div class="section-meta"><span class="section-num">05</span><span>Kadar</span></div>
-  <h2 class="section-title">Oči u gornjoj trećini kadra.</h2>
-  <p class="section-intro">Cilj je čist i stabilan kadar koji ostavlja prostor za montažu — bez stiskanja i bez praznog neba iznad glave.</p>
-
-  <div class="diagram" data-num="05">
-    <svg viewBox="0 0 320 220" width="320">
-      <rect x="80" y="20" width="160" height="180" rx="4" fill="none" stroke="#0F172A" stroke-width="2"/>
-      <g stroke="#0052CC" stroke-width="0.8" stroke-dasharray="3 3" opacity="0.6">
-        <line x1="80" y1="80" x2="240" y2="80"/>
-        <line x1="80" y1="140" x2="240" y2="140"/>
-        <line x1="133" y1="20" x2="133" y2="200"/>
-        <line x1="187" y1="20" x2="187" y2="200"/>
-      </g>
-      <circle cx="160" cy="95" r="22" fill="#0F172A" class="fade-target"/>
-      <rect x="130" y="120" width="60" height="80" rx="4" fill="#0F172A" class="fade-target"/>
-      <circle cx="153" cy="80" r="3" fill="#047857" class="fade-target-2"/>
-      <circle cx="167" cy="80" r="3" fill="#047857" class="fade-target-2"/>
-      <text x="260" y="84" font-family="DM Mono" font-size="9" fill="#047857" font-weight="500" class="fade-target-2">EYES</text>
-      <g class="fade-target-2">
-        <line x1="50" y1="20" x2="50" y2="73" stroke="#64748B"/>
-        <line x1="46" y1="20" x2="54" y2="20" stroke="#64748B"/>
-        <line x1="46" y1="73" x2="54" y2="73" stroke="#64748B"/>
-        <text x="30" y="48" font-family="DM Mono" font-size="9" fill="#64748B" text-anchor="middle">15%</text>
-      </g>
-    </svg>
-  </div>
-
-  <div class="panels">
-    <div class="panel good">
-      <div class="panel-header"><span class="panel-badge">✓</span>Standard</div>
-      <ul>
-        <li>Oči u <strong>gornjoj trećini</strong></li>
-        <li>Prostor iznad glave <strong>10–15%</strong></li>
-        <li>Neutralna pozadina</li>
-      </ul>
-    </div>
-    <div class="panel bad">
-      <div class="panel-header"><span class="panel-badge">✕</span>Izbegavati</div>
-      <ul>
-        <li>Previše praznog prostora iznad glave</li>
-        <li>Vizuelni nered u pozadini</li>
-        <li>Sečenje glave po sredini</li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<!-- 06 GOVOR -->
-<section class="guide section" id="s06">
-  <div class="section-meta"><span class="section-num">06</span><span>Govor</span></div>
-  <h2 class="section-title">Pričaj kao sa prijateljem.</h2>
-  <p class="section-intro">Prirodnost je važnija od savršenstva. Pričaj kao da pričaš sa prijateljem — bez glume, bez žurbe.</p>
-
-  <div class="diagram" data-num="06">
-    <svg viewBox="0 0 320 200" width="320">
-      <path d="M 60 60 Q 60 40 80 40 L 240 40 Q 260 40 260 60 L 260 120 Q 260 140 240 140 L 130 140 L 110 160 L 115 140 L 80 140 Q 60 140 60 120 Z" fill="white" stroke="#0F172A" stroke-width="1.5"/>
-      <g class="fade-target">
-        <rect x="80" y="78" width="20" height="5" rx="1" fill="#0F172A"/>
-        <rect x="108" y="78" width="32" height="5" rx="1" fill="#0F172A"/>
-        <rect x="148" y="78" width="14" height="5" rx="1" fill="#0052CC"/>
-        <rect x="170" y="78" width="24" height="5" rx="1" fill="#0F172A"/>
-        <rect x="202" y="78" width="28" height="5" rx="1" fill="#0F172A"/>
-      </g>
-      <g class="fade-target-2">
-        <rect x="80" y="93" width="28" height="5" rx="1" fill="#0F172A"/>
-        <rect x="116" y="93" width="16" height="5" rx="1" fill="#0F172A"/>
-        <rect x="140" y="93" width="36" height="5" rx="1" fill="#0F172A"/>
-        <rect x="184" y="93" width="20" height="5" rx="1" fill="#0052CC"/>
-        <rect x="212" y="93" width="18" height="5" rx="1" fill="#0F172A"/>
-      </g>
-      <text x="160" y="125" font-family="DM Mono" font-size="9" fill="#64748B" text-anchor="middle">PRIRODAN TEMPO · PAUZE · PONAVLJANJA</text>
-    </svg>
-  </div>
-
-  <div class="panels">
-    <div class="panel good">
-      <div class="panel-header"><span class="panel-badge">✓</span>Preporučeno</div>
-      <ul>
-        <li>Umeren tempo, blago sporiji</li>
-        <li>Kratke pauze između misli</li>
-        <li>Prirodan ton, kao u razgovoru</li>
-      </ul>
-    </div>
-    <div class="panel bad">
-      <div class="panel-header"><span class="panel-badge">✕</span>Izbegavati</div>
-      <ul>
-        <li>"Ispravljanje u hodu"</li>
-        <li>Žurbu i monoton ton</li>
-        <li>Glumu, čitanje sa papira</li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="note"><span class="note-label">NOTE</span>Ako pogrešiš — samo ponovi rečenicu. Materijal se u montaži spaja i čisti.</div>
-</section>
-
-<!-- 07 ODEĆA -->
-<section class="guide section" id="s07">
-  <div class="section-meta"><span class="section-num">07</span><span>Odeća</span></div>
-  <h2 class="section-title">Jednobojno, neutralno.</h2>
-  <p class="section-intro">Cilj je da fokus ostane na poruci, ne na odeći. Neutralni tonovi pomažu da kamera dobro "pročita" lice.</p>
-
-  <div class="diagram" data-num="07">
-    <svg viewBox="0 0 320 200" width="320">
-      <g>
-        <rect x="40" y="30" width="60" height="60" rx="4" fill="#1E3A5F"/>
-        <rect x="110" y="30" width="60" height="60" rx="4" fill="#D6C8A8"/>
-        <rect x="180" y="30" width="60" height="60" rx="4" fill="#A8C5E0"/>
-        <text x="140" y="108" font-family="DM Mono" font-size="9" fill="#047857" text-anchor="middle" font-weight="500">SOLID COLORS</text>
-      </g>
-      <g class="fade-target">
-        <rect x="40" y="125" width="60" height="60" rx="4" fill="white" stroke="#0F172A" stroke-width="1"/>
-        <g>
-          <rect x="40" y="125" width="60" height="6" fill="#0F172A"/>
-          <rect x="40" y="137" width="60" height="6" fill="#0F172A"/>
-          <rect x="40" y="149" width="60" height="6" fill="#0F172A"/>
-          <rect x="40" y="161" width="60" height="6" fill="#0F172A"/>
-          <rect x="40" y="173" width="60" height="6" fill="#0F172A"/>
-        </g>
-        <rect x="110" y="125" width="60" height="60" rx="4" fill="#C44536"/>
-        <g opacity="0.5">
-          <rect x="110" y="125" width="60" height="4" fill="#0F172A"/>
-          <rect x="110" y="155" width="60" height="4" fill="#0F172A"/>
-          <rect x="125" y="125" width="4" height="60" fill="#0F172A"/>
-          <rect x="155" y="125" width="4" height="60" fill="#0F172A"/>
-        </g>
-        <rect x="180" y="125" width="60" height="60" rx="4" fill="#D4FF00"/>
-        <text x="140" y="200" font-family="DM Mono" font-size="9" fill="#B91C1C" text-anchor="middle" font-weight="500">PATTERNS / NEON</text>
-      </g>
-    </svg>
-  </div>
-
-  <div class="panels">
-    <div class="panel good">
-      <div class="panel-header"><span class="panel-badge">✓</span>Preporučeno</div>
-      <ul>
-        <li>Jednobojna odeća</li>
-        <li>Neutralni tonovi</li>
-        <li>Jednostavan, uredan izgled</li>
-      </ul>
-    </div>
-    <div class="panel bad">
-      <div class="panel-header"><span class="panel-badge">✕</span>Izbegavati</div>
-      <ul>
-        <li>Jake šare i sitne uzorke</li>
-        <li>Fluorescentne boje</li>
-        <li>Reflektivne materijale</li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<!-- 08 PROSTOR -->
-<section class="guide section" id="s08">
-  <div class="section-meta"><span class="section-num">08</span><span>Prostor</span></div>
-  <h2 class="section-title">Čista pozadina bez kretanja.</h2>
-  <p class="section-intro">Prostor treba da podržava sadržaj, ne da odvlači pažnju. Čista pozadina je uvek dobitnička opcija.</p>
-
-  <div class="diagram" data-num="08">
-    <svg viewBox="0 0 320 200" width="320">
-      <rect x="30" y="30" width="120" height="140" rx="4" fill="#F7F8FA" stroke="#0F172A" stroke-width="1.5"/>
-      <circle cx="90" cy="90" r="16" fill="#0F172A"/>
-      <rect x="70" y="106" width="40" height="60" rx="3" fill="#0F172A"/>
-      <text x="90" y="186" font-family="DM Mono" font-size="9" fill="#047857" text-anchor="middle" font-weight="500">CLEAN</text>
-      <g class="fade-target">
-        <rect x="170" y="30" width="120" height="140" rx="4" fill="#F7F8FA" stroke="#0F172A" stroke-width="1.5"/>
-        <circle cx="220" cy="90" r="14" fill="#0F172A"/>
-        <rect x="204" y="104" width="32" height="50" rx="3" fill="#0F172A"/>
-        <rect x="246" y="50" width="36" height="24" rx="2" fill="#64748B"/>
-        <text x="264" y="65" font-family="DM Mono" font-size="7" fill="white" text-anchor="middle">TV</text>
-        <circle cx="260" cy="120" r="6" fill="#0F172A" opacity="0.5"/>
-        <rect x="254" y="126" width="12" height="20" rx="1" fill="#0F172A" opacity="0.5"/>
-        <circle cx="180" cy="60" r="4" fill="#0052CC"/>
-        <text x="230" y="186" font-family="DM Mono" font-size="9" fill="#B91C1C" text-anchor="middle" font-weight="500">CLUTTERED</text>
-      </g>
-    </svg>
-  </div>
-
-  <div class="panels">
-    <div class="panel good">
-      <div class="panel-header"><span class="panel-badge">✓</span>Preporučeno</div>
-      <ul>
-        <li>Čista, jednostavna pozadina</li>
-        <li>Statično okruženje</li>
-        <li>Neutralni zidovi ili zavese</li>
-      </ul>
-    </div>
-    <div class="panel bad">
-      <div class="panel-header"><span class="panel-badge">✕</span>Izbegavati</div>
-      <ul>
-        <li>Prolazak ljudi iza kadra</li>
-        <li>Uključen televizor ili muzika</li>
-        <li>Vizuelno bučne tapete</li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<!-- 09 OUTDOOR -->
-<section class="guide section" id="s09">
-  <div class="section-meta"><span class="section-num">09</span><span>Outdoor</span></div>
-  <h2 class="section-title">Jutro ili zalazak sunca.</h2>
-  <p class="section-intro">Outdoor snimanje je prihvatljivo uz kontrolu uslova — sunce i vetar su najveći neprijatelji.</p>
-
-  <div class="diagram" data-num="09">
-    <svg viewBox="0 0 320 200" width="320">
-      <line x1="20" y1="150" x2="300" y2="150" stroke="#0F172A" stroke-width="1.5"/>
-      <path d="M 30 150 Q 160 30 290 150" fill="none" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="3 3" class="anim-draw"/>
-      <g class="fade-target">
-        <circle cx="60" cy="125" r="12" fill="#FCD34D"/>
-        <text x="60" y="172" font-family="DM Mono" font-size="9" fill="#047857" text-anchor="middle" font-weight="500">JUTRO</text>
-      </g>
-      <g class="fade-target-2">
-        <circle cx="160" cy="50" r="14" fill="#FCD34D"/>
-        <g stroke="#FCD34D" stroke-width="2">
-          <line x1="160" y1="28" x2="160" y2="22"/>
-          <line x1="160" y1="72" x2="160" y2="78"/>
-          <line x1="138" y1="50" x2="132" y2="50"/>
-          <line x1="182" y1="50" x2="188" y2="50"/>
-        </g>
-        <line x1="142" y1="32" x2="178" y2="68" stroke="#B91C1C" stroke-width="2.5"/>
-        <text x="160" y="172" font-family="DM Mono" font-size="9" fill="#B91C1C" text-anchor="middle" font-weight="500">PODNE</text>
-      </g>
-      <g class="fade-target">
-        <circle cx="260" cy="125" r="12" fill="#E8804C"/>
-        <text x="260" y="172" font-family="DM Mono" font-size="9" fill="#047857" text-anchor="middle" font-weight="500">ZALAZAK</text>
-      </g>
-    </svg>
-  </div>
-
-  <div class="panels">
-    <div class="panel good">
-      <div class="panel-header"><span class="panel-badge">✓</span>Preporučeno</div>
-      <ul>
-        <li><strong>Rano jutro</strong> ili <strong>zalazak</strong> sunca</li>
-        <li>Meko, indirektno svetlo</li>
-        <li>Zaklon od vetra — senka</li>
-      </ul>
-    </div>
-    <div class="panel bad">
-      <div class="panel-header"><span class="panel-badge">✕</span>Izbegavati</div>
-      <ul>
-        <li>Direktno podnevno sunce</li>
-        <li>Vetrovite lokacije</li>
-        <li>Bučne ulice i parkove</li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<!-- 10 ISPORUKA -->
-<section class="guide section" id="s10">
-  <div class="section-meta"><span class="section-num">10</span><span>Isporuka</span></div>
-  <h2 class="section-title">Original fajl na Google Drive.</h2>
-  <p class="section-intro">Da bi materijal bio procesuiran bez gubitka kvaliteta — originalni fajl, na Drive, bez prepakovanja.</p>
-
-  <div class="diagram" data-num="10">
-    <svg viewBox="0 0 320 200" width="320">
-      <g>
-        <rect x="50" y="40" width="90" height="80" rx="6" fill="white" stroke="#0F172A" stroke-width="1.5"/>
-        <g transform="translate(70, 60)">
-          <polygon points="25,0 50,40 0,40" fill="#FBBC04"/>
-          <polygon points="15,15 40,15 25,40 0,40" fill="#34A853"/>
-          <polygon points="40,15 50,40 25,40" fill="#4285F4"/>
-        </g>
-        <text x="95" y="138" font-family="DM Mono" font-size="9" fill="#047857" text-anchor="middle" font-weight="500">DRIVE / ORIGINAL</text>
-      </g>
-      <g class="fade-target">
-        <rect x="180" y="40" width="90" height="80" rx="6" fill="white" stroke="#0F172A" stroke-width="1.5"/>
-        <circle cx="210" cy="80" r="16" fill="#25D366"/>
-        <text x="210" y="84" font-family="DM Sans" font-size="13" fill="white" text-anchor="middle" font-weight="700">W</text>
-        <circle cx="245" cy="80" r="16" fill="#E1306C"/>
-        <text x="245" y="84" font-family="DM Sans" font-size="13" fill="white" text-anchor="middle" font-weight="700">IG</text>
-        <line x1="190" y1="55" x2="260" y2="105" stroke="#B91C1C" stroke-width="2"/>
-        <text x="225" y="138" font-family="DM Mono" font-size="9" fill="#B91C1C" text-anchor="middle" font-weight="500">CHAT / COMPRESSED</text>
-      </g>
-    </svg>
-  </div>
-
-  <div class="panels">
-    <div class="panel good">
-      <div class="panel-header"><span class="panel-badge">✓</span>Obavezno</div>
-      <ul>
-        <li>Upload na <strong>Google Drive</strong></li>
-        <li>Slanje <strong>originalnog fajla</strong></li>
-        <li>Bez kompresije i prepakovanja</li>
-      </ul>
-    </div>
-    <div class="panel bad">
-      <div class="panel-header"><span class="panel-badge">✕</span>Izbegavati</div>
-      <ul>
-        <li>Slanje preko WhatsApp-a</li>
-        <li>Slanje preko Instagram-a</li>
-        <li>Email kao primarni kanal</li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="note"><span class="note-label">NOTE</span>Original fajl = pun kvalitet. Sve ostalo gubi detalje.</div>
-</section>
-
-<!-- CONCLUSION -->
-<section class="conclusion">
-  <div class="conclusion-inner">
-    <span class="conclusion-label">Zaključak</span>
-    <h2 class="conclusion-title">Fokus na <span>poruku</span>,<br>ne na tehničko savršenstvo.</h2>
-    <p class="conclusion-text">Ovaj proces je dizajniran da minimizira tehničke greške i omogući fokus na sadržaj i poruku. Kvalitet finalnog videa zavisi prvenstveno od jasnoće poruke i stabilnosti osnovnih snimaka.</p>
-
-    <div class="conclusion-grid">
-      <div class="conclusion-card">
-        <div class="conclusion-card-num">01 — ŠTA TI RADIŠ</div>
-        <div class="conclusion-card-title">Snimaš prateći ovih 10 koraka</div>
-        <div class="conclusion-card-text">Greške i pauze ostavi — nema potrebe da prekidaš.</div>
+    <!-- DOC HEADER -->
+    <header class="doc-header">
+      <div class="doc-kicker">● CLIENT MANUAL · DOCUMENT</div>
+      <h1 class="doc-title">Video Production Manual</h1>
+      <p class="doc-desc">Tehnička specifikacija za snimanje materijala koji se obrađuje u našoj postprodukciji. Deset koraka. Svaki definisan, merljiv, ponovljiv.</p>
+      <div class="doc-specs">
+        <div class="doc-spec">
+          <div class="doc-spec-label">Koraka</div>
+          <div class="doc-spec-value">10</div>
+        </div>
+        <div class="doc-spec">
+          <div class="doc-spec-label">Vreme</div>
+          <div class="doc-spec-value">~8 min</div>
+        </div>
+        <div class="doc-spec">
+          <div class="doc-spec-label">Verzija</div>
+          <div class="doc-spec-value">V1.0</div>
+        </div>
+        <div class="doc-spec">
+          <div class="doc-spec-label">Update</div>
+          <div class="doc-spec-value">2026</div>
+        </div>
       </div>
-      <div class="conclusion-card">
-        <div class="conclusion-card-num">02 — ŠTA MI RADIMO</div>
-        <div class="conclusion-card-title">Postprodukcija i finalizacija</div>
-        <div class="conclusion-card-text">Sečemo greške, ujednačujemo zvuk i sliku, isporučujemo final.</div>
+    </header>
+
+    <!-- 01 -->
+    <section class="step" id="s01" data-step="01">
+      <div class="step-head">
+        <span class="step-badge">01</span>
+        <span class="step-tag">PRINCIP</span>
       </div>
-      <div class="conclusion-card">
-        <div class="conclusion-card-num">03 — ŠTA NAM TREBA</div>
-        <div class="conclusion-card-title">Original fajl na Google Drive</div>
-        <div class="conclusion-card-text">Na dostavljenom folderu. Bez chat aplikacija.</div>
+      <h2 class="step-title">Snimak ne mora biti perfektan</h2>
+      <p class="step-intro">Greške, pauze i ponavljanja su normalni deo procesa. Materijal se obrađuje u postprodukciji — kamera ne sme da staje na svaku grešku.</p>
+
+      <div class="wireframe">
+        <span class="wireframe-label">FIG.01 · WORKFLOW</span>
+        <span class="wireframe-axis">REC ACTIVE</span>
+        <svg viewBox="0 0 320 200" width="320">
+          <rect x="40" y="30" width="240" height="140" rx="2" fill="none" stroke="#0052CC" stroke-width="1"/>
+          <circle cx="160" cy="100" r="26" fill="none" stroke="#0B1220" stroke-width="1.5"/>
+          <rect x="130" y="126" width="60" height="40" rx="2" fill="none" stroke="#0B1220" stroke-width="1.5"/>
+          <circle cx="65" cy="50" r="5" fill="#B91C1C" class="anim-pulse"/>
+          <text x="78" y="55" font-family="DM Mono" font-size="11" font-weight="500" fill="#B91C1C">REC</text>
+          <g class="fade-target">
+            <line x1="200" y1="60" x2="265" y2="60" stroke="#0052CC" stroke-width="1"/>
+            <line x1="200" y1="60" x2="200" y2="55" stroke="#0052CC" stroke-width="1"/>
+            <line x1="265" y1="60" x2="265" y2="55" stroke="#0052CC" stroke-width="1"/>
+            <text x="232" y="50" font-family="DM Mono" font-size="9" fill="#0052CC" text-anchor="middle">ERROR-OK</text>
+            <text x="232" y="76" font-family="DM Mono" font-size="9" fill="#64748B" text-anchor="middle">FIXED IN POST</text>
+          </g>
+        </svg>
       </div>
-      <div class="conclusion-card">
-        <div class="conclusion-card-num">04 — PITANJA</div>
-        <div class="conclusion-card-title">Pre snimanja, ne posle</div>
-        <div class="conclusion-card-text">Bolje minut razgovora nego sat ponovnog snimanja.</div>
+
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-type="do" data-target="t01-do"><span class="dot"></span>DO</button>
+        <button class="tab" data-type="dont" data-target="t01-dont"><span class="dot"></span>DON'T</button>
       </div>
-    </div>
-  </div>
-</section>
+      <div class="tab-content active" id="t01-do">
+        <ul class="checklist">
+          <li class="checklist-item do"><span class="icon">✓</span><div>Zastani kratko, ponovi rečenicu</div></li>
+          <li class="checklist-item do"><span class="icon">✓</span><div>Nastavi dalje bez prekidanja snimanja</div></li>
+          <li class="checklist-item do"><span class="icon">✓</span><div>Veruj procesu — montaža čisti sve</div></li>
+        </ul>
+      </div>
+      <div class="tab-content" id="t01-dont">
+        <ul class="checklist">
+          <li class="checklist-item dont"><span class="icon">✕</span><div>Prekidati snimanje na svaku grešku</div></li>
+          <li class="checklist-item dont"><span class="icon">✕</span><div>Brisati snimljen materijal</div></li>
+          <li class="checklist-item dont"><span class="icon">✕</span><div>Snimati ispočetka</div></li>
+        </ul>
+      </div>
+
+      <div class="callout"><span class="callout-icon">i</span><div><strong>Princip:</strong> sve se rešava u postprodukciji. Pusti kameru da snima.</div></div>
+    </section>
+
+    <!-- 02 -->
+    <section class="step" id="s02" data-step="02">
+      <div class="step-head">
+        <span class="step-badge">02</span>
+        <span class="step-tag">SVETLO</span>
+      </div>
+      <h2 class="step-title">Lice okrenuto ka izvoru svetla</h2>
+      <p class="step-intro">Kvalitet svetla direktno utiče na izgled. Cilj: ravnomerno osvetljenje lica, bez jakih senki, bez contre-jour efekta.</p>
+
+      <div class="wireframe">
+        <span class="wireframe-label">FIG.02 · LIGHT GEOMETRY</span>
+        <span class="wireframe-axis">TOP-DOWN</span>
+        <svg viewBox="0 0 320 200" width="320">
+          <g>
+            <circle cx="40" cy="100" r="14" fill="none" stroke="#FCD34D" stroke-width="1.5"/>
+            <circle cx="40" cy="100" r="6" fill="#FCD34D"/>
+            <g stroke="#FCD34D" stroke-width="1" class="anim-draw">
+              <line x1="56" y1="100" x2="105" y2="100"/>
+              <line x1="56" y1="90" x2="105" y2="85"/>
+              <line x1="56" y1="110" x2="105" y2="115"/>
+            </g>
+            <circle cx="120" cy="100" r="12" fill="none" stroke="#0B1220" stroke-width="1.5"/>
+            <rect x="106" y="114" width="28" height="22" rx="2" fill="none" stroke="#0B1220" stroke-width="1.5"/>
+            <text x="80" y="172" font-family="DM Mono" font-size="9" fill="#047857" text-anchor="middle" font-weight="500">FRONT-LIT</text>
+          </g>
+          <line x1="160" y1="20" x2="160" y2="180" stroke="#E2E8F0" stroke-dasharray="2 2"/>
+          <g>
+            <circle cx="280" cy="100" r="14" fill="none" stroke="#FCD34D" stroke-width="1.5"/>
+            <circle cx="280" cy="100" r="6" fill="#FCD34D"/>
+            <g stroke="#FCD34D" stroke-width="1" class="anim-draw-2">
+              <line x1="264" y1="100" x2="215" y2="100"/>
+              <line x1="264" y1="90" x2="215" y2="85"/>
+              <line x1="264" y1="110" x2="215" y2="115"/>
+            </g>
+            <circle cx="200" cy="100" r="12" fill="none" stroke="#64748B" stroke-width="1.5" opacity="0.5"/>
+            <rect x="186" y="114" width="28" height="22" rx="2" fill="none" stroke="#64748B" stroke-width="1.5" opacity="0.5"/>
+            <text x="240" y="172" font-family="DM Mono" font-size="9" fill="#B91C1C" text-anchor="middle" font-weight="500">BACK-LIT</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="spec-table">
+        <div class="spec-row">
+          <div class="spec-key">Izvor svetla</div>
+          <div class="spec-val">Prirodno svetlo · prozor</div>
+          <div class="spec-tag required">REQ</div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">Razmak</div>
+          <div class="spec-val"><code>1.0–2.0 m</code> od izvora</div>
+          <div class="spec-tag opt">REC</div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">Pozicija lica</div>
+          <div class="spec-val">Okrenuto ka svetlu, ne od njega</div>
+          <div class="spec-tag required">REQ</div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">Plafonsko svetlo</div>
+          <div class="spec-val">Isključi — pravi senke ispod očiju</div>
+          <div class="spec-tag opt">AVOID</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 -->
+    <section class="step" id="s03" data-step="03">
+      <div class="step-head">
+        <span class="step-badge">03</span>
+        <span class="step-tag">KAMERA</span>
+      </div>
+      <h2 class="step-title">Kamera u visini očiju</h2>
+      <p class="step-intro">Simuliraj prirodnu liniju pogleda — kao razgovor sa nekim u istoj sobi. Stabilno, na stativu, zadnja kamera telefona.</p>
+
+      <div class="wireframe">
+        <span class="wireframe-label">FIG.03 · CAMERA SETUP</span>
+        <span class="wireframe-axis">SIDE VIEW</span>
+        <svg viewBox="0 0 320 220" width="320">
+          <circle cx="220" cy="80" r="14" fill="none" stroke="#0B1220" stroke-width="1.5"/>
+          <rect x="200" y="94" width="40" height="60" rx="2" fill="none" stroke="#0B1220" stroke-width="1.5"/>
+          <line x1="80" y1="80" x2="200" y2="80" stroke="#047857" stroke-width="1" stroke-dasharray="4 3" class="anim-draw"/>
+          <text x="140" y="72" font-family="DM Mono" font-size="9" fill="#047857" font-weight="500" text-anchor="middle">EYE LINE</text>
+          <g class="fade-target">
+            <rect x="60" y="68" width="32" height="24" rx="2" fill="none" stroke="#0052CC" stroke-width="1.5"/>
+            <circle cx="76" cy="80" r="6" fill="none" stroke="#0052CC" stroke-width="1.5"/>
+            <text x="76" y="110" font-family="DM Mono" font-size="9" fill="#047857" text-anchor="middle" font-weight="500">EYE LEVEL</text>
+          </g>
+          <g class="fade-target-2">
+            <line x1="95" y1="180" x2="200" y2="180" stroke="#64748B" stroke-width="1"/>
+            <line x1="95" y1="176" x2="95" y2="184" stroke="#64748B"/>
+            <line x1="200" y1="176" x2="200" y2="184" stroke="#64748B"/>
+            <text x="148" y="198" font-family="DM Mono" font-size="10" fill="#64748B" text-anchor="middle">1.0–1.5 m</text>
+          </g>
+          <g opacity="0.35">
+            <rect x="60" y="148" width="28" height="20" rx="2" fill="none" stroke="#B91C1C" stroke-width="1.5"/>
+            <text x="74" y="178" font-family="DM Mono" font-size="8" fill="#B91C1C" text-anchor="middle" font-weight="500">LOW</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="spec-table">
+        <div class="spec-row">
+          <div class="spec-key">Visina kamere</div>
+          <div class="spec-val"><code>= visini očiju</code></div>
+          <div class="spec-tag required">REQ</div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">Udaljenost</div>
+          <div class="spec-val"><code>1.0–1.5 m</code></div>
+          <div class="spec-tag required">REQ</div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">Stativ</div>
+          <div class="spec-val">Obavezno · ne držati u ruci</div>
+          <div class="spec-tag required">REQ</div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">Kamera</div>
+          <div class="spec-val">Zadnja kamera telefona</div>
+          <div class="spec-tag required">REQ</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 -->
+    <section class="step" id="s04" data-step="04">
+      <div class="step-head">
+        <span class="step-badge">04</span>
+        <span class="step-tag">AUDIO</span>
+      </div>
+      <h2 class="step-title">Tiha prostorija, blizak mikrofon</h2>
+      <p class="step-intro">Zvuk je 50% videa. Tiha soba je preduslov svemu ostalom — bez odjeka, bez klime, bez ventilatora.</p>
+
+      <div class="wireframe">
+        <span class="wireframe-label">FIG.04 · AUDIO CAPTURE</span>
+        <span class="wireframe-axis">SIGNAL</span>
+        <svg viewBox="0 0 320 200" width="320">
+          <rect x="148" y="60" width="24" height="50" rx="10" fill="none" stroke="#0B1220" stroke-width="1.5"/>
+          <rect x="155" y="115" width="10" height="30" fill="none" stroke="#0B1220" stroke-width="1.5"/>
+          <rect x="135" y="142" width="50" height="6" rx="2" fill="none" stroke="#0B1220" stroke-width="1.5"/>
+          <g transform="translate(160, 85)">
+            <rect class="wave-bar" x="-78" y="-8" width="6" height="16" fill="#0052CC" rx="1"/>
+            <rect class="wave-bar" x="-64" y="-14" width="6" height="28" fill="#0052CC" rx="1"/>
+            <rect class="wave-bar" x="-50" y="-22" width="6" height="44" fill="#0052CC" rx="1"/>
+            <rect class="wave-bar" x="44" y="-22" width="6" height="44" fill="#0052CC" rx="1"/>
+            <rect class="wave-bar" x="58" y="-14" width="6" height="28" fill="#0052CC" rx="1"/>
+            <rect class="wave-bar" x="72" y="-8" width="6" height="16" fill="#0052CC" rx="1"/>
+          </g>
+          <g class="fade-target">
+            <line x1="50" y1="170" x2="148" y2="170" stroke="#047857" stroke-width="1.2"/>
+            <line x1="50" y1="166" x2="50" y2="174" stroke="#047857"/>
+            <line x1="148" y1="166" x2="148" y2="174" stroke="#047857"/>
+            <text x="99" y="188" font-family="DM Mono" font-size="10" fill="#047857" text-anchor="middle" font-weight="500">10–20 cm</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="spec-table">
+        <div class="spec-row">
+          <div class="spec-key">Razmak mikrofon</div>
+          <div class="spec-val"><code>10–20 cm</code> od usta</div>
+          <div class="spec-tag required">REQ</div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">Test snimak</div>
+          <div class="spec-val"><code>5–10 s</code> pre glavnog snimanja</div>
+          <div class="spec-tag required">REQ</div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">Klima / fan</div>
+          <div class="spec-val">Isključi — pravi belu buku</div>
+          <div class="spec-tag opt">AVOID</div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">Odjek prostorije</div>
+          <div class="spec-val">Izbegavaj prazne sobe</div>
+          <div class="spec-tag opt">AVOID</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 -->
+    <section class="step" id="s05" data-step="05">
+      <div class="step-head">
+        <span class="step-badge">05</span>
+        <span class="step-tag">KADAR</span>
+      </div>
+      <h2 class="step-title">Oči u gornjoj trećini kadra</h2>
+      <p class="step-intro">Rule of thirds. Oči na gornjoj horizontali. Mali prostor iznad glave, dovoljno prostora za montažu.</p>
+
+      <div class="wireframe">
+        <span class="wireframe-label">FIG.05 · COMPOSITION</span>
+        <span class="wireframe-axis">RULE OF 3</span>
+        <svg viewBox="0 0 320 220" width="320">
+          <rect x="80" y="20" width="160" height="180" rx="2" fill="none" stroke="#0B1220" stroke-width="1.5"/>
+          <g stroke="#0052CC" stroke-width="0.8" stroke-dasharray="3 3" opacity="0.6">
+            <line x1="80" y1="80" x2="240" y2="80"/>
+            <line x1="80" y1="140" x2="240" y2="140"/>
+            <line x1="133" y1="20" x2="133" y2="200"/>
+            <line x1="187" y1="20" x2="187" y2="200"/>
+          </g>
+          <circle cx="160" cy="95" r="22" fill="none" stroke="#0B1220" stroke-width="1.5" class="fade-target"/>
+          <rect x="130" y="120" width="60" height="80" rx="2" fill="none" stroke="#0B1220" stroke-width="1.5" class="fade-target"/>
+          <circle cx="153" cy="80" r="3" fill="#047857" class="fade-target-2"/>
+          <circle cx="167" cy="80" r="3" fill="#047857" class="fade-target-2"/>
+          <text x="260" y="84" font-family="DM Mono" font-size="9" fill="#047857" font-weight="500" class="fade-target-2">EYES</text>
+          <g class="fade-target-2">
+            <line x1="50" y1="20" x2="50" y2="73" stroke="#64748B"/>
+            <line x1="46" y1="20" x2="54" y2="20" stroke="#64748B"/>
+            <line x1="46" y1="73" x2="54" y2="73" stroke="#64748B"/>
+            <text x="30" y="48" font-family="DM Mono" font-size="9" fill="#64748B" text-anchor="middle">15%</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="spec-table">
+        <div class="spec-row">
+          <div class="spec-key">Pozicija očiju</div>
+          <div class="spec-val">Gornja trećina kadra</div>
+          <div class="spec-tag required">REQ</div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">Headroom</div>
+          <div class="spec-val"><code>10–15%</code> visine kadra</div>
+          <div class="spec-tag required">REQ</div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">Pozadina</div>
+          <div class="spec-val">Neutralna, nenametljiva</div>
+          <div class="spec-tag required">REQ</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 -->
+    <section class="step" id="s06" data-step="06">
+      <div class="step-head">
+        <span class="step-badge">06</span>
+        <span class="step-tag">GOVOR</span>
+      </div>
+      <h2 class="step-title">Pričaj kao sa prijateljem</h2>
+      <p class="step-intro">Umeren tempo, kratke pauze, prirodan ton. Ako pogrešiš — ponovi rečenicu i nastavi. Postprodukcija seče sve viškove.</p>
+
+      <div class="wireframe">
+        <span class="wireframe-label">FIG.06 · SPEECH PATTERN</span>
+        <span class="wireframe-axis">RHYTHM</span>
+        <svg viewBox="0 0 320 200" width="320">
+          <path d="M 60 60 Q 60 40 80 40 L 240 40 Q 260 40 260 60 L 260 120 Q 260 140 240 140 L 130 140 L 110 160 L 115 140 L 80 140 Q 60 140 60 120 Z" fill="none" stroke="#0B1220" stroke-width="1.5"/>
+          <g class="fade-target">
+            <rect x="80" y="78" width="20" height="5" rx="1" fill="#0B1220"/>
+            <rect x="108" y="78" width="32" height="5" rx="1" fill="#0B1220"/>
+            <rect x="148" y="78" width="14" height="5" rx="1" fill="#0052CC"/>
+            <rect x="170" y="78" width="24" height="5" rx="1" fill="#0B1220"/>
+            <rect x="202" y="78" width="28" height="5" rx="1" fill="#0B1220"/>
+          </g>
+          <g class="fade-target-2">
+            <rect x="80" y="93" width="28" height="5" rx="1" fill="#0B1220"/>
+            <rect x="116" y="93" width="16" height="5" rx="1" fill="#0B1220"/>
+            <rect x="140" y="93" width="36" height="5" rx="1" fill="#0B1220"/>
+            <rect x="184" y="93" width="20" height="5" rx="1" fill="#0052CC"/>
+            <rect x="212" y="93" width="18" height="5" rx="1" fill="#0B1220"/>
+          </g>
+          <text x="160" y="125" font-family="DM Mono" font-size="9" fill="#64748B" text-anchor="middle">·····  PAUSE  ·····</text>
+        </svg>
+      </div>
+
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-type="do" data-target="t06-do"><span class="dot"></span>DO</button>
+        <button class="tab" data-type="dont" data-target="t06-dont"><span class="dot"></span>DON'T</button>
+      </div>
+      <div class="tab-content active" id="t06-do">
+        <ul class="checklist">
+          <li class="checklist-item do"><span class="icon">✓</span><div>Umeren tempo, blago sporiji nego u običnom razgovoru</div></li>
+          <li class="checklist-item do"><span class="icon">✓</span><div>Kratke pauze između misli — daju ritam montaži</div></li>
+          <li class="checklist-item do"><span class="icon">✓</span><div>Prirodan ton — kao razgovor sa prijateljem</div></li>
+        </ul>
+      </div>
+      <div class="tab-content" id="t06-dont">
+        <ul class="checklist">
+          <li class="checklist-item dont"><span class="icon">✕</span><div>Ispravljanje u hodu ("ej, izvini, hteo sam reći...")</div></li>
+          <li class="checklist-item dont"><span class="icon">✕</span><div>Žurba, ubrzan ili monoton ton</div></li>
+          <li class="checklist-item dont"><span class="icon">✕</span><div>Čitanje sa papira — gubi se prirodnost</div></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 07 -->
+    <section class="step" id="s07" data-step="07">
+      <div class="step-head">
+        <span class="step-badge">07</span>
+        <span class="step-tag">ODEĆA</span>
+      </div>
+      <h2 class="step-title">Jednobojno, neutralno</h2>
+      <p class="step-intro">Šare vibriraju na kameri (moiré efekat). Neon ulazi u kožu i menja boju lica. Bezbedno: čvrste, zemljane boje.</p>
+
+      <div class="wireframe">
+        <span class="wireframe-label">FIG.07 · WARDROBE</span>
+        <span class="wireframe-axis">SWATCHES</span>
+        <svg viewBox="0 0 320 200" width="320">
+          <g>
+            <rect x="40" y="30" width="60" height="60" rx="2" fill="#1E3A5F" stroke="#0B1220" stroke-width="1"/>
+            <rect x="110" y="30" width="60" height="60" rx="2" fill="#D6C8A8" stroke="#0B1220" stroke-width="1"/>
+            <rect x="180" y="30" width="60" height="60" rx="2" fill="#A8C5E0" stroke="#0B1220" stroke-width="1"/>
+            <text x="140" y="108" font-family="DM Mono" font-size="9" fill="#047857" text-anchor="middle" font-weight="500">SOLID · OK</text>
+          </g>
+          <g class="fade-target">
+            <rect x="40" y="125" width="60" height="60" rx="2" fill="white" stroke="#0B1220" stroke-width="1"/>
+            <g>
+              <rect x="40" y="125" width="60" height="6" fill="#0B1220"/>
+              <rect x="40" y="137" width="60" height="6" fill="#0B1220"/>
+              <rect x="40" y="149" width="60" height="6" fill="#0B1220"/>
+              <rect x="40" y="161" width="60" height="6" fill="#0B1220"/>
+              <rect x="40" y="173" width="60" height="6" fill="#0B1220"/>
+            </g>
+            <rect x="110" y="125" width="60" height="60" rx="2" fill="#C44536" stroke="#0B1220" stroke-width="1"/>
+            <g opacity="0.5">
+              <rect x="110" y="125" width="60" height="4" fill="#0B1220"/>
+              <rect x="110" y="155" width="60" height="4" fill="#0B1220"/>
+              <rect x="125" y="125" width="4" height="60" fill="#0B1220"/>
+              <rect x="155" y="125" width="4" height="60" fill="#0B1220"/>
+            </g>
+            <rect x="180" y="125" width="60" height="60" rx="2" fill="#D4FF00" stroke="#0B1220" stroke-width="1"/>
+            <text x="140" y="200" font-family="DM Mono" font-size="9" fill="#B91C1C" text-anchor="middle" font-weight="500">PATTERN · NEON · AVOID</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="spec-table">
+        <div class="spec-row">
+          <div class="spec-key">Tip odeće</div>
+          <div class="spec-val">Jednobojna, glatka tkanina</div>
+          <div class="spec-tag required">REQ</div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">Paleta</div>
+          <div class="spec-val">Neutralne / zemljane boje</div>
+          <div class="spec-tag opt">REC</div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">Sitne šare</div>
+          <div class="spec-val">Mogu izazvati moiré na kameri</div>
+          <div class="spec-tag opt">AVOID</div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">Neon / fluo</div>
+          <div class="spec-val">Boja se reflektuje na kožu</div>
+          <div class="spec-tag opt">AVOID</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 08 -->
+    <section class="step" id="s08" data-step="08">
+      <div class="step-head">
+        <span class="step-badge">08</span>
+        <span class="step-tag">PROSTOR</span>
+      </div>
+      <h2 class="step-title">Čista pozadina, statično okruženje</h2>
+      <p class="step-intro">Cilj: oko gledaoca ostaje na licu i poruci. Bez prolaska ljudi, bez TV-a u pozadini, bez muzike koju mikrofon hvata.</p>
+
+      <div class="wireframe">
+        <span class="wireframe-label">FIG.08 · SET</span>
+        <span class="wireframe-axis">FRONTAL</span>
+        <svg viewBox="0 0 320 200" width="320">
+          <rect x="30" y="30" width="120" height="140" rx="2" fill="none" stroke="#0B1220" stroke-width="1.5"/>
+          <circle cx="90" cy="90" r="14" fill="none" stroke="#0B1220" stroke-width="1.5"/>
+          <rect x="70" y="106" width="40" height="60" rx="2" fill="none" stroke="#0B1220" stroke-width="1.5"/>
+          <text x="90" y="186" font-family="DM Mono" font-size="9" fill="#047857" text-anchor="middle" font-weight="500">CLEAN</text>
+          <g class="fade-target">
+            <rect x="170" y="30" width="120" height="140" rx="2" fill="none" stroke="#0B1220" stroke-width="1.5"/>
+            <circle cx="220" cy="90" r="12" fill="none" stroke="#0B1220" stroke-width="1.5"/>
+            <rect x="204" y="104" width="32" height="50" rx="2" fill="none" stroke="#0B1220" stroke-width="1.5"/>
+            <rect x="246" y="50" width="36" height="24" rx="2" fill="none" stroke="#64748B" stroke-width="1"/>
+            <text x="264" y="65" font-family="DM Mono" font-size="7" fill="#64748B" text-anchor="middle">TV</text>
+            <circle cx="260" cy="120" r="5" fill="none" stroke="#64748B" stroke-width="1"/>
+            <rect x="254" y="125" width="12" height="20" rx="1" fill="none" stroke="#64748B" stroke-width="1"/>
+            <text x="230" y="186" font-family="DM Mono" font-size="9" fill="#B91C1C" text-anchor="middle" font-weight="500">CLUTTER</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="spec-table">
+        <div class="spec-row">
+          <div class="spec-key">Pozadina</div>
+          <div class="spec-val">Zid · zavesa · prazan prostor</div>
+          <div class="spec-tag required">REQ</div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">Kretanje</div>
+          <div class="spec-val">Bez prolaska ljudi/životinja</div>
+          <div class="spec-tag required">REQ</div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">TV / muzika</div>
+          <div class="spec-val">Isključeno — mikrofon hvata</div>
+          <div class="spec-tag required">REQ</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 09 -->
+    <section class="step" id="s09" data-step="09">
+      <div class="step-head">
+        <span class="step-badge">09</span>
+        <span class="step-tag">OUTDOOR</span>
+      </div>
+      <h2 class="step-title">Jutro ili zalazak — golden hour</h2>
+      <p class="step-intro">Sunce i vetar su najveći neprijatelji outdoor snimanja. Snimaj kad je svetlo meko, biraj zaklon od vetra.</p>
+
+      <div class="wireframe">
+        <span class="wireframe-label">FIG.09 · SUN ARC</span>
+        <span class="wireframe-axis">TIME OF DAY</span>
+        <svg viewBox="0 0 320 200" width="320">
+          <line x1="20" y1="150" x2="300" y2="150" stroke="#0B1220" stroke-width="1.5"/>
+          <path d="M 30 150 Q 160 30 290 150" fill="none" stroke="#0052CC" stroke-width="1" stroke-dasharray="3 3" class="anim-draw"/>
+          <g class="fade-target">
+            <circle cx="60" cy="125" r="10" fill="none" stroke="#FCD34D" stroke-width="1.5"/>
+            <circle cx="60" cy="125" r="4" fill="#FCD34D"/>
+            <text x="60" y="172" font-family="DM Mono" font-size="9" fill="#047857" text-anchor="middle" font-weight="500">06–09h</text>
+          </g>
+          <g class="fade-target-2">
+            <circle cx="160" cy="50" r="12" fill="none" stroke="#FCD34D" stroke-width="1.5"/>
+            <circle cx="160" cy="50" r="6" fill="#FCD34D"/>
+            <g stroke="#FCD34D" stroke-width="1.5">
+              <line x1="160" y1="28" x2="160" y2="22"/>
+              <line x1="160" y1="72" x2="160" y2="78"/>
+              <line x1="138" y1="50" x2="132" y2="50"/>
+              <line x1="182" y1="50" x2="188" y2="50"/>
+            </g>
+            <line x1="142" y1="32" x2="178" y2="68" stroke="#B91C1C" stroke-width="2"/>
+            <text x="160" y="172" font-family="DM Mono" font-size="9" fill="#B91C1C" text-anchor="middle" font-weight="500">12h ✕</text>
+          </g>
+          <g class="fade-target">
+            <circle cx="260" cy="125" r="10" fill="none" stroke="#E8804C" stroke-width="1.5"/>
+            <circle cx="260" cy="125" r="4" fill="#E8804C"/>
+            <text x="260" y="172" font-family="DM Mono" font-size="9" fill="#047857" text-anchor="middle" font-weight="500">17–19h</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="spec-table">
+        <div class="spec-row">
+          <div class="spec-key">Vreme snimanja</div>
+          <div class="spec-val"><code>06–09h</code> · <code>17–19h</code></div>
+          <div class="spec-tag required">REQ</div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">Podne (10–15h)</div>
+          <div class="spec-val">Tvrde senke ispod očiju</div>
+          <div class="spec-tag opt">AVOID</div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">Vetar</div>
+          <div class="spec-val">Zaklon · senka · zatišje</div>
+          <div class="spec-tag required">REQ</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section class="step" id="s10" data-step="10">
+      <div class="step-head">
+        <span class="step-badge">10</span>
+        <span class="step-tag">ISPORUKA</span>
+      </div>
+      <h2 class="step-title">Original fajl, Google Drive</h2>
+      <p class="step-intro">Bilo koja chat aplikacija (WhatsApp, Instagram, Telegram) komprimuje video do 70%. Drive čuva original — bez gubitka.</p>
+
+      <div class="wireframe">
+        <span class="wireframe-label">FIG.10 · DELIVERY</span>
+        <span class="wireframe-axis">PIPELINE</span>
+        <svg viewBox="0 0 320 200" width="320">
+          <g>
+            <rect x="50" y="40" width="90" height="80" rx="4" fill="none" stroke="#0B1220" stroke-width="1.5"/>
+            <g transform="translate(70, 60)">
+              <polygon points="25,0 50,40 0,40" fill="#FBBC04"/>
+              <polygon points="15,15 40,15 25,40 0,40" fill="#34A853"/>
+              <polygon points="40,15 50,40 25,40" fill="#4285F4"/>
+            </g>
+            <text x="95" y="138" font-family="DM Mono" font-size="9" fill="#047857" text-anchor="middle" font-weight="500">DRIVE · ORIGINAL</text>
+          </g>
+          <g class="fade-target">
+            <rect x="180" y="40" width="90" height="80" rx="4" fill="none" stroke="#0B1220" stroke-width="1.5"/>
+            <circle cx="210" cy="80" r="14" fill="#25D366"/>
+            <text x="210" y="84" font-family="DM Sans" font-size="12" fill="white" text-anchor="middle" font-weight="700">W</text>
+            <circle cx="245" cy="80" r="14" fill="#E1306C"/>
+            <text x="245" y="84" font-family="DM Sans" font-size="12" fill="white" text-anchor="middle" font-weight="700">IG</text>
+            <line x1="190" y1="55" x2="260" y2="105" stroke="#B91C1C" stroke-width="2"/>
+            <text x="225" y="138" font-family="DM Mono" font-size="9" fill="#B91C1C" text-anchor="middle" font-weight="500">CHAT · ~70% LOSS</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="spec-table">
+        <div class="spec-row">
+          <div class="spec-key">Kanal</div>
+          <div class="spec-val">Google Drive (folder dostavljen)</div>
+          <div class="spec-tag required">REQ</div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">Format</div>
+          <div class="spec-val">Originalni fajl iz telefona</div>
+          <div class="spec-tag required">REQ</div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">WhatsApp / IG / Email</div>
+          <div class="spec-val">Kompresija — gubitak detalja</div>
+          <div class="spec-tag opt">AVOID</div>
+        </div>
+      </div>
+
+      <div class="callout"><span class="callout-icon">i</span><div><strong>Pravilo:</strong> ako fajl prođe kroz chat aplikaciju, izgubili smo razliku između HD i SD.</div></div>
+    </section>
+
+    <!-- SUMMARY CHECKLIST -->
+    <section class="summary" id="summary">
+      <div class="summary-card">
+        <div class="summary-tag">● PRE SNIMANJA</div>
+        <h2 class="summary-title">Quick checklist</h2>
+        <p class="summary-desc">Prođi kroz listu pre nego što pritisneš REC. Čekiraj stavke — služi samo tebi, ništa se ne pamti.</p>
+
+        <ul class="summary-list" id="summaryList">
+          <li class="summary-item"><span class="summary-check"></span><span class="step-no">01</span><span class="text">Spreman da <strong>ne prekidaš</strong> snimanje na svaku grešku</span></li>
+          <li class="summary-item"><span class="summary-check"></span><span class="step-no">02</span><span class="text">Lice okrenuto ka prozoru · razmak <code>1–2 m</code></span></li>
+          <li class="summary-item"><span class="summary-check"></span><span class="step-no">03</span><span class="text">Stativ · zadnja kamera · <code>visina očiju</code></span></li>
+          <li class="summary-item"><span class="summary-check"></span><span class="step-no">04</span><span class="text">Mikrofon na <code>10–20 cm</code> · klima isključena</span></li>
+          <li class="summary-item"><span class="summary-check"></span><span class="step-no">05</span><span class="text">Oči u gornjoj trećini · <code>15%</code> iznad glave</span></li>
+          <li class="summary-item"><span class="summary-check"></span><span class="step-no">06</span><span class="text">Umeren tempo, prirodan ton — kao razgovor</span></li>
+          <li class="summary-item"><span class="summary-check"></span><span class="step-no">07</span><span class="text">Jednobojna odeća · bez šara i neona</span></li>
+          <li class="summary-item"><span class="summary-check"></span><span class="step-no">08</span><span class="text">Čista pozadina · bez TV-a, muzike, kretanja</span></li>
+          <li class="summary-item"><span class="summary-check"></span><span class="step-no">09</span><span class="text">Ako outdoor — jutro ili zalazak, ne podne</span></li>
+          <li class="summary-item"><span class="summary-check"></span><span class="step-no">10</span><span class="text">Posle: original fajl na <strong>Google Drive</strong></span></li>
+        </ul>
+
+        <div class="summary-progress">
+          <span id="progressText">0 / 10</span>
+          <div class="summary-progress-bar"><div class="summary-progress-fill" id="progressFill"></div></div>
+          <span id="progressPct">0%</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
 
 <footer>CVPG · V1.0 · 2026 · Hvala</footer>
 
-<button class="toc-toggle" id="tocToggle" aria-label="Sadržaj">≡</button>
-<nav class="toc" id="toc">
-  <div class="toc-head">Sadržaj</div>
-  <a href="#s01"><span class="num">01</span>Princip</a>
-  <a href="#s02"><span class="num">02</span>Svetlo</a>
-  <a href="#s03"><span class="num">03</span>Kamera</a>
-  <a href="#s04"><span class="num">04</span>Audio</a>
-  <a href="#s05"><span class="num">05</span>Kadar</a>
-  <a href="#s06"><span class="num">06</span>Govor</a>
-  <a href="#s07"><span class="num">07</span>Odeća</a>
-  <a href="#s08"><span class="num">08</span>Prostor</a>
-  <a href="#s09"><span class="num">09</span>Outdoor</a>
-  <a href="#s10"><span class="num">10</span>Isporuka</a>
-</nav>
+<!-- Mobile nav -->
+<div class="mobile-nav" id="mobileNav">
+  <div class="mobile-nav-current">
+    <span class="mobile-nav-num" id="mobileNum">00</span>
+    <span id="mobileText">Sadržaj</span>
+  </div>
+  <span>↑</span>
+</div>
+
+<div class="mobile-drawer" id="mobileDrawer">
+  <div class="mobile-drawer-content">
+    <div class="mobile-drawer-head">
+      <span class="mobile-drawer-title">Sadržaj · 10 koraka</span>
+      <button class="mobile-drawer-close" id="drawerClose">×</button>
+    </div>
+    <a href="#s01"><span class="num">01</span>Princip</a>
+    <a href="#s02"><span class="num">02</span>Svetlo</a>
+    <a href="#s03"><span class="num">03</span>Kamera</a>
+    <a href="#s04"><span class="num">04</span>Audio</a>
+    <a href="#s05"><span class="num">05</span>Kadar</a>
+    <a href="#s06"><span class="num">06</span>Govor</a>
+    <a href="#s07"><span class="num">07</span>Odeća</a>
+    <a href="#s08"><span class="num">08</span>Prostor</a>
+    <a href="#s09"><span class="num">09</span>Outdoor</a>
+    <a href="#s10"><span class="num">10</span>Isporuka</a>
+    <a href="#summary"><span class="num">▣</span>Checklist</a>
+  </div>
+</div>
 
 <script>
-  const progressFill = document.getElementById('progressFill');
-  window.addEventListener('scroll', () => {
+  // Step tracking + progress
+  const steps = document.querySelectorAll('.step');
+  const sideLinks = document.querySelectorAll('#sideNav a');
+  const topStep = document.getElementById('topStep');
+  const topPct = document.getElementById('topPct');
+  const mobileNum = document.getElementById('mobileNum');
+  const mobileText = document.getElementById('mobileText');
+
+  function updateProgress() {
     const scrollTop = window.scrollY;
     const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-    progressFill.style.width = ((scrollTop / docHeight) * 100) + '%';
-  });
+    const pct = Math.round((scrollTop / docHeight) * 100);
+    topPct.textContent = pct + '%';
 
+    // Find current step
+    let current = null;
+    steps.forEach(s => {
+      const r = s.getBoundingClientRect();
+      if (r.top < window.innerHeight * 0.4 && r.bottom > 0) current = s;
+    });
+
+    sideLinks.forEach(a => a.classList.remove('active'));
+    if (current) {
+      const num = current.dataset.step;
+      topStep.textContent = 'STEP ' + num + '/10';
+      mobileNum.textContent = num;
+      mobileText.textContent = current.querySelector('.step-tag').textContent;
+      const link = document.querySelector('#sideNav a[href="#s' + num + '"]');
+      if (link) link.classList.add('active');
+    } else {
+      topStep.textContent = 'STEP 00/10';
+      mobileNum.textContent = '00';
+      mobileText.textContent = 'Početak';
+    }
+  }
+  window.addEventListener('scroll', updateProgress);
+  updateProgress();
+
+  // Fade-in observer
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) entry.target.classList.add('in-view');
     });
   }, { threshold: 0.15 });
-  document.querySelectorAll('.section').forEach(s => observer.observe(s));
+  steps.forEach(s => observer.observe(s));
 
-  const tocToggle = document.getElementById('tocToggle');
-  const toc = document.getElementById('toc');
-  tocToggle.addEventListener('click', (e) => {
-    e.stopPropagation();
-    toc.classList.toggle('open');
+  // Tabs
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.target;
+      const parent = tab.parentElement;
+      parent.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const section = tab.closest('.step');
+      section.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById(target).classList.add('active');
+    });
   });
-  document.addEventListener('click', (e) => {
-    if (!toc.contains(e.target) && e.target !== tocToggle) toc.classList.remove('open');
+
+  // Summary checklist
+  const checks = document.querySelectorAll('.summary-check');
+  const progressText = document.getElementById('progressText');
+  const progressPct = document.getElementById('progressPct');
+  const progressFill = document.getElementById('progressFill');
+  function updateChecklist() {
+    const total = checks.length;
+    const done = document.querySelectorAll('.summary-check.checked').length;
+    progressText.textContent = done + ' / ' + total;
+    const p = Math.round((done / total) * 100);
+    progressPct.textContent = p + '%';
+    progressFill.style.width = p + '%';
+  }
+  checks.forEach(c => {
+    c.addEventListener('click', () => {
+      c.classList.toggle('checked');
+      updateChecklist();
+    });
   });
-  toc.querySelectorAll('a').forEach(a => {
-    a.addEventListener('click', () => toc.classList.remove('open'));
+
+  // Mobile drawer
+  const mobileNav = document.getElementById('mobileNav');
+  const mobileDrawer = document.getElementById('mobileDrawer');
+  const drawerClose = document.getElementById('drawerClose');
+  mobileNav.addEventListener('click', () => mobileDrawer.classList.add('open'));
+  drawerClose.addEventListener('click', () => mobileDrawer.classList.remove('open'));
+  mobileDrawer.addEventListener('click', (e) => {
+    if (e.target === mobileDrawer) mobileDrawer.classList.remove('open');
+  });
+  mobileDrawer.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => mobileDrawer.classList.remove('open'));
   });
 </script>
 
