@@ -436,44 +436,6 @@
     <p style="margin-top:10px;font-size:0.9rem;color:var(--text-muted);">Govori srpski — čuješ engleski</p>
   </div>
 
-  <!-- API Key Section -->
-  <div id="apiSection" style="margin-bottom:32px;" class="fade-in">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gold-dim)" stroke-width="2">
-          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-        </svg>
-        <span style="font-size:0.8rem;color:var(--text-muted);letter-spacing:0.05em;text-transform:uppercase;">Anthropic API Key</span>
-      </div>
-      <span id="keyStatus" style="font-size:0.75rem;color:var(--text-muted);"></span>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <input id="apiKeyInput" type="password" class="api-input"
-        placeholder="sk-ant-api03-..." autocomplete="off" spellcheck="false">
-      <button id="saveKeyBtn" onclick="saveApiKey()" style="
-        background:oklch(55% 0.200 250 / 0.15);
-        border:1px solid oklch(55% 0.200 250 / 0.4);
-        border-radius:10px;
-        color:var(--blue-bright);
-        padding:10px 16px;
-        font-family:'Space Grotesk',sans-serif;
-        font-size:0.8rem;
-        cursor:pointer;
-        white-space:nowrap;
-        transition:all 0.2s;
-        flex-shrink:0;
-      " onmouseover="this.style.background='oklch(55% 0.200 250 / 0.25)'"
-         onmouseout="this.style.background='oklch(55% 0.200 250 / 0.15)'">
-        Sačuvaj
-      </button>
-    </div>
-    <p style="margin-top:6px;font-size:0.72rem;color:var(--text-muted);">
-      Koristi Claude claude-opus-4-7 za prevod. Ključ se čuva lokalno u browseru, nikad se ne šalje nigde osim Anthropic API-ja.
-    </p>
-  </div>
-
-  <div class="divider" style="margin-bottom:32px;"></div>
-
   <!-- Controls row -->
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:32px;" class="fade-in">
     <!-- Voice selector -->
@@ -590,7 +552,7 @@
             <div style="width:5px;height:5px;border-radius:50%;background:var(--gold);animation:blink 0.8s ease-in-out 0.2s infinite;"></div>
             <div style="width:5px;height:5px;border-radius:50%;background:var(--gold);animation:blink 0.8s ease-in-out 0.4s infinite;"></div>
           </div>
-          <span style="font-size:0.8rem;color:var(--gold-dim);">Claude prevodi...</span>
+          <span style="font-size:0.8rem;color:var(--gold-dim);">Prevodim...</span>
         </div>
       </div>
     </div>
@@ -622,7 +584,6 @@
 
 <script>
 // ── State ──
-let apiKey = '';
 let isRecording = false;
 let recognition = null;
 let currentSrText = '';
@@ -631,11 +592,9 @@ let isSpeaking = false;
 let speechRate = 1.0;
 let selectedVoice = null;
 let history = [];
-let interimText = '';
 
 // ── Init ──
 window.addEventListener('DOMContentLoaded', () => {
-  loadApiKey();
   initSpeechRecognition();
   loadVoices();
   window.speechSynthesis.onvoiceschanged = loadVoices;
@@ -650,32 +609,6 @@ function checkBrowserSupport() {
     document.getElementById('micBtn').disabled = true;
     document.getElementById('micBtn').style.opacity = '0.4';
   }
-}
-
-// ── API Key ──
-function loadApiKey() {
-  const saved = localStorage.getItem('anthropic_api_key');
-  if (saved) {
-    apiKey = saved;
-    document.getElementById('apiKeyInput').value = saved;
-    document.getElementById('keyStatus').textContent = '✓ Ključ sačuvan';
-    document.getElementById('keyStatus').style.color = 'var(--success)';
-  }
-}
-
-function saveApiKey() {
-  const val = document.getElementById('apiKeyInput').value.trim();
-  if (!val.startsWith('sk-ant-')) {
-    setStatus('error', 'Neispravan API ključ');
-    document.getElementById('keyStatus').textContent = '✗ Neispravan format';
-    document.getElementById('keyStatus').style.color = 'var(--error)';
-    return;
-  }
-  apiKey = val;
-  localStorage.setItem('anthropic_api_key', val);
-  document.getElementById('keyStatus').textContent = '✓ Sačuvano';
-  document.getElementById('keyStatus').style.color = 'var(--success)';
-  setStatus('idle', 'Spreman');
 }
 
 // ── Speech Recognition ──
@@ -799,7 +732,7 @@ function escHtml(t) {
   return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// ── Translation (Claude claude-opus-4-7) ──
+// ── Translation (Google Translate → MyMemory fallback, bez API ključa) ──
 let translateTimeout = null;
 
 function translateText(text) {
@@ -807,54 +740,45 @@ function translateText(text) {
   translateTimeout = setTimeout(() => doTranslate(text), 600);
 }
 
+async function translateGoogle(text) {
+  const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=sr&tl=en&dt=t&q=' + encodeURIComponent(text);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Google Translate HTTP ' + res.status);
+  const data = await res.json();
+  return data[0].map(x => x[0]).join('');
+}
+
+async function translateMyMemory(text) {
+  const url = 'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(text) + '&langpair=sr|en';
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('MyMemory HTTP ' + res.status);
+  const data = await res.json();
+  if (data.responseStatus !== 200) throw new Error(data.responseDetails || 'MyMemory error');
+  return data.responseData.translatedText;
+}
+
 async function doTranslate(text) {
   if (!text.trim()) return;
-  if (!apiKey) {
-    setStatus('error', 'Unesi API ključ');
-    updateEnPanel('', false);
-    return;
-  }
 
-  setStatus('translating', 'Claude prevodi...');
+  setStatus('translating', 'Prevodim...');
   updateEnPanel('', true);
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-        'content-type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'claude-opus-4-7',
-        max_tokens: 1024,
-        system: 'You are a professional Serbian-to-English translator. Translate the given Serbian text to natural, fluent English. Preserve the tone and register of the original. Return ONLY the English translation — no explanations, no comments, no quotes.',
-        messages: [{ role: 'user', content: text }]
-      })
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    let translated = '';
+    try {
+      translated = await translateGoogle(text);
+    } catch {
+      translated = await translateMyMemory(text);
     }
 
-    const data = await res.json();
-    currentEnText = data.content[0].text.trim();
+    currentEnText = translated.trim();
     updateEnPanel(currentEnText, false);
     document.getElementById('playBtn').disabled = false;
     setStatus('done', 'Prevod gotov');
-
     saveToHistory(text, currentEnText);
 
-    // Auto-play
-    if (document.getElementById('autoPlayCheck')?.checked) {
-      setTimeout(() => speakEnglish(), 300);
-    }
-
   } catch (err) {
-    setStatus('error', err.message.slice(0, 60));
+    setStatus('error', 'Greška prevoda');
     updateEnPanel('', false);
     document.getElementById('enText').innerHTML =
       `<span style="color:var(--error);font-size:0.9rem;">Greška: ${escHtml(err.message)}</span>`;
