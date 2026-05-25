@@ -40,7 +40,6 @@
     overflow-x: hidden;
   }
 
-  /* ── Noise texture ── */
   body::before {
     content: '';
     position: fixed;
@@ -50,7 +49,6 @@
     z-index: 0;
   }
 
-  /* ── Ambient glow ── */
   .ambient-glow {
     position: fixed;
     border-radius: 50%;
@@ -59,10 +57,9 @@
     z-index: 0;
   }
 
-  /* ── Mic button ── */
   .mic-btn {
-    width: 120px;
-    height: 120px;
+    width: 130px;
+    height: 130px;
     border-radius: 50%;
     background: var(--bg-elevated);
     border: 2px solid var(--border-bright);
@@ -72,56 +69,26 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
-  .mic-btn:hover {
-    border-color: var(--blue);
-    transform: scale(1.05);
-    box-shadow: 0 0 40px oklch(60% 0.230 250 / 0.3);
-  }
+  .mic-btn:hover { border-color: var(--blue); transform: scale(1.05); box-shadow: 0 0 40px oklch(60% 0.230 250 / 0.3); }
 
   .mic-btn.recording {
     background: oklch(55% 0.200 250 / 0.15);
     border-color: var(--blue-bright);
-    box-shadow:
-      0 0 0 0 oklch(65% 0.220 250 / 0.5),
-      0 0 60px oklch(60% 0.230 250 / 0.4);
     animation: pulse-ring 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
   @keyframes pulse-ring {
-    0%, 100% {
-      box-shadow:
-        0 0 0 0 oklch(65% 0.220 250 / 0.5),
-        0 0 60px oklch(60% 0.230 250 / 0.4);
-    }
-    50% {
-      box-shadow:
-        0 0 0 20px oklch(65% 0.220 250 / 0),
-        0 0 80px oklch(60% 0.230 250 / 0.6);
-    }
+    0%, 100% { box-shadow: 0 0 0 0 oklch(65% 0.220 250 / 0.5), 0 0 60px oklch(60% 0.230 250 / 0.4); }
+    50% { box-shadow: 0 0 0 24px oklch(65% 0.220 250 / 0), 0 0 80px oklch(60% 0.230 250 / 0.6); }
   }
 
-  /* ── Waveform ── */
-  .waveform {
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    height: 40px;
-  }
-
-  .waveform-bar {
-    width: 3px;
-    background: var(--blue);
-    border-radius: 2px;
-    transition: height 0.1s ease;
-    height: 4px;
-  }
-
-  .waveform.active .waveform-bar {
-    animation: wave 1.2s ease-in-out infinite;
-  }
-
+  .waveform { display: flex; align-items: center; gap: 3px; height: 40px; }
+  .waveform-bar { width: 3px; background: var(--blue); border-radius: 2px; height: 4px; }
+  .waveform.active .waveform-bar { animation: wave 1.2s ease-in-out infinite; }
   .waveform-bar:nth-child(1) { animation-delay: 0s; }
   .waveform-bar:nth-child(2) { animation-delay: 0.1s; }
   .waveform-bar:nth-child(3) { animation-delay: 0.2s; }
@@ -131,13 +98,8 @@
   .waveform-bar:nth-child(7) { animation-delay: 0.2s; }
   .waveform-bar:nth-child(8) { animation-delay: 0.1s; }
   .waveform-bar:nth-child(9) { animation-delay: 0s; }
+  @keyframes wave { 0%, 100% { height: 4px; } 50% { height: 32px; } }
 
-  @keyframes wave {
-    0%, 100% { height: 4px; }
-    50% { height: 32px; }
-  }
-
-  /* ── Text panels ── */
   .text-panel {
     background: var(--bg-surface);
     border: 1px solid var(--border);
@@ -146,7 +108,6 @@
     position: relative;
     overflow: hidden;
   }
-
   .text-panel::before {
     content: '';
     position: absolute;
@@ -154,10 +115,7 @@
     background: linear-gradient(135deg, oklch(60% 0.230 250 / 0.03), transparent 50%);
     pointer-events: none;
   }
-
-  .text-panel.active {
-    border-color: var(--border-bright);
-  }
+  .text-panel.active { border-color: var(--border-bright); }
 
   .text-content {
     min-height: 120px;
@@ -168,261 +126,97 @@
     white-space: pre-wrap;
   }
 
-  .text-content.interim {
-    color: var(--text-muted);
-    font-style: italic;
-  }
-
-  /* ── Play button ── */
   .play-btn {
-    width: 44px;
-    height: 44px;
+    width: 48px; height: 48px;
     border-radius: 50%;
     background: oklch(55% 0.200 250 / 0.15);
     border: 1px solid var(--blue);
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     transition: all 0.2s;
     flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
-
-  .play-btn:hover {
-    background: oklch(55% 0.200 250 / 0.3);
-    transform: scale(1.1);
-  }
-
-  .play-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-    transform: none;
-  }
-
-  .play-btn.playing {
-    background: oklch(55% 0.200 250 / 0.3);
-    animation: pulse-soft 1s ease-in-out infinite;
-  }
-
+  .play-btn:hover { background: oklch(55% 0.200 250 / 0.3); transform: scale(1.1); }
+  .play-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+  .play-btn.playing { background: oklch(55% 0.200 250 / 0.3); animation: pulse-soft 1s ease-in-out infinite; }
   @keyframes pulse-soft {
     0%, 100% { box-shadow: 0 0 0 0 oklch(65% 0.220 250 / 0.4); }
     50% { box-shadow: 0 0 0 8px oklch(65% 0.220 250 / 0); }
   }
 
-  /* ── Copy button ── */
   .copy-btn {
-    width: 36px;
-    height: 36px;
+    width: 40px; height: 40px;
     border-radius: 8px;
     background: transparent;
     border: 1px solid var(--border);
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     transition: all 0.2s;
     color: var(--text-muted);
+    -webkit-tap-highlight-color: transparent;
   }
+  .copy-btn:hover { border-color: var(--border-bright); color: var(--text-secondary); background: var(--bg-elevated); }
+  .copy-btn.copied { border-color: var(--success); color: var(--success); }
 
-  .copy-btn:hover {
-    border-color: var(--border-bright);
-    color: var(--text-secondary);
-    background: var(--bg-elevated);
-  }
-
-  .copy-btn.copied {
-    border-color: var(--success);
-    color: var(--success);
-  }
-
-  /* ── API key input ── */
-  .api-input {
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    color: var(--text-primary);
-    padding: 10px 14px;
-    font-family: 'Space Grotesk', monospace;
-    font-size: 0.85rem;
-    outline: none;
-    transition: border-color 0.2s;
-    width: 100%;
-    letter-spacing: 0.05em;
-  }
-
-  .api-input:focus {
-    border-color: var(--blue);
-    box-shadow: 0 0 0 3px oklch(60% 0.230 250 / 0.1);
-  }
-
-  /* ── Status badge ── */
   .status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 12px;
-    border-radius: 100px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 12px; border-radius: 100px;
+    font-size: 0.75rem; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;
   }
+  .status-badge.idle { background: oklch(42% 0.010 250 / 0.2); color: var(--text-muted); border: 1px solid var(--border); }
+  .status-badge.listening { background: oklch(55% 0.200 250 / 0.15); color: var(--blue-bright); border: 1px solid oklch(55% 0.200 250 / 0.4); }
+  .status-badge.translating { background: oklch(78% 0.175 78 / 0.1); color: var(--gold); border: 1px solid oklch(78% 0.175 78 / 0.3); }
+  .status-badge.done { background: oklch(65% 0.180 150 / 0.1); color: var(--success); border: 1px solid oklch(65% 0.180 150 / 0.3); }
+  .status-badge.error { background: oklch(60% 0.200 25 / 0.1); color: var(--error); border: 1px solid oklch(60% 0.200 25 / 0.3); }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .status-badge.listening .status-dot, .status-badge.translating .status-dot { animation: blink 1s ease-in-out infinite; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-  .status-badge.idle {
-    background: oklch(42% 0.010 250 / 0.2);
-    color: var(--text-muted);
-    border: 1px solid var(--border);
-  }
-
-  .status-badge.listening {
-    background: oklch(55% 0.200 250 / 0.15);
-    color: var(--blue-bright);
-    border: 1px solid oklch(55% 0.200 250 / 0.4);
-  }
-
-  .status-badge.translating {
-    background: oklch(78% 0.175 78 / 0.1);
-    color: var(--gold);
-    border: 1px solid oklch(78% 0.175 78 / 0.3);
-  }
-
-  .status-badge.done {
-    background: oklch(65% 0.180 150 / 0.1);
-    color: var(--success);
-    border: 1px solid oklch(65% 0.180 150 / 0.3);
-  }
-
-  .status-badge.error {
-    background: oklch(60% 0.200 25 / 0.1);
-    color: var(--error);
-    border: 1px solid oklch(60% 0.200 25 / 0.3);
-  }
-
-  .status-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-  }
-
-  .status-badge.listening .status-dot,
-  .status-badge.translating .status-dot {
-    animation: blink 1s ease-in-out infinite;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-
-  /* ── Voice selector ── */
   .voice-select {
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text-secondary);
-    padding: 6px 10px;
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 0.8rem;
-    outline: none;
-    cursor: pointer;
-    transition: border-color 0.2s;
+    background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text-secondary); padding: 8px 10px;
+    font-family: 'Space Grotesk', sans-serif; font-size: 0.8rem;
+    outline: none; cursor: pointer; max-width: 180px;
   }
 
-  .voice-select:focus {
-    border-color: var(--border-bright);
-  }
+  .history-item { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 16px; transition: border-color 0.2s; }
+  .history-item:hover { border-color: var(--border-bright); }
 
-  /* ── History ── */
-  .history-item {
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
-    transition: border-color 0.2s;
-  }
+  .lang-chip { font-size: 0.65rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; flex-shrink: 0; }
+  .lang-chip.sr { background: oklch(55% 0.200 250 / 0.15); color: var(--blue-bright); border: 1px solid oklch(55% 0.200 250 / 0.3); }
+  .lang-chip.en { background: oklch(78% 0.175 78 / 0.1); color: var(--gold); border: 1px solid oklch(78% 0.175 78 / 0.3); }
 
-  .history-item:hover {
-    border-color: var(--border-bright);
-  }
+  .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border-bright), transparent); }
 
-  /* ── Label chip ── */
-  .lang-chip {
-    font-size: 0.65rem;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    padding: 2px 8px;
-    border-radius: 4px;
-  }
-
-  .lang-chip.sr {
-    background: oklch(55% 0.200 250 / 0.15);
-    color: var(--blue-bright);
-    border: 1px solid oklch(55% 0.200 250 / 0.3);
-  }
-
-  .lang-chip.en {
-    background: oklch(78% 0.175 78 / 0.1);
-    color: var(--gold);
-    border: 1px solid oklch(78% 0.175 78 / 0.3);
-  }
-
-  /* ── Separator ── */
-  .divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--border-bright), transparent);
-  }
-
-  /* ── Scrollbar ── */
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
 
-  /* ── Section fade-in ── */
-  .fade-in {
-    animation: fadeIn 0.4s ease;
-  }
+  .fade-in { animation: fadeIn 0.4s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+  input[type=range] { -webkit-appearance: none; height: 3px; background: var(--border); border-radius: 2px; outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--blue-bright); cursor: pointer; }
 
-  /* ── Speed slider ── */
-  input[type=range] {
-    -webkit-appearance: none;
-    height: 3px;
-    background: var(--border);
-    border-radius: 2px;
-    outline: none;
-  }
-
-  input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: var(--blue-bright);
-    cursor: pointer;
-    transition: transform 0.15s;
-  }
-
-  input[type=range]::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
+  @media (max-width: 600px) {
+    #textPanels { grid-template-columns: 1fr !important; }
+    .mic-btn { width: 160px !important; height: 160px !important; }
+    .text-content { font-size: 1.15rem !important; }
+    #controlsRow { flex-direction: column !important; align-items: flex-start !important; }
   }
 </style>
 </head>
 <body>
 
-<!-- Ambient glows -->
 <div class="ambient-glow" style="width:600px;height:600px;top:-200px;left:-200px;background:oklch(55% 0.200 250 / 0.06);"></div>
 <div class="ambient-glow" style="width:400px;height:400px;bottom:-100px;right:-100px;background:oklch(78% 0.175 78 / 0.04);"></div>
 
 <div style="position:relative;z-index:1;max-width:860px;margin:0 auto;padding:40px 20px 80px;">
 
   <!-- Header -->
-  <div style="text-align:center;margin-bottom:48px;" class="fade-in">
+  <div style="text-align:center;margin-bottom:40px;" class="fade-in">
     <div style="display:inline-flex;align-items:center;gap:10px;margin-bottom:16px;">
       <div style="width:32px;height:2px;background:linear-gradient(90deg,transparent,var(--blue));"></div>
       <span style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-muted);">AI Voice Translator</span>
@@ -436,80 +230,67 @@
     <p style="margin-top:10px;font-size:0.9rem;color:var(--text-muted);">Govori srpski — čuješ engleski</p>
   </div>
 
-  <!-- Controls row -->
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:32px;" class="fade-in">
-    <!-- Voice selector -->
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+  <!-- Browser warning -->
+  <div id="browserWarning" style="display:none;padding:14px 18px;background:oklch(60% 0.200 25 / 0.08);border:1px solid oklch(60% 0.200 25 / 0.3);border-radius:12px;margin-bottom:24px;">
+    <p style="color:var(--error);font-size:0.85rem;line-height:1.5;">
+      ⚠ Tvoj browser ne podržava Web Speech API. Koristi <strong>Google Chrome</strong> na Androidu ili <strong>Safari</strong> na iPhoneu.
+    </p>
+  </div>
+
+  <!-- Controls -->
+  <div id="controlsRow" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:32px;" class="fade-in">
+    <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;">
       <div>
-        <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;">Engleski glas</label>
+        <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.08em;">Engleski glas</label>
         <select id="voiceSelect" class="voice-select" onchange="updateVoice()">
-          <option value="">Učitavam glasove...</option>
+          <option value="">Učitavam...</option>
         </select>
       </div>
       <div>
-        <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;">Brzina</label>
+        <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.08em;">Brzina</label>
         <div style="display:flex;align-items:center;gap:8px;">
-          <input type="range" id="speedRange" min="0.5" max="1.8" step="0.1" value="1.0" style="width:80px;" oninput="updateSpeed(this.value)">
-          <span id="speedLabel" style="font-size:0.78rem;color:var(--text-secondary);min-width:28px;">1.0×</span>
+          <input type="range" id="speedRange" min="0.5" max="1.8" step="0.1" value="1.0" style="width:90px;" oninput="updateSpeed(this.value)">
+          <span id="speedLabel" style="font-size:0.78rem;color:var(--text-secondary);min-width:30px;">1.0×</span>
         </div>
       </div>
     </div>
-
-    <!-- Status -->
     <div id="statusBadge" class="status-badge idle">
       <div class="status-dot"></div>
       <span id="statusText">Spreman</span>
     </div>
   </div>
 
-  <!-- Main mic area -->
-  <div style="display:flex;flex-direction:column;align-items:center;gap:24px;margin-bottom:40px;" class="fade-in">
-    <button class="mic-btn" id="micBtn" onclick="toggleRecording()" title="Pritisni i govori srpski">
-      <!-- Mic icon -->
-      <svg id="micIcon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--blue-bright)" stroke-width="1.5" stroke-linecap="round">
+  <!-- Mic -->
+  <div style="display:flex;flex-direction:column;align-items:center;gap:20px;margin-bottom:40px;" class="fade-in">
+    <button class="mic-btn" id="micBtn" onclick="toggleRecording()">
+      <svg id="micIcon" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--blue-bright)" stroke-width="1.5" stroke-linecap="round">
         <rect x="9" y="2" width="6" height="12" rx="3"/>
         <path d="M5 10a7 7 0 0 0 14 0"/>
         <line x1="12" y1="19" x2="12" y2="22"/>
         <line x1="8" y1="22" x2="16" y2="22"/>
       </svg>
-      <!-- Stop icon (hidden) -->
-      <svg id="stopIcon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--error)" stroke-width="1.5" style="display:none;">
-        <rect x="4" y="4" width="16" height="16" rx="3" fill="oklch(60% 0.200 25 / 0.2)"/>
+      <svg id="stopIcon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--error)" stroke-width="1.5" style="display:none;">
+        <rect x="4" y="4" width="16" height="16" rx="3" fill="oklch(60% 0.200 25 / 0.25)"/>
       </svg>
     </button>
-
-    <!-- Waveform -->
     <div class="waveform" id="waveform">
-      <div class="waveform-bar"></div>
-      <div class="waveform-bar"></div>
-      <div class="waveform-bar"></div>
-      <div class="waveform-bar"></div>
-      <div class="waveform-bar"></div>
-      <div class="waveform-bar"></div>
-      <div class="waveform-bar"></div>
-      <div class="waveform-bar"></div>
-      <div class="waveform-bar"></div>
+      <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
+      <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
+      <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
     </div>
-
-    <p style="font-size:0.8rem;color:var(--text-muted);text-align:center;" id="micHint">
-      Klikni dugme i govori srpski
-    </p>
+    <p style="font-size:0.85rem;color:var(--text-muted);text-align:center;" id="micHint">Tapni dugme i govori srpski</p>
   </div>
 
   <!-- Text panels -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;" class="fade-in" id="textPanels">
-
-    <!-- Serbian panel -->
     <div class="text-panel" id="srPanel">
-      <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
         <div style="display:flex;align-items:center;gap:8px;">
           <span class="lang-chip sr">SR</span>
           <span style="font-size:0.78rem;color:var(--text-muted);">Srpski unos</span>
         </div>
         <button class="copy-btn" id="copySr" onclick="copyText('sr')" title="Kopiraj">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-          </svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         </button>
       </div>
       <div style="padding:20px;">
@@ -519,26 +300,19 @@
       </div>
     </div>
 
-    <!-- English panel -->
     <div class="text-panel" id="enPanel">
-      <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
         <div style="display:flex;align-items:center;gap:8px;">
           <span class="lang-chip en">EN</span>
           <span style="font-size:0.78rem;color:var(--text-muted);">English translation</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
-          <button class="play-btn" id="playBtn" onclick="speakEnglish()" title="Reprodukuj engleski" disabled>
-            <svg id="playIcon" width="16" height="16" viewBox="0 0 24 24" fill="var(--blue-bright)">
-              <polygon points="5,3 19,12 5,21"/>
-            </svg>
-            <svg id="stopPlayIcon" width="16" height="16" viewBox="0 0 24 24" fill="var(--blue-bright)" style="display:none;">
-              <rect x="4" y="4" width="6" height="16" rx="1"/><rect x="14" y="4" width="6" height="16" rx="1"/>
-            </svg>
+          <button class="play-btn" id="playBtn" onclick="speakEnglish()" disabled>
+            <svg id="playIcon" width="17" height="17" viewBox="0 0 24 24" fill="var(--blue-bright)"><polygon points="5,3 19,12 5,21"/></svg>
+            <svg id="stopPlayIcon" width="17" height="17" viewBox="0 0 24 24" fill="var(--blue-bright)" style="display:none;"><rect x="4" y="4" width="6" height="16" rx="1"/><rect x="14" y="4" width="6" height="16" rx="1"/></svg>
           </button>
-          <button class="copy-btn" id="copyEn" onclick="copyText('en')" title="Copy">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-            </svg>
+          <button class="copy-btn" id="copyEn" onclick="copyText('en')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           </button>
         </div>
       </div>
@@ -546,8 +320,8 @@
         <div class="text-content" id="enText">
           <span style="color:var(--text-muted);font-style:italic;font-size:1rem;">Translation will appear here...</span>
         </div>
-        <div id="translatingIndicator" style="display:none;margin-top:12px;display:flex;align-items:center;gap:8px;">
-          <div style="display:flex;gap:4px;align-items:center;">
+        <div id="translatingIndicator" style="display:none;margin-top:12px;align-items:center;gap:8px;">
+          <div style="display:flex;gap:4px;">
             <div style="width:5px;height:5px;border-radius:50%;background:var(--gold);animation:blink 0.8s ease-in-out infinite;"></div>
             <div style="width:5px;height:5px;border-radius:50%;background:var(--gold);animation:blink 0.8s ease-in-out 0.2s infinite;"></div>
             <div style="width:5px;height:5px;border-radius:50%;background:var(--gold);animation:blink 0.8s ease-in-out 0.4s infinite;"></div>
@@ -558,32 +332,19 @@
     </div>
   </div>
 
-  <!-- Browser warning (shown if no support) -->
-  <div id="browserWarning" style="display:none;text-align:center;padding:16px;background:oklch(60% 0.200 25 / 0.08);border:1px solid oklch(60% 0.200 25 / 0.3);border-radius:12px;margin-bottom:24px;">
-    <p style="color:var(--error);font-size:0.85rem;">
-      ⚠ Tvoj browser ne podržava Web Speech API. Koristi <strong>Google Chrome</strong> ili <strong>Microsoft Edge</strong>.
-    </p>
-  </div>
-
   <!-- History -->
   <div id="historySection" style="display:none;" class="fade-in">
-    <div class="divider" style="margin-bottom:28px;"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <div class="divider" style="margin-bottom:24px;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
       <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:1.3rem;font-weight:600;color:var(--text-secondary);">Istorija prevoda</h2>
-      <button onclick="clearHistory()" style="
-        background:transparent;border:1px solid var(--border);border-radius:8px;
-        color:var(--text-muted);padding:5px 12px;font-size:0.75rem;cursor:pointer;
-        font-family:'Space Grotesk',sans-serif;transition:all 0.2s;
-      " onmouseover="this.style.borderColor='var(--border-bright)'"
-         onmouseout="this.style.borderColor='var(--border)'">Obriši sve</button>
+      <button onclick="clearHistory()" style="background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);padding:6px 14px;font-size:0.75rem;cursor:pointer;font-family:'Space Grotesk',sans-serif;">Obriši sve</button>
     </div>
-    <div id="historyList" style="display:flex;flex-direction:column;gap:10px;max-height:360px;overflow-y:auto;padding-right:4px;"></div>
+    <div id="historyList" style="display:flex;flex-direction:column;gap:10px;max-height:360px;overflow-y:auto;"></div>
   </div>
 
 </div>
 
 <script>
-// ── State ──
 let isRecording = false;
 let recognition = null;
 let currentSrText = '';
@@ -592,8 +353,8 @@ let isSpeaking = false;
 let speechRate = 1.0;
 let selectedVoice = null;
 let history = [];
+let shouldRestart = false;
 
-// ── Init ──
 window.addEventListener('DOMContentLoaded', () => {
   initSpeechRecognition();
   loadVoices();
@@ -605,20 +366,28 @@ window.addEventListener('DOMContentLoaded', () => {
 function checkBrowserSupport() {
   const hasSTT = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
   if (!hasSTT) {
-    document.getElementById('browserWarning').style.display = 'block';
+    showWarning('⚠ Tvoj browser ne podržava govor. Koristi <strong>Chrome na Androidu</strong> ili <strong>Safari na iPhoneu</strong>.');
     document.getElementById('micBtn').disabled = true;
     document.getElementById('micBtn').style.opacity = '0.4';
   }
+  if (location.protocol === 'file:') {
+    showWarning('⚠ Fajl je otvoren lokalno — mikrofon zahteva HTTPS. Otvori stranicu preko GitHub Pages linka.');
+  }
 }
 
-// ── Speech Recognition ──
-function initSpeechRecognition() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) return;
+function showWarning(html) {
+  const w = document.getElementById('browserWarning');
+  w.style.display = 'block';
+  w.querySelector('p').innerHTML = html;
+}
 
-  recognition = new SpeechRecognition();
+function initSpeechRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+
+  recognition = new SR();
   recognition.lang = 'sr-RS';
-  recognition.continuous = true;
+  recognition.continuous = false;
   recognition.interimResults = true;
   recognition.maxAlternatives = 1;
 
@@ -640,23 +409,38 @@ function initSpeechRecognition() {
   };
 
   recognition.onerror = (e) => {
-    if (e.error === 'no-speech') return;
     if (e.error === 'not-allowed') {
-      setStatus('error', 'Mikrofon odbijen');
-    } else {
-      setStatus('error', 'Greška: ' + e.error);
+      showWarning('⚠ <strong>Mikrofon je blokiran.</strong> Klikni na ikonu katanca u adresnoj traci → dozvoli mikrofon → osveži stranicu.');
+      shouldRestart = false;
+      isRecording = false;
+      setMicUI(false);
+      setStatus('error', 'Mikrofon blokiran');
+      return;
     }
-    stopRecording();
+    if (e.error === 'network') {
+      setStatus('error', 'Nema interneta');
+      shouldRestart = false;
+      isRecording = false;
+      setMicUI(false);
+      return;
+    }
+    // no-speech / aborted — dozvoljavamo restart
   };
 
   recognition.onend = () => {
-    if (isRecording) recognition.start();
+    if (shouldRestart && isRecording) {
+      setTimeout(() => {
+        if (shouldRestart && isRecording) {
+          try { recognition.start(); } catch(e) {}
+        }
+      }, 250);
+    }
   };
 }
 
 function toggleRecording() {
   if (!recognition) {
-    alert('Browser ne podržava Speech Recognition. Koristi Chrome ili Edge.');
+    alert('Browser ne podržava govor. Koristi Chrome na Androidu ili Safari na iPhoneu.');
     return;
   }
   if (isRecording) stopRecording();
@@ -669,32 +453,34 @@ function startRecording() {
   updateSrPanel('', '');
   updateEnPanel('', false);
   document.getElementById('playBtn').disabled = true;
+  document.getElementById('browserWarning').style.display = 'none';
 
-  recognition.start();
+  shouldRestart = true;
   isRecording = true;
+  try { recognition.start(); } catch(e) {}
 
-  document.getElementById('micBtn').classList.add('recording');
-  document.getElementById('micIcon').style.display = 'none';
-  document.getElementById('stopIcon').style.display = 'block';
-  document.getElementById('waveform').classList.add('active');
-  document.getElementById('micHint').textContent = 'Snima se... Klikni da završiš';
+  setMicUI(true);
   setStatus('listening', 'Slušam...');
 }
 
 function stopRecording() {
+  shouldRestart = false;
   isRecording = false;
-  recognition.stop();
-
-  document.getElementById('micBtn').classList.remove('recording');
-  document.getElementById('micIcon').style.display = 'block';
-  document.getElementById('stopIcon').style.display = 'none';
-  document.getElementById('waveform').classList.remove('active');
-  document.getElementById('micHint').textContent = 'Klikni dugme i govori srpski';
-
+  try { recognition.stop(); } catch(e) {}
+  setMicUI(false);
   if (!currentSrText) setStatus('idle', 'Spreman');
 }
 
-// ── UI Updates ──
+function setMicUI(rec) {
+  document.getElementById('micBtn').classList.toggle('recording', rec);
+  document.getElementById('micIcon').style.display = rec ? 'none' : 'block';
+  document.getElementById('stopIcon').style.display = rec ? 'block' : 'none';
+  document.getElementById('waveform').classList.toggle('active', rec);
+  document.getElementById('micHint').textContent = rec
+    ? 'Snima se... Tapni ponovo da završiš'
+    : 'Tapni dugme i govori srpski';
+}
+
 function updateSrPanel(final, interim) {
   const el = document.getElementById('srText');
   if (!final && !interim) {
@@ -719,22 +505,15 @@ function updateEnPanel(text, isTranslating) {
     return;
   }
   document.getElementById('enPanel').classList.add('active');
-  if (text) {
-    el.innerHTML = `<span>${escHtml(text)}</span>`;
-    ind.style.display = 'none';
-  } else {
-    el.innerHTML = '';
-    ind.style.display = 'flex';
-  }
+  if (text) { el.innerHTML = `<span>${escHtml(text)}</span>`; ind.style.display = 'none'; }
+  else { el.innerHTML = ''; ind.style.display = 'flex'; }
 }
 
 function escHtml(t) {
   return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// ── Translation (Google Translate → MyMemory fallback, bez API ključa) ──
 let translateTimeout = null;
-
 function translateText(text) {
   if (translateTimeout) clearTimeout(translateTimeout);
   translateTimeout = setTimeout(() => doTranslate(text), 600);
@@ -743,7 +522,7 @@ function translateText(text) {
 async function translateGoogle(text) {
   const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=sr&tl=en&dt=t&q=' + encodeURIComponent(text);
   const res = await fetch(url);
-  if (!res.ok) throw new Error('Google Translate HTTP ' + res.status);
+  if (!res.ok) throw new Error('Google ' + res.status);
   const data = await res.json();
   return data[0].map(x => x[0]).join('');
 }
@@ -751,66 +530,48 @@ async function translateGoogle(text) {
 async function translateMyMemory(text) {
   const url = 'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(text) + '&langpair=sr|en';
   const res = await fetch(url);
-  if (!res.ok) throw new Error('MyMemory HTTP ' + res.status);
+  if (!res.ok) throw new Error('MyMemory ' + res.status);
   const data = await res.json();
-  if (data.responseStatus !== 200) throw new Error(data.responseDetails || 'MyMemory error');
+  if (data.responseStatus !== 200) throw new Error('MyMemory error');
   return data.responseData.translatedText;
 }
 
 async function doTranslate(text) {
   if (!text.trim()) return;
-
   setStatus('translating', 'Prevodim...');
   updateEnPanel('', true);
-
   try {
     let translated = '';
-    try {
-      translated = await translateGoogle(text);
-    } catch {
-      translated = await translateMyMemory(text);
-    }
-
+    try { translated = await translateGoogle(text); }
+    catch { translated = await translateMyMemory(text); }
     currentEnText = translated.trim();
     updateEnPanel(currentEnText, false);
     document.getElementById('playBtn').disabled = false;
     setStatus('done', 'Prevod gotov');
     saveToHistory(text, currentEnText);
-
-  } catch (err) {
+  } catch(err) {
     setStatus('error', 'Greška prevoda');
     updateEnPanel('', false);
-    document.getElementById('enText').innerHTML =
-      `<span style="color:var(--error);font-size:0.9rem;">Greška: ${escHtml(err.message)}</span>`;
+    document.getElementById('enText').innerHTML = `<span style="color:var(--error);font-size:0.9rem;">Greška: ${escHtml(err.message)}</span>`;
   }
 }
 
-// ── TTS ──
 function loadVoices() {
-  const voices = window.speechSynthesis.getVoices();
-  const enVoices = voices.filter(v => v.lang.startsWith('en'));
+  const voices = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
   const select = document.getElementById('voiceSelect');
-
-  if (enVoices.length === 0) {
-    setTimeout(loadVoices, 300);
-    return;
-  }
-
+  if (!voices.length) { setTimeout(loadVoices, 300); return; }
   select.innerHTML = '';
-  enVoices.forEach(v => {
-    const opt = document.createElement('option');
-    opt.value = v.name;
-    opt.textContent = `${v.name} (${v.lang})`;
-    select.appendChild(opt);
+  voices.forEach(v => {
+    const o = document.createElement('option');
+    o.value = v.name;
+    o.textContent = v.name + ' (' + v.lang + ')';
+    select.appendChild(o);
   });
-
-  // Prefer high-quality voices
-  const preferred = ['Google US English', 'Samantha', 'Alex', 'Microsoft Zira', 'Google UK English Female'];
+  const preferred = ['Google US English','Samantha','Alex','Microsoft Zira','Google UK English Female'];
   for (const name of preferred) {
-    const found = enVoices.find(v => v.name === name);
-    if (found) { select.value = found.name; break; }
+    const f = voices.find(v => v.name === name);
+    if (f) { select.value = f.name; break; }
   }
-
   updateVoice();
 }
 
@@ -826,43 +587,31 @@ function updateSpeed(val) {
 
 function speakEnglish() {
   if (!currentEnText) return;
-
   if (isSpeaking) {
     window.speechSynthesis.cancel();
-    isSpeaking = false;
-    setSpeakingUI(false);
-    return;
+    isSpeaking = false; setSpeakingUI(false); return;
   }
-
   const utt = new SpeechSynthesisUtterance(currentEnText);
   utt.lang = 'en-US';
   utt.rate = speechRate;
   if (selectedVoice) utt.voice = selectedVoice;
-
   utt.onstart = () => { isSpeaking = true; setSpeakingUI(true); };
   utt.onend = () => { isSpeaking = false; setSpeakingUI(false); };
   utt.onerror = () => { isSpeaking = false; setSpeakingUI(false); };
-
   window.speechSynthesis.speak(utt);
 }
 
-function setSpeakingUI(speaking) {
-  const btn = document.getElementById('playBtn');
-  const playIco = document.getElementById('playIcon');
-  const stopIco = document.getElementById('stopPlayIcon');
-  btn.classList.toggle('playing', speaking);
-  playIco.style.display = speaking ? 'none' : 'block';
-  stopIco.style.display = speaking ? 'block' : 'none';
+function setSpeakingUI(s) {
+  document.getElementById('playBtn').classList.toggle('playing', s);
+  document.getElementById('playIcon').style.display = s ? 'none' : 'block';
+  document.getElementById('stopPlayIcon').style.display = s ? 'block' : 'none';
 }
 
-// ── Status ──
 function setStatus(type, text) {
-  const badge = document.getElementById('statusBadge');
-  badge.className = 'status-badge ' + type;
+  document.getElementById('statusBadge').className = 'status-badge ' + type;
   document.getElementById('statusText').textContent = text;
 }
 
-// ── Copy ──
 async function copyText(lang) {
   const text = lang === 'sr' ? currentSrText : currentEnText;
   if (!text) return;
@@ -874,7 +623,6 @@ async function copyText(lang) {
   } catch {}
 }
 
-// ── History ──
 function saveToHistory(sr, en) {
   const entry = { sr, en, time: new Date().toLocaleTimeString('sr-RS') };
   history.unshift(entry);
@@ -884,9 +632,8 @@ function saveToHistory(sr, en) {
 }
 
 function loadHistory() {
-  try {
-    history = JSON.parse(localStorage.getItem('translation_history') || '[]');
-  } catch { history = []; }
+  try { history = JSON.parse(localStorage.getItem('translation_history') || '[]'); }
+  catch { history = []; }
   renderHistory();
 }
 
@@ -897,16 +644,16 @@ function renderHistory() {
   section.style.display = 'block';
   list.innerHTML = history.map((h, i) => `
     <div class="history-item" style="cursor:pointer;" onclick="loadHistoryItem(${i})">
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-        <div style="display:flex;gap:6px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;gap:8px;">
+        <div style="display:flex;gap:6px;min-width:0;">
           <span class="lang-chip sr">SR</span>
-          <span style="font-size:0.78rem;color:var(--text-muted);font-style:italic;">${escHtml(h.sr.slice(0,80))}${h.sr.length > 80 ? '...' : ''}</span>
+          <span style="font-size:0.78rem;color:var(--text-muted);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(h.sr.slice(0,80))}${h.sr.length>80?'...':''}</span>
         </div>
-        <span style="font-size:0.7rem;color:var(--text-muted);flex-shrink:0;margin-left:8px;">${h.time}</span>
+        <span style="font-size:0.7rem;color:var(--text-muted);flex-shrink:0;">${h.time}</span>
       </div>
       <div style="display:flex;gap:6px;">
         <span class="lang-chip en">EN</span>
-        <span style="font-size:0.78rem;color:var(--text-secondary);">${escHtml(h.en.slice(0,80))}${h.en.length > 80 ? '...' : ''}</span>
+        <span style="font-size:0.78rem;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(h.en.slice(0,80))}${h.en.length>80?'...':''}</span>
       </div>
     </div>
   `).join('');
@@ -914,8 +661,7 @@ function renderHistory() {
 
 function loadHistoryItem(i) {
   const h = history[i];
-  currentSrText = h.sr;
-  currentEnText = h.en;
+  currentSrText = h.sr; currentEnText = h.en;
   updateSrPanel(h.sr, '');
   updateEnPanel(h.en, false);
   document.getElementById('playBtn').disabled = false;
@@ -929,13 +675,6 @@ function clearHistory() {
   renderHistory();
 }
 </script>
-
-<!-- Responsive fix for mobile -->
-<style>
-@media (max-width: 600px) {
-  #textPanels { grid-template-columns: 1fr !important; }
-}
-</style>
 
 </body>
 </html>
