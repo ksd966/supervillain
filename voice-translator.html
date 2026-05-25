@@ -609,18 +609,30 @@ function checkBrowserSupport() {
     document.getElementById('micBtn').disabled = true;
     document.getElementById('micBtn').style.opacity = '0.4';
   }
+  if (location.protocol === 'file:') {
+    document.getElementById('browserWarning').style.display = 'block';
+    document.getElementById('browserWarning').querySelector('p').textContent =
+      '⚠ Fajl otvoren lokalno — mikrofon zahteva HTTPS. Koristi GitHub Pages link.';
+  }
 }
 
 // ── Speech Recognition ──
+let shouldRestart = false;
+let recognitionBusy = false;
+
 function initSpeechRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) return;
 
   recognition = new SpeechRecognition();
   recognition.lang = 'sr-RS';
-  recognition.continuous = true;
+  recognition.continuous = false; // false = mobile compatible
   recognition.interimResults = true;
   recognition.maxAlternatives = 1;
+
+  recognition.onstart = () => {
+    recognitionBusy = true;
+  };
 
   recognition.onresult = (e) => {
     let finalText = '';
@@ -640,23 +652,48 @@ function initSpeechRecognition() {
   };
 
   recognition.onerror = (e) => {
-    if (e.error === 'no-speech') return;
+    recognitionBusy = false;
     if (e.error === 'not-allowed') {
-      setStatus('error', 'Mikrofon odbijen');
-    } else {
-      setStatus('error', 'Greška: ' + e.error);
+      setStatus('error', 'Mikrofon zabranjen! Dozvoli ga u podešavanjima browsera.');
+      showPermissionHelp();
+      shouldRestart = false;
+      isRecording = false;
+      setMicUI(false);
+      return;
     }
-    stopRecording();
+    if (e.error === 'network') {
+      setStatus('error', 'Nema interneta za prepoznavanje govora');
+      shouldRestart = false;
+      isRecording = false;
+      setMicUI(false);
+      return;
+    }
+    // no-speech, audio-capture, aborted — ignorišemo, restart
   };
 
   recognition.onend = () => {
-    if (isRecording) recognition.start();
+    recognitionBusy = false;
+    if (shouldRestart && isRecording) {
+      setTimeout(() => {
+        if (shouldRestart && isRecording) {
+          try { recognition.start(); }
+          catch(err) { /* već se pokreće */ }
+        }
+      }, 200);
+    }
   };
+}
+
+function showPermissionHelp() {
+  const w = document.getElementById('browserWarning');
+  w.style.display = 'block';
+  w.querySelector('p').innerHTML =
+    '⚠ <strong>Mikrofon je blokiran.</strong> Klikni na ikonu katanca/mikrofona u adresnoj traci browsera → dozvoli mikrofon → osveži stranicu.';
 }
 
 function toggleRecording() {
   if (!recognition) {
-    alert('Browser ne podržava Speech Recognition. Koristi Chrome ili Edge.');
+    alert('Browser ne podržava govor. Koristi Chrome na Androidu ili Safari na iPhoneu.');
     return;
   }
   if (isRecording) stopRecording();
@@ -669,29 +706,39 @@ function startRecording() {
   updateSrPanel('', '');
   updateEnPanel('', false);
   document.getElementById('playBtn').disabled = true;
+  document.getElementById('browserWarning').style.display = 'none';
 
-  recognition.start();
+  shouldRestart = true;
   isRecording = true;
 
-  document.getElementById('micBtn').classList.add('recording');
-  document.getElementById('micIcon').style.display = 'none';
-  document.getElementById('stopIcon').style.display = 'block';
-  document.getElementById('waveform').classList.add('active');
-  document.getElementById('micHint').textContent = 'Snima se... Klikni da završiš';
+  try {
+    recognition.start();
+  } catch(err) {
+    // ignorišemo InvalidStateError ako je već pokrenuto
+  }
+
+  setMicUI(true);
   setStatus('listening', 'Slušam...');
 }
 
 function stopRecording() {
+  shouldRestart = false;
   isRecording = false;
-  recognition.stop();
 
-  document.getElementById('micBtn').classList.remove('recording');
-  document.getElementById('micIcon').style.display = 'block';
-  document.getElementById('stopIcon').style.display = 'none';
-  document.getElementById('waveform').classList.remove('active');
-  document.getElementById('micHint').textContent = 'Klikni dugme i govori srpski';
+  try { recognition.stop(); } catch(e) {}
 
+  setMicUI(false);
   if (!currentSrText) setStatus('idle', 'Spreman');
+}
+
+function setMicUI(recording) {
+  document.getElementById('micBtn').classList.toggle('recording', recording);
+  document.getElementById('micIcon').style.display = recording ? 'none' : 'block';
+  document.getElementById('stopIcon').style.display = recording ? 'block' : 'none';
+  document.getElementById('waveform').classList.toggle('active', recording);
+  document.getElementById('micHint').textContent = recording
+    ? 'Snima se... Tapni ponovo da završiš'
+    : 'Tapni dugme i govori srpski';
 }
 
 // ── UI Updates ──
@@ -930,10 +977,20 @@ function clearHistory() {
 }
 </script>
 
-<!-- Responsive fix for mobile -->
 <style>
 @media (max-width: 600px) {
   #textPanels { grid-template-columns: 1fr !important; }
+
+  .mic-btn {
+    width: 150px !important;
+    height: 150px !important;
+  }
+
+  .text-content {
+    font-size: 1.1rem !important;
+  }
+
+  body { padding-bottom: 40px; }
 }
 </style>
 
