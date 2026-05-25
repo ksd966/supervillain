@@ -1,0 +1,1627 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>VitaTrack · Dnevnik zdravlja</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ── Reset & Base ─────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:        #0b0f1a;
+  --bg2:       #111827;
+  --glass:     rgba(255,255,255,0.05);
+  --glass2:    rgba(255,255,255,0.08);
+  --border:    rgba(255,255,255,0.10);
+  --border2:   rgba(255,255,255,0.18);
+  --cyan:      #00d9ff;
+  --cyan-dim:  rgba(0,217,255,0.15);
+  --cyan-glow: rgba(0,217,255,0.35);
+  --purple:    #a78bfa;
+  --rose:      #fb7185;
+  --amber:     #fbbf24;
+  --green:     #34d399;
+  --text:      #f1f5f9;
+  --text2:     #94a3b8;
+  --text3:     #475569;
+  --pain0:     #34d399;
+  --pain3:     #fbbf24;
+  --pain6:     #f97316;
+  --pain9:     #ef4444;
+  --r:         16px;
+  --r2:        12px;
+  --nav-h:     70px;
+}
+html { height: 100%; }
+body {
+  font-family: -apple-system, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100%;
+  overflow-x: hidden;
+  padding-bottom: calc(var(--nav-h) + 16px);
+}
+
+/* ── Animated Background ──────────────────────────── */
+#bg-canvas {
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none; opacity: .5;
+}
+
+/* ── Layout ───────────────────────────────────────── */
+.page { max-width: 540px; margin: 0 auto; padding: 20px 16px 8px; position: relative; z-index: 1; }
+
+/* ── Header ───────────────────────────────────────── */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  background: rgba(11,15,26,0.85);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 50;
+}
+.header-left { display: flex; flex-direction: column; gap: 2px; }
+.header-app { font-size: .72rem; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--cyan); }
+.header-date { font-size: 1rem; font-weight: 700; color: var(--text); }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.completion-ring { position: relative; width: 44px; height: 44px; cursor: default; }
+.completion-ring svg { transform: rotate(-90deg); }
+.completion-ring .ring-bg { fill: none; stroke: var(--border); stroke-width: 4; }
+.completion-ring .ring-fill { fill: none; stroke: var(--cyan); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset .6s cubic-bezier(.4,0,.2,1); }
+.completion-pct { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: .65rem; font-weight: 700; color: var(--cyan); }
+
+/* ── Bottom Nav ───────────────────────────────────── */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+  height: var(--nav-h);
+  background: rgba(11,15,26,0.92);
+  backdrop-filter: blur(32px);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-around;
+  padding: 0 8px 8px;
+}
+.nav-item {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  flex: 1; cursor: pointer; padding: 8px 4px;
+  transition: all .2s; border-radius: 12px; user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.nav-item:active { transform: scale(.92); }
+.nav-icon {
+  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+  border-radius: 10px; font-size: 1.15rem; transition: all .25s;
+  background: transparent;
+}
+.nav-label { font-size: .68rem; font-weight: 600; color: var(--text3); transition: color .25s; }
+.nav-item.active .nav-icon { background: var(--cyan-dim); }
+.nav-item.active .nav-label { color: var(--cyan); }
+.nav-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--cyan); opacity: 0; transition: opacity .2s; }
+.nav-item.active .nav-dot { opacity: 1; }
+
+/* ── Sections ─────────────────────────────────────── */
+.section { display: none; animation: slideUp .3s cubic-bezier(.4,0,.2,1); }
+.section.active { display: block; }
+@keyframes slideUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+
+/* ── Cards ────────────────────────────────────────── */
+.card {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px;
+  margin-bottom: 12px;
+  transition: border-color .2s;
+  position: relative; overflow: hidden;
+}
+.card::before {
+  content:''; position:absolute; inset:0;
+  background: linear-gradient(135deg, rgba(255,255,255,.03) 0%, transparent 60%);
+  pointer-events: none; border-radius: inherit;
+}
+.card:hover { border-color: var(--border2); }
+.card-title {
+  font-size: .8rem; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--text2); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.card-title-accent { color: var(--cyan); }
+.card-accent { border-color: rgba(0,217,255,0.25); background: rgba(0,217,255,0.04); }
+
+/* ── Time-of-day Selector ─────────────────────────── */
+.tod-wrap { display: flex; gap: 8px; }
+.tod-btn {
+  flex: 1; padding: 12px 8px; border-radius: var(--r2);
+  border: 1px solid var(--border); background: transparent;
+  cursor: pointer; transition: all .2s;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  color: var(--text2); -webkit-tap-highlight-color: transparent;
+}
+.tod-btn:active { transform: scale(.95); }
+.tod-btn.active {
+  background: var(--cyan-dim); border-color: rgba(0,217,255,.4);
+  color: var(--cyan);
+}
+.tod-btn .tod-icon { font-size: 1.2rem; }
+.tod-btn .tod-label { font-size: .72rem; font-weight: 700; }
+.tod-btn .tod-status { font-size: .62rem; color: var(--green); height: 12px; }
+
+/* ── Body Map ─────────────────────────────────────── */
+.body-map-wrap { display: flex; gap: 16px; align-items: flex-start; }
+.body-svg-container { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.body-region {
+  cursor: pointer;
+  transition: all .2s;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.4));
+}
+.body-region:hover { filter: drop-shadow(0 0 8px rgba(0,217,255,.6)) brightness(1.2); }
+.body-region.active-region { filter: drop-shadow(0 0 10px rgba(0,217,255,.8)) brightness(1.3); stroke-width: 2.5 !important; }
+.body-region.pain-low   { fill: #fbbf24 !important; filter: drop-shadow(0 0 6px rgba(251,191,36,.5)); }
+.body-region.pain-mid   { fill: #f97316 !important; filter: drop-shadow(0 0 6px rgba(249,115,22,.5)); }
+.body-region.pain-high  { fill: #ef4444 !important; filter: drop-shadow(0 0 8px rgba(239,68,68,.6)); }
+.body-hint { font-size: .7rem; color: var(--text3); text-align: center; max-width: 120px; line-height: 1.4; }
+
+/* Region panel */
+.region-panel { flex: 1; min-width: 0; }
+.region-name { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.region-sublabel { font-size: .75rem; color: var(--text3); margin-bottom: 14px; }
+
+/* Pain level display */
+.pain-display {
+  display: flex; align-items: center; justify-content: center;
+  width: 60px; height: 60px; border-radius: 50%;
+  font-size: 1.6rem; font-weight: 800;
+  border: 3px solid var(--border); margin-bottom: 10px;
+  transition: all .3s;
+  background: rgba(0,0,0,.3);
+}
+
+/* ── Custom Slider ────────────────────────────────── */
+.slider-wrap { margin-bottom: 12px; }
+.slider-track { position: relative; height: 36px; display: flex; align-items: center; cursor: pointer; }
+.slider-rail { height: 6px; border-radius: 3px; width: 100%; position: absolute; overflow: hidden; }
+.slider-rail-bg { position: absolute; inset: 0; background: var(--glass2); border-radius: 3px; }
+.slider-fill { position: absolute; top: 0; left: 0; bottom: 0; border-radius: 3px; transition: width .1s, background .3s; }
+input[type=range].custom-range {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 36px; background: transparent;
+  position: absolute; cursor: pointer; margin: 0;
+}
+input[type=range].custom-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: #fff; border: 3px solid var(--cyan);
+  box-shadow: 0 0 0 4px var(--cyan-dim), 0 2px 8px rgba(0,0,0,.5);
+  cursor: pointer; transition: transform .15s, box-shadow .15s;
+}
+input[type=range].custom-range::-webkit-slider-thumb:active {
+  transform: scale(1.2);
+  box-shadow: 0 0 0 8px var(--cyan-dim), 0 2px 12px rgba(0,0,0,.5);
+}
+input[type=range].custom-range::-moz-range-thumb {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: #fff; border: 3px solid var(--cyan);
+  cursor: pointer;
+}
+.slider-labels { display: flex; justify-content: space-between; margin-top: 4px; }
+.slider-labels span { font-size: .68rem; color: var(--text3); }
+
+/* ── Pain Type Chips ──────────────────────────────── */
+.chip-group { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.chip {
+  padding: 5px 12px; border-radius: 999px; font-size: .75rem; font-weight: 600;
+  border: 1px solid var(--border); background: transparent; color: var(--text2);
+  cursor: pointer; transition: all .2s; user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.chip:active { transform: scale(.94); }
+.chip.active { background: var(--cyan-dim); border-color: rgba(0,217,255,.5); color: var(--cyan); }
+
+/* ── Active pains list ────────────────────────────── */
+.pain-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; border-radius: var(--r2);
+  background: var(--glass2); margin-bottom: 6px;
+  border: 1px solid var(--border); font-size: .82rem;
+}
+.pain-badge {
+  font-weight: 800; font-size: .9rem; min-width: 28px;
+  text-align: right;
+}
+
+/* ── Diagnosis Cards ──────────────────────────────── */
+.diag-card {
+  border-radius: var(--r2); padding: 14px; margin-bottom: 10px;
+  border: 1px solid transparent;
+}
+.diag-card.ra    { background: rgba(251,191,36,.06); border-color: rgba(251,191,36,.2); }
+.diag-card.fibro { background: rgba(167,139,250,.06); border-color: rgba(167,139,250,.2); }
+.diag-card.disc  { background: rgba(0,217,255,.06);  border-color: rgba(0,217,255,.2); }
+.diag-title { font-size: .78rem; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.diag-card.ra    .diag-title { color: var(--amber); }
+.diag-card.fibro .diag-title { color: var(--purple); }
+.diag-card.disc  .diag-title { color: var(--cyan); }
+.field-label { font-size: .75rem; color: var(--text2); margin-bottom: 6px; display: block; }
+
+/* ── Pill Selector (single choice) ───────────────── */
+.pill-group { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill-opt {
+  padding: 6px 14px; border-radius: 999px; font-size: .78rem; font-weight: 600;
+  border: 1px solid var(--border); background: transparent; color: var(--text2);
+  cursor: pointer; transition: all .2s; user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.pill-opt:active { transform: scale(.94); }
+.pill-opt.active.ra    { background: rgba(251,191,36,.2); border-color: var(--amber); color: var(--amber); }
+.pill-opt.active.fibro { background: rgba(167,139,250,.2); border-color: var(--purple); color: var(--purple); }
+.pill-opt.active.disc  { background: rgba(0,217,255,.15); border-color: var(--cyan); color: var(--cyan); }
+.pill-opt.active.neutral { background: var(--glass2); border-color: var(--border2); color: var(--text); }
+
+/* ── Stars ────────────────────────────────────────── */
+.stars { display: flex; gap: 4px; }
+.star { font-size: 1.5rem; cursor: pointer; color: var(--text3); transition: color .15s, transform .15s; user-select: none; }
+.star:active { transform: scale(1.3); }
+.star.lit { color: var(--amber); filter: drop-shadow(0 0 4px rgba(251,191,36,.5)); }
+
+/* ── Form inputs ──────────────────────────────────── */
+.inp {
+  width: 100%; padding: 10px 14px;
+  background: var(--glass2); border: 1px solid var(--border);
+  border-radius: var(--r2); color: var(--text); font-size: .9rem;
+  outline: none; transition: border-color .2s, background .2s;
+  font-family: inherit;
+}
+.inp:focus { border-color: rgba(0,217,255,.5); background: rgba(0,217,255,.04); }
+.inp::placeholder { color: var(--text3); }
+select.inp { cursor: pointer; }
+select.inp option { background: var(--bg2); }
+textarea.inp { resize: vertical; min-height: 80px; line-height: 1.5; }
+
+/* ── Medication Cards ─────────────────────────────── */
+.med-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px; border-radius: var(--r2);
+  border: 1px solid var(--border); background: var(--glass);
+  margin-bottom: 8px; cursor: pointer; transition: all .2s;
+  -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.med-row:active { transform: scale(.98); }
+.med-row.taken { border-color: rgba(52,211,153,.3); background: rgba(52,211,153,.06); }
+.med-checkbox {
+  width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all .2s; font-size: .9rem;
+}
+.med-row.taken .med-checkbox { background: var(--green); border-color: var(--green); }
+.med-info { flex: 1; min-width: 0; }
+.med-name { font-weight: 700; font-size: .9rem; color: var(--text); }
+.med-meta { font-size: .75rem; color: var(--text2); margin-top: 2px; }
+.med-time { font-size: .72rem; color: var(--cyan); font-weight: 600; }
+
+/* ── Buttons ──────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 24px; border-radius: var(--r2); border: none;
+  font-family: inherit; font-weight: 700; font-size: .9rem; cursor: pointer;
+  transition: all .2s; user-select: none; -webkit-tap-highlight-color: transparent;
+}
+.btn:active { transform: scale(.96); }
+.btn-cyan {
+  background: linear-gradient(135deg, #00d9ff, #0099cc);
+  color: #000; box-shadow: 0 4px 16px rgba(0,217,255,.3);
+}
+.btn-cyan:hover { box-shadow: 0 6px 24px rgba(0,217,255,.45); }
+.btn-ghost { background: var(--glass2); border: 1px solid var(--border); color: var(--text2); }
+.btn-ghost:hover { border-color: var(--border2); color: var(--text); }
+.btn-danger { background: rgba(251,113,133,.12); border: 1px solid rgba(251,113,133,.3); color: var(--rose); }
+.btn-icon { width: 36px; height: 36px; padding: 0; border-radius: 10px; flex-shrink: 0; }
+.btn-full { width: 100%; }
+
+/* ── Weather Buttons ──────────────────────────────── */
+.weather-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.weather-btn {
+  padding: 12px 8px; border-radius: var(--r2); border: 1px solid var(--border);
+  background: transparent; cursor: pointer; transition: all .2s;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  color: var(--text2); font-size: .75rem; font-weight: 600;
+  -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.weather-btn:active { transform: scale(.94); }
+.weather-btn .w-icon { font-size: 1.4rem; }
+.weather-btn.active { background: var(--glass2); border-color: var(--border2); color: var(--text); }
+
+/* ── Chart wrapper ────────────────────────────────── */
+.chart-box { position: relative; height: 200px; }
+
+/* ── Stats row ────────────────────────────────────── */
+.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+.stat-card {
+  padding: 14px 12px; border-radius: var(--r2); border: 1px solid var(--border);
+  background: var(--glass); text-align: center;
+}
+.stat-val { font-size: 1.6rem; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+.stat-label { font-size: .68rem; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; }
+
+/* ── Toast ────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: calc(var(--nav-h) + 12px); left: 50%; transform: translateX(-50%) translateY(20px);
+  background: rgba(30,40,60,.95); backdrop-filter: blur(16px);
+  border: 1px solid var(--border); border-radius: 999px;
+  padding: 10px 20px; font-size: .85rem; font-weight: 600; color: var(--text);
+  z-index: 200; opacity: 0; transition: all .3s; white-space: nowrap;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── Add Med Form ─────────────────────────────────── */
+.add-med-form {
+  border: 1px solid rgba(0,217,255,.25); border-radius: var(--r);
+  background: rgba(0,217,255,.04); padding: 18px; margin-bottom: 12px;
+  display: none;
+}
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.form-field { display: flex; flex-direction: column; gap: 5px; }
+.form-label { font-size: .75rem; font-weight: 600; color: var(--text2); }
+
+/* ── History entries ──────────────────────────────── */
+.hist-entry {
+  padding: 12px 14px; border-radius: var(--r2); border: 1px solid var(--border);
+  background: var(--glass); margin-bottom: 8px;
+  border-left-width: 3px; border-left-style: solid;
+}
+.hist-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.hist-date { font-weight: 700; font-size: .85rem; }
+.hist-pain { font-weight: 800; font-size: .95rem; }
+.hist-note { font-size: .78rem; color: var(--text2); line-height: 1.4; }
+
+/* ── Report ───────────────────────────────────────── */
+.report-header { text-align: center; padding: 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+.report-title { font-size: 1.2rem; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+.report-sub { font-size: .8rem; color: var(--text2); }
+.report-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.report-table th { text-align: left; padding: 8px 12px; background: var(--glass2); color: var(--text2); font-weight: 700; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; }
+.report-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--text); }
+.location-bar-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.location-bar-label { font-size: .82rem; color: var(--text); flex: 1; }
+.location-bar-track { flex: 1; height: 6px; background: var(--glass2); border-radius: 3px; overflow: hidden; }
+.location-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--cyan), var(--purple)); }
+.location-bar-count { font-size: .78rem; color: var(--text3); min-width: 24px; text-align: right; }
+
+/* ── Range selector tabs ──────────────────────────── */
+.range-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+.range-tab {
+  padding: 6px 14px; border-radius: 999px; font-size: .78rem; font-weight: 700;
+  border: 1px solid var(--border); background: transparent; color: var(--text3);
+  cursor: pointer; transition: all .2s;
+}
+.range-tab.active { background: var(--cyan-dim); border-color: rgba(0,217,255,.4); color: var(--cyan); }
+
+/* ── Divider ──────────────────────────────────────── */
+.divider { height: 1px; background: var(--border); margin: 14px 0; }
+
+/* ── Empty state ──────────────────────────────────── */
+.empty { text-align: center; padding: 32px 20px; color: var(--text3); }
+.empty-icon { font-size: 2.5rem; margin-bottom: 10px; opacity: .5; }
+.empty-text { font-size: .85rem; line-height: 1.5; }
+
+/* ── Ripple ───────────────────────────────────────── */
+.ripple-host { position: relative; overflow: hidden; }
+@keyframes ripple { to { transform: scale(4); opacity: 0; } }
+.ripple-wave {
+  position: absolute; border-radius: 50%; background: rgba(0,217,255,.25);
+  transform: scale(0); animation: ripple .5s ease-out; pointer-events: none;
+}
+
+/* ── Print ────────────────────────────────────────── */
+@media print {
+  body { background: #fff; color: #000; padding: 0; }
+  .header, .bottom-nav, #bg-canvas, .no-print { display: none !important; }
+  .section { display: block !important; animation: none !important; }
+  .card { background: #fff; border: 1px solid #e2e8f0; box-shadow: none; color: #000; }
+  .card::before { display: none; }
+  .stat-card { border: 1px solid #e2e8f0; }
+  * { color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+
+@media (max-width: 360px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .weather-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- Animated bg -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-left">
+    <span class="header-app">VitaTrack</span>
+    <span class="header-date" id="header-date"></span>
+  </div>
+  <div class="header-right">
+    <div class="completion-ring" id="completion-ring" title="Dnevni napredak">
+      <svg width="44" height="44" viewBox="0 0 44 44">
+        <circle class="ring-bg" cx="22" cy="22" r="17"/>
+        <circle class="ring-fill" id="ring-fill" cx="22" cy="22" r="17"
+          stroke-dasharray="107" stroke-dashoffset="107"/>
+      </svg>
+      <div class="completion-pct" id="completion-pct">0%</div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════ SECTIONS ═══════════════════════════ -->
+
+<!-- DANAS -->
+<section class="section active page" id="s-danas">
+
+  <!-- Time of day -->
+  <div class="card card-accent" style="margin-top:4px;">
+    <div class="card-title">⏱ <span class="card-title-accent">Unos za period dana</span></div>
+    <div class="tod-wrap">
+      <div class="tod-btn ripple-host" id="tod-jutro" onclick="setTOD('jutro',event)">
+        <span class="tod-icon">🌅</span>
+        <span class="tod-label">Jutro</span>
+        <span class="tod-status" id="tod-st-jutro"></span>
+      </div>
+      <div class="tod-btn ripple-host" id="tod-podne" onclick="setTOD('podne',event)">
+        <span class="tod-icon">☀️</span>
+        <span class="tod-label">Podne</span>
+        <span class="tod-status" id="tod-st-podne"></span>
+      </div>
+      <div class="tod-btn ripple-host" id="tod-vece" onclick="setTOD('vece',event)">
+        <span class="tod-icon">🌙</span>
+        <span class="tod-label">Veče</span>
+        <span class="tod-status" id="tod-st-vece"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Body map -->
+  <div class="card">
+    <div class="card-title">🗺 <span class="card-title-accent">Mapa bola</span> <span style="font-size:.7rem;color:var(--text3);text-transform:none;letter-spacing:0;font-weight:400;">— klikni na tijelo</span></div>
+    <div class="body-map-wrap">
+
+      <!-- SVG body — anatomical silhouette -->
+      <div class="body-svg-container">
+        <svg width="120" height="290" viewBox="0 0 120 290" id="body-svg" style="overflow:visible;">
+          <defs>
+            <radialGradient id="bodyGrad" cx="40%" cy="30%">
+              <stop offset="0%" stop-color="#334155"/>
+              <stop offset="100%" stop-color="#1e293b"/>
+            </radialGradient>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <!-- Head -->
+          <ellipse id="reg-glava" class="body-region" cx="60" cy="20" rx="17" ry="18"
+            fill="url(#bodyGrad)" stroke="#475569" stroke-width="1.5" onclick="clickReg('glava',event)"/>
+
+          <!-- Neck -->
+          <rect id="reg-vrat" class="body-region" x="52" y="37" width="16" height="14" rx="4"
+            fill="#2d3f55" stroke="#0ea5e9" stroke-width="2" onclick="clickReg('vrat',event)"/>
+
+          <!-- Shoulders -->
+          <ellipse id="reg-rame-l" class="body-region" cx="27" cy="65" rx="14" ry="10"
+            fill="url(#bodyGrad)" stroke="#475569" stroke-width="1.5" onclick="clickReg('rame-l',event)"/>
+          <ellipse id="reg-rame-d" class="body-region" cx="93" cy="65" rx="14" ry="10"
+            fill="url(#bodyGrad)" stroke="#475569" stroke-width="1.5" onclick="clickReg('rame-d',event)"/>
+
+          <!-- Upper torso -->
+          <path id="reg-ledja-g" class="body-region"
+            d="M38 51 Q60 48 82 51 L84 90 Q60 93 36 90 Z"
+            fill="url(#bodyGrad)" stroke="#475569" stroke-width="1.5" onclick="clickReg('ledja-g',event)"/>
+
+          <!-- Lower torso — lumbar (highlighted because hernija) -->
+          <path id="reg-ledja-l" class="body-region"
+            d="M38 90 Q60 87 82 90 L80 124 Q60 127 40 124 Z"
+            fill="#1e3550" stroke="#0ea5e9" stroke-width="2" onclick="clickReg('ledja-l',event)"/>
+
+          <!-- Upper arms -->
+          <rect id="reg-ruka-l-g" class="body-region" x="10" y="60" width="14" height="36" rx="6"
+            fill="url(#bodyGrad)" stroke="#475569" stroke-width="1.5" onclick="clickReg('ruka-l-g',event)"/>
+          <rect id="reg-ruka-d-g" class="body-region" x="96" y="60" width="14" height="36" rx="6"
+            fill="url(#bodyGrad)" stroke="#475569" stroke-width="1.5" onclick="clickReg('ruka-d-g',event)"/>
+
+          <!-- Forearms + hands -->
+          <rect id="reg-ruka-l-d" class="body-region" x="8" y="98" width="13" height="34" rx="5"
+            fill="url(#bodyGrad)" stroke="#475569" stroke-width="1.5" onclick="clickReg('ruka-l-d',event)"/>
+          <rect id="reg-ruka-d-d" class="body-region" x="99" y="98" width="13" height="34" rx="5"
+            fill="url(#bodyGrad)" stroke="#475569" stroke-width="1.5" onclick="clickReg('ruka-d-d',event)"/>
+
+          <!-- Hips -->
+          <rect id="reg-kuk-l" class="body-region" x="40" y="124" width="18" height="20" rx="4"
+            fill="url(#bodyGrad)" stroke="#475569" stroke-width="1.5" onclick="clickReg('kuk-l',event)"/>
+          <rect id="reg-kuk-d" class="body-region" x="62" y="124" width="18" height="20" rx="4"
+            fill="url(#bodyGrad)" stroke="#475569" stroke-width="1.5" onclick="clickReg('kuk-d',event)"/>
+
+          <!-- Thighs + knees -->
+          <rect id="reg-noga-l-g" class="body-region" x="41" y="144" width="17" height="48" rx="6"
+            fill="url(#bodyGrad)" stroke="#475569" stroke-width="1.5" onclick="clickReg('noga-l-g',event)"/>
+          <rect id="reg-noga-d-g" class="body-region" x="62" y="144" width="17" height="48" rx="6"
+            fill="url(#bodyGrad)" stroke="#475569" stroke-width="1.5" onclick="clickReg('noga-d-g',event)"/>
+
+          <!-- Shins + feet -->
+          <rect id="reg-noga-l-d" class="body-region" x="42" y="194" width="15" height="48" rx="5"
+            fill="url(#bodyGrad)" stroke="#475569" stroke-width="1.5" onclick="clickReg('noga-l-d',event)"/>
+          <rect id="reg-noga-d-d" class="body-region" x="63" y="194" width="15" height="48" rx="5"
+            fill="url(#bodyGrad)" stroke="#475569" stroke-width="1.5" onclick="clickReg('noga-d-d',event)"/>
+
+          <!-- C/L hernija labels -->
+          <text x="88" y="47" fill="#0ea5e9" font-size="7" font-weight="700">C</text>
+          <text x="88" y="108" fill="#0ea5e9" font-size="7" font-weight="700">L</text>
+        </svg>
+        <span class="body-hint">Klikni na<br>dio tijela</span>
+      </div>
+
+      <!-- Region panel -->
+      <div class="region-panel">
+        <div id="region-placeholder" style="color:var(--text3);font-size:.85rem;padding-top:20px;line-height:1.6;">
+          Odaberi lokaciju<br>bola na figuri →
+        </div>
+
+        <div id="region-detail" style="display:none;">
+          <div class="region-name" id="reg-title"></div>
+          <div class="region-sublabel" id="reg-sub"></div>
+
+          <div class="pain-display" id="pain-display">0</div>
+
+          <div class="slider-wrap">
+            <div class="slider-track">
+              <div class="slider-rail">
+                <div class="slider-rail-bg"></div>
+                <div class="slider-fill" id="slider-fill"></div>
+              </div>
+              <input type="range" class="custom-range" id="reg-slider" min="0" max="10" value="0"
+                oninput="onRegSlider(this.value)">
+            </div>
+            <div class="slider-labels"><span>Nema</span><span>Umereno</span><span>Jako</span></div>
+          </div>
+
+          <div class="chip-group" id="pain-type-chips">
+            <span class="chip" data-t="probadajuci" onclick="toggleChip(this)">Probadajući</span>
+            <span class="chip" data-t="tupi"        onclick="toggleChip(this)">Tupi</span>
+            <span class="chip" data-t="peckajuci"   onclick="toggleChip(this)">Peckajući</span>
+            <span class="chip" data-t="trnjenje"    onclick="toggleChip(this)">Trnjenje</span>
+            <span class="chip" data-t="ukocenost"   onclick="toggleChip(this)">Ukrućenost</span>
+          </div>
+        </div>
+
+        <!-- Active pains -->
+        <div id="active-pains" style="margin-top:14px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Diagnose-specific symptoms -->
+  <div class="card">
+    <div class="card-title">🔬 <span class="card-title-accent">Simptomi</span></div>
+
+    <!-- RA -->
+    <div class="diag-card ra">
+      <div class="diag-title">🦴 Reumatoidni artritis</div>
+      <label class="field-label">Jutarnja ukočenost — trajanje</label>
+      <div class="pill-group" id="ukocenost-grp">
+        <span class="pill-opt ra" data-v="0"   onclick="pickPill(this,'ukocenost','ra')">Nema</span>
+        <span class="pill-opt ra" data-v="15"  onclick="pickPill(this,'ukocenost','ra')">15 min</span>
+        <span class="pill-opt ra" data-v="30"  onclick="pickPill(this,'ukocenost','ra')">30 min</span>
+        <span class="pill-opt ra" data-v="60"  onclick="pickPill(this,'ukocenost','ra')">1 sat</span>
+        <span class="pill-opt ra" data-v="120" onclick="pickPill(this,'ukocenost','ra')">2+ sata</span>
+      </div>
+      <div style="height:10px;"></div>
+      <label class="field-label">Oticanje zglobova</label>
+      <div class="pill-group" id="oticanje-grp">
+        <span class="pill-opt ra" data-v="nema"    onclick="pickPill(this,'oticanje','ra')">Nema</span>
+        <span class="pill-opt ra" data-v="blago"   onclick="pickPill(this,'oticanje','ra')">Blago</span>
+        <span class="pill-opt ra" data-v="umereno" onclick="pickPill(this,'oticanje','ra')">Umereno</span>
+        <span class="pill-opt ra" data-v="jako"    onclick="pickPill(this,'oticanje','ra')">Jako</span>
+      </div>
+    </div>
+
+    <!-- Fibro -->
+    <div class="diag-card fibro">
+      <div class="diag-title">🧠 Fibromijalgija</div>
+      <label class="field-label">Umor: <strong id="umor-val" style="color:var(--purple);">0</strong>/10</label>
+      <div class="slider-wrap">
+        <div class="slider-track">
+          <div class="slider-rail">
+            <div class="slider-rail-bg"></div>
+            <div class="slider-fill" id="umor-fill" style="background:var(--purple);"></div>
+          </div>
+          <input type="range" class="custom-range" id="umor-sl" min="0" max="10" value="0"
+            style="--tw:var(--purple);"
+            oninput="onSimpleSlider('umor','umor-val','umor-fill',this.value)">
+        </div>
+      </div>
+      <label class="field-label" style="margin-top:8px;">Maglina u glavi</label>
+      <div class="pill-group" id="maglina-grp">
+        <span class="pill-opt fibro" data-v="nema"    onclick="pickPill(this,'maglina','fibro')">Nema</span>
+        <span class="pill-opt fibro" data-v="blaga"   onclick="pickPill(this,'maglina','fibro')">Blaga</span>
+        <span class="pill-opt fibro" data-v="umerena" onclick="pickPill(this,'maglina','fibro')">Umerena</span>
+        <span class="pill-opt fibro" data-v="jaka"    onclick="pickPill(this,'maglina','fibro')">Jaka</span>
+      </div>
+      <div style="height:10px;"></div>
+      <label class="field-label">Osetljivost na dodir</label>
+      <div class="pill-group" id="allodynia-grp">
+        <span class="pill-opt fibro" data-v="nema"  onclick="pickPill(this,'allodynia','fibro')">Nema</span>
+        <span class="pill-opt fibro" data-v="blaga" onclick="pickPill(this,'allodynia','fibro')">Blaga</span>
+        <span class="pill-opt fibro" data-v="jaka"  onclick="pickPill(this,'allodynia','fibro')">Jaka</span>
+      </div>
+    </div>
+
+    <!-- Disc -->
+    <div class="diag-card disc">
+      <div class="diag-title">💠 Discus hernija</div>
+      <label class="field-label">Bol/trnjenje pri pokretu glave (C): <strong id="c-val" style="color:var(--cyan);">0</strong>/10</label>
+      <div class="slider-wrap">
+        <div class="slider-track">
+          <div class="slider-rail">
+            <div class="slider-rail-bg"></div>
+            <div class="slider-fill" id="c-fill" style="background:var(--cyan);"></div>
+          </div>
+          <input type="range" class="custom-range" id="c-sl" min="0" max="10" value="0"
+            oninput="onSimpleSlider('cHernija','c-val','c-fill',this.value)">
+        </div>
+      </div>
+      <label class="field-label" style="margin-top:8px;">Bol pri sedenju/stajanju (L): <strong id="l-val" style="color:var(--cyan);">0</strong>/10</label>
+      <div class="slider-wrap">
+        <div class="slider-track">
+          <div class="slider-rail">
+            <div class="slider-rail-bg"></div>
+            <div class="slider-fill" id="l-fill" style="background:var(--cyan);"></div>
+          </div>
+          <input type="range" class="custom-range" id="l-sl" min="0" max="10" value="0"
+            oninput="onSimpleSlider('lHernija','l-val','l-fill',this.value)">
+        </div>
+      </div>
+      <label class="field-label" style="margin-top:8px;">Iscijadični bol (isijava u nogu)</label>
+      <div class="pill-group" id="iscijadis-grp">
+        <span class="pill-opt disc" data-v="nema"  onclick="pickPill(this,'iscijadis','disc')">Nema</span>
+        <span class="pill-opt disc" data-v="levo"  onclick="pickPill(this,'iscijadis','disc')">Lijevo</span>
+        <span class="pill-opt disc" data-v="desno" onclick="pickPill(this,'iscijadis','disc')">Desno</span>
+        <span class="pill-opt disc" data-v="oba"   onclick="pickPill(this,'iscijadis','disc')">Oba</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sleep & factors -->
+  <div class="card">
+    <div class="card-title">🌙 <span class="card-title-accent">San i faktori</span></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+      <div class="form-field">
+        <label class="form-label">Sati spavanja</label>
+        <input type="number" class="inp" id="san-sati" min="0" max="24" step="0.5" placeholder="npr. 7" oninput="autoSave()">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Kvalitet sna</label>
+        <div class="stars" id="stars-wrap">
+          <span class="star" data-v="1" onclick="setStars(1)">★</span>
+          <span class="star" data-v="2" onclick="setStars(2)">★</span>
+          <span class="star" data-v="3" onclick="setStars(3)">★</span>
+          <span class="star" data-v="4" onclick="setStars(4)">★</span>
+          <span class="star" data-v="5" onclick="setStars(5)">★</span>
+        </div>
+      </div>
+    </div>
+
+    <label class="form-label" style="display:block;margin-bottom:6px;">Stres: <strong id="stres-val" style="color:var(--rose);">0</strong>/10</label>
+    <div class="slider-wrap">
+      <div class="slider-track">
+        <div class="slider-rail">
+          <div class="slider-rail-bg"></div>
+          <div class="slider-fill" id="stres-fill" style="background:var(--rose);"></div>
+        </div>
+        <input type="range" class="custom-range" id="stres-sl" min="0" max="10" value="0"
+          oninput="onSimpleSlider('stres','stres-val','stres-fill',this.value)">
+      </div>
+    </div>
+
+    <label class="form-label" style="display:block;margin:12px 0 8px;">Aktivnost</label>
+    <div class="pill-group" id="aktivnost-grp">
+      <span class="pill-opt neutral" data-v="odmor"     onclick="pickPill(this,'aktivnost','neutral')">😴 Odmor</span>
+      <span class="pill-opt neutral" data-v="laka"      onclick="pickPill(this,'aktivnost','neutral')">🚶 Laka</span>
+      <span class="pill-opt neutral" data-v="umerena"   onclick="pickPill(this,'aktivnost','neutral')">🏃 Umerena</span>
+      <span class="pill-opt neutral" data-v="intenzivna" onclick="pickPill(this,'aktivnost','neutral')">💪 Intenzivna</span>
+    </div>
+
+    <label class="form-label" style="display:block;margin:14px 0 8px;">Atmosferske prilike</label>
+    <div class="weather-grid" id="weather-grp">
+      <div class="weather-btn" data-v="suncano"  onclick="pickWeather(this)"><span class="w-icon">☀️</span>Sunčano</div>
+      <div class="weather-btn" data-v="oblacno"  onclick="pickWeather(this)"><span class="w-icon">⛅</span>Oblačno</div>
+      <div class="weather-btn" data-v="kisovito" onclick="pickWeather(this)"><span class="w-icon">🌧️</span>Kišovito</div>
+      <div class="weather-btn" data-v="vetrovno" onclick="pickWeather(this)"><span class="w-icon">💨</span>Vetrovito</div>
+      <div class="weather-btn" data-v="hladno"   onclick="pickWeather(this)"><span class="w-icon">❄️</span>Hladno</div>
+      <div class="weather-btn" data-v="vlazno"   onclick="pickWeather(this)"><span class="w-icon">💧</span>Vlažno</div>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="card">
+    <div class="card-title">📝 <span class="card-title-accent">Napomene</span></div>
+    <textarea class="inp" id="notes-ta" placeholder="Šta se desilo danas? Novi simptomi, fizioterapija, promjene..." oninput="autoSave()"></textarea>
+  </div>
+
+  <!-- Meds today -->
+  <div class="card" id="meds-today-card">
+    <div class="card-title" style="justify-content:space-between;">
+      <span>💊 <span class="card-title-accent">Lekovi danas</span></span>
+      <button class="btn btn-ghost" style="padding:4px 10px;font-size:.72rem;" onclick="showSection('lekovi')">Uredi →</button>
+    </div>
+    <div id="meds-today-list"></div>
+  </div>
+
+  <!-- Save -->
+  <button class="btn btn-cyan btn-full ripple-host" onclick="saveExplicit(event)" style="margin-top:4px;margin-bottom:8px;">
+    💾 Sačuvaj unos
+  </button>
+
+</section>
+
+<!-- LEKOVI -->
+<section class="section page" id="s-lekovi">
+  <div class="card" style="margin-top:4px;">
+    <div class="card-title">💊 <span class="card-title-accent">Moji lekovi</span></div>
+    <div id="meds-main-list"></div>
+    <button class="btn btn-cyan btn-full ripple-host" onclick="toggleAddMedForm(event)" style="margin-top:8px;" id="add-med-btn">
+      + Dodaj lek
+    </button>
+  </div>
+
+  <div class="add-med-form" id="add-med-form">
+    <div class="card-title" style="margin-bottom:14px;">✦ Novi lek</div>
+    <div class="form-grid">
+      <div class="form-field" style="grid-column:span 2;">
+        <label class="form-label">Naziv leka *</label>
+        <input type="text" class="inp" id="nm-naziv" placeholder="npr. Methotrexate">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Doza</label>
+        <input type="text" class="inp" id="nm-doza" placeholder="npr. 10mg">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Učestalost</label>
+        <select class="inp" id="nm-freq">
+          <option value="dnevno">Dnevno</option>
+          <option value="2x">2× dnevno</option>
+          <option value="3x">3× dnevno</option>
+          <option value="nedeljno">Nedeljno</option>
+          <option value="po-potrebi">Po potrebi</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Vreme uzimanja</label>
+        <input type="text" class="inp" id="nm-vreme" placeholder="08:00, 20:00">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Napomene</label>
+        <input type="text" class="inp" id="nm-note" placeholder="uz jelo...">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;">
+      <button class="btn btn-ghost" onclick="toggleAddMedForm()">Otkaži</button>
+      <button class="btn btn-cyan ripple-host" onclick="addMed(event)">Dodaj</button>
+    </div>
+  </div>
+
+  <div style="background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:var(--r);padding:14px;font-size:.8rem;color:var(--amber);line-height:1.6;">
+    ⚠️ Aplikacija ne zamjenjuje savjet ljekara. Konsultujte reumatologa i neurologa o svakoj promjeni terapije.
+  </div>
+</section>
+
+<!-- ISTORIJA -->
+<section class="section page" id="s-istorija">
+
+  <div class="card" style="margin-top:4px;">
+    <div class="card-title">📈 <span class="card-title-accent">Bol tokom vremena</span></div>
+    <div class="range-tabs">
+      <div class="range-tab active" id="rt-7"  onclick="setRange(7)">7 dana</div>
+      <div class="range-tab"        id="rt-30" onclick="setRange(30)">30 dana</div>
+      <div class="range-tab"        id="rt-90" onclick="setRange(90)">90 dana</div>
+    </div>
+    <div class="chart-box"><canvas id="pain-chart"></canvas></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">😴 <span class="card-title-accent">San i umor</span></div>
+    <div class="chart-box"><canvas id="sleep-chart"></canvas></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📅 <span class="card-title-accent">Dnevnici</span></div>
+    <div id="hist-list"></div>
+  </div>
+
+</section>
+
+<!-- IZVEŠTAJ -->
+<section class="section page" id="s-izvestaj">
+
+  <div class="card card-accent no-print" style="margin-top:4px;">
+    <div class="card-title">📄 <span class="card-title-accent">Izveštaj za ljekara</span></div>
+    <div style="font-size:.82rem;color:var(--text2);line-height:1.6;margin-bottom:14px;">
+      Štampajte ili sačuvajte kao PDF za sljedeći pregled.
+    </div>
+    <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+      <div class="form-field" style="flex:1;min-width:160px;">
+        <label class="form-label">Period</label>
+        <select class="inp" id="rpt-period">
+          <option value="7">7 dana</option>
+          <option value="14">14 dana</option>
+          <option value="30" selected>30 dana</option>
+        </select>
+      </div>
+      <button class="btn btn-cyan ripple-host" onclick="printRpt(event)">🖨 Štampaj / PDF</button>
+    </div>
+  </div>
+
+  <div id="rpt-content"></div>
+
+</section>
+
+<!-- ═══════════════════════════ BOTTOM NAV ═══════════════════════════ -->
+<nav class="bottom-nav">
+  <div class="nav-item active" id="nav-danas" onclick="showSection('danas')">
+    <div class="nav-icon">📋</div>
+    <div class="nav-dot"></div>
+    <span class="nav-label">Danas</span>
+  </div>
+  <div class="nav-item" id="nav-lekovi" onclick="showSection('lekovi')">
+    <div class="nav-icon">💊</div>
+    <div class="nav-dot"></div>
+    <span class="nav-label">Lekovi</span>
+  </div>
+  <div class="nav-item" id="nav-istorija" onclick="showSection('istorija')">
+    <div class="nav-icon">📈</div>
+    <div class="nav-dot"></div>
+    <span class="nav-label">Istorija</span>
+  </div>
+  <div class="nav-item" id="nav-izvestaj" onclick="showSection('izvestaj')">
+    <div class="nav-icon">📄</div>
+    <div class="nav-dot"></div>
+    <span class="nav-label">Izveštaj</span>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════ JAVASCRIPT ═══════════════════════════ -->
+<script>
+// ── Animated particle background ──────────────────
+(function(){
+  const c = document.getElementById('bg-canvas');
+  const ctx = c.getContext('2d');
+  let W, H;
+
+  const PARTICLE_COUNT = 55;
+  const CONNECT_DIST   = 130;
+  const ORBS = 5;
+
+  let particles = [], orbs = [];
+
+  function resize(){
+    W = c.width  = innerWidth;
+    H = c.height = innerHeight;
+  }
+  resize();
+  addEventListener('resize', resize);
+
+  // Glowing orbs (slow, large)
+  for(let i=0;i<ORBS;i++) orbs.push({
+    x: Math.random()*1200, y: Math.random()*900,
+    r: 100 + Math.random()*180,
+    vx: (Math.random()-.5)*.12, vy: (Math.random()-.5)*.12,
+    hue: [190,270,210,190,270][i]
+  });
+
+  // Small floating particles
+  for(let i=0;i<PARTICLE_COUNT;i++) particles.push({
+    x:  Math.random()*1400,
+    y:  Math.random()*900,
+    vx: (Math.random()-.5)*.35,
+    vy: (Math.random()-.5)*.35,
+    r:  .8 + Math.random()*1.6,
+    alpha: .3 + Math.random()*.5,
+    hue: Math.random()<.6 ? 190 : 270
+  });
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+
+    // Orbs
+    orbs.forEach(o=>{
+      o.x += o.vx; o.y += o.vy;
+      if(o.x < -o.r) o.x = W+o.r; if(o.x > W+o.r) o.x = -o.r;
+      if(o.y < -o.r) o.y = H+o.r; if(o.y > H+o.r) o.y = -o.r;
+      const g = ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);
+      g.addColorStop(0, `hsla(${o.hue},80%,58%,.10)`);
+      g.addColorStop(1, 'transparent');
+      ctx.beginPath(); ctx.arc(o.x,o.y,o.r,0,Math.PI*2);
+      ctx.fillStyle = g; ctx.fill();
+    });
+
+    // Particles + connections
+    particles.forEach(p=>{
+      p.x += p.vx; p.y += p.vy;
+      if(p.x < 0) p.x = W; if(p.x > W) p.x = 0;
+      if(p.y < 0) p.y = H; if(p.y > H) p.y = 0;
+
+      // Draw dot
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = `hsla(${p.hue},90%,72%,${p.alpha})`;
+      ctx.fill();
+    });
+
+    // Draw connecting lines
+    for(let i=0;i<particles.length;i++){
+      for(let j=i+1;j<particles.length;j++){
+        const a=particles[i], b=particles[j];
+        const dx=a.x-b.x, dy=a.y-b.y;
+        const dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<CONNECT_DIST){
+          const alpha = (1-dist/CONNECT_DIST)*.18;
+          const hue = a.hue===b.hue ? a.hue : 230;
+          ctx.beginPath();
+          ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
+          ctx.strokeStyle = `hsla(${hue},80%,70%,${alpha})`;
+          ctx.lineWidth = .6;
+          ctx.stroke();
+        }
+      }
+    }
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ── Ripple effect ──────────────────────────────────
+function addRipple(el, e){
+  if(!el || el.namespaceURI === 'http://www.w3.org/2000/svg') return;
+  const r = el.getBoundingClientRect();
+  const wave = document.createElement('span');
+  wave.className = 'ripple-wave';
+  const size = Math.max(r.width, r.height);
+  const cx = e?.clientX ?? r.left + r.width / 2;
+  const cy = e?.clientY ?? r.top  + r.height / 2;
+  wave.style.cssText = `width:${size}px;height:${size}px;left:${cx-r.left-size/2}px;top:${cy-r.top-size/2}px`;
+  el.appendChild(wave);
+  wave.addEventListener('animationend', ()=>wave.remove());
+}
+document.addEventListener('click', e => {
+  const host = e.target.closest('.ripple-host');
+  if(host && host.namespaceURI !== 'http://www.w3.org/2000/svg') addRipple(host, e);
+});
+
+// ── Toast ──────────────────────────────────────────
+function showToast(msg, dur=2000){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(()=>t.classList.remove('show'), dur);
+}
+
+// ── Region labels ──────────────────────────────────
+const REG = {
+  glava:    { label:'Glava',                    sub:'' },
+  vrat:     { label:'Vrat',                     sub:'Cervikalna hernija (C)' },
+  'rame-l': { label:'Lijevo rame',              sub:'' },
+  'rame-d': { label:'Desno rame',               sub:'' },
+  'ledja-g':{ label:'Gornja leđa',              sub:'Torakalna regija' },
+  'ledja-l':{ label:'Lumbalna leđa',            sub:'Lumbalna hernija (L)' },
+  'ruka-l-g':{ label:'Lijeva nadlaktica',       sub:'' },
+  'ruka-d-g':{ label:'Desna nadlaktica',        sub:'' },
+  'ruka-l-d':{ label:'Lijeva šaka / podlaktica', sub:'' },
+  'ruka-d-d':{ label:'Desna šaka / podlaktica', sub:'' },
+  'kuk-l':  { label:'Lijevi kuk',               sub:'' },
+  'kuk-d':  { label:'Desni kuk',                sub:'' },
+  'noga-l-g':{ label:'Lijevo bedro / koleno',   sub:'' },
+  'noga-d-g':{ label:'Desno bedro / koleno',    sub:'' },
+  'noga-l-d':{ label:'Lijeva potkolenica / stopalo', sub:'' },
+  'noga-d-d':{ label:'Desna potkolenica / stopalo',  sub:'' },
+};
+
+// ── Storage ────────────────────────────────────────
+const DB  = { get: ()=>JSON.parse(localStorage.getItem('vt_data')||'{}'),  save: d=>localStorage.setItem('vt_data',JSON.stringify(d)) };
+const MDB = { get: ()=>JSON.parse(localStorage.getItem('vt_meds')||'[]'),  save: m=>localStorage.setItem('vt_meds',JSON.stringify(m)) };
+const todayKey = ()=>new Date().toISOString().slice(0,10);
+
+function getEntry(){
+  const d=DB.get(), k=todayKey();
+  if(!d[k]) d[k]={};
+  if(!d[k][tod]) d[k][tod]={ bol:{}, sim:{}, fak:{}, lekovi:{} };
+  return { d, e:d[k][tod], k };
+}
+
+// ── State ──────────────────────────────────────────
+let tod = 'jutro';
+let selReg = null;
+let curTypes = [];
+let histRange = 7;
+let painChart = null, sleepChart = null;
+let autoSaveTimer = null;
+
+// ── Sections / Nav ─────────────────────────────────
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('s-'+id).classList.add('active');
+  document.getElementById('nav-'+id).classList.add('active');
+  if(id==='istorija') renderCharts();
+  if(id==='izvestaj') renderReport();
+  if(id==='lekovi')   renderMedsMain();
+  if(id==='danas')    renderMedsToday();
+}
+
+// ── Time of day ────────────────────────────────────
+function setTOD(t, e){
+  if(e) addRipple(document.getElementById('tod-'+t), e);
+  tod = t;
+  document.querySelectorAll('.tod-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tod-'+t).classList.add('active');
+  loadUI();
+}
+
+function todStatus(t){
+  const d=DB.get(), k=todayKey();
+  return d[k]?.[t]?.savedAt ? '✓' : '';
+}
+function refreshTODStatus(){
+  ['jutro','podne','vece'].forEach(t=>{
+    document.getElementById('tod-st-'+t).textContent = todStatus(t);
+  });
+}
+
+// ── Body map ───────────────────────────────────────
+function clickReg(id, e){
+  if(e) e.stopPropagation();
+  selReg = id;
+  document.querySelectorAll('.body-region').forEach(el=>el.classList.remove('active-region'));
+  document.getElementById('reg-'+id)?.classList.add('active-region');
+
+  const info = REG[id]||{label:id,sub:''};
+  document.getElementById('reg-title').textContent = info.label;
+  document.getElementById('reg-sub').textContent   = info.sub;
+  document.getElementById('region-placeholder').style.display = 'none';
+  document.getElementById('region-detail').style.display = 'block';
+
+  const { e:entry } = getEntry();
+  const pain = entry.bol[id]||{ level:0, types:[] };
+  document.getElementById('reg-slider').value = pain.level;
+  curTypes = [...(pain.types||[])];
+  updateRegDisplay(pain.level);
+  refreshTypeChips();
+}
+
+function onRegSlider(v){
+  updateRegDisplay(v);
+  if(!selReg) return;
+  const { d, e:entry, k } = getEntry();
+  entry.bol[selReg] = { level:+v, types:curTypes };
+  DB.save(d);
+  updateBodyColors();
+  renderActivePains();
+  autoSave();
+}
+
+function updateRegDisplay(v){
+  v = +v;
+  const el = document.getElementById('pain-display');
+  const fill = document.getElementById('slider-fill');
+  el.textContent = v;
+  const pct = v/10*100;
+  fill.style.width = pct+'%';
+  let color, glow;
+  if(v===0){ color='#475569'; glow='transparent'; }
+  else if(v<=3){ color='#34d399'; glow='rgba(52,211,153,.3)'; }
+  else if(v<=6){ color='#fbbf24'; glow='rgba(251,191,36,.3)'; }
+  else if(v<=8){ color='#f97316'; glow='rgba(249,115,22,.3)'; }
+  else { color='#ef4444'; glow='rgba(239,68,68,.4)'; }
+  el.style.borderColor = color;
+  el.style.color = color;
+  el.style.boxShadow = `0 0 12px ${glow}`;
+  fill.style.background = `linear-gradient(90deg, #34d399, ${color})`;
+}
+
+function toggleChip(el){
+  const t = el.dataset.t;
+  const idx = curTypes.indexOf(t);
+  if(idx>=0) curTypes.splice(idx,1); else curTypes.push(t);
+  el.classList.toggle('active');
+  if(selReg){
+    const { d, e:entry } = getEntry();
+    if(entry.bol[selReg]) entry.bol[selReg].types = curTypes;
+    DB.save(d);
+  }
+}
+
+function refreshTypeChips(){
+  document.querySelectorAll('#pain-type-chips .chip').forEach(el=>{
+    el.classList.toggle('active', curTypes.includes(el.dataset.t));
+  });
+}
+
+function updateBodyColors(){
+  const { e:entry } = getEntry();
+  Object.keys(REG).forEach(id=>{
+    const el = document.getElementById('reg-'+id);
+    if(!el) return;
+    const lv = entry.bol[id]?.level||0;
+    el.classList.remove('pain-low','pain-mid','pain-high');
+    if(lv>=1 && lv<=3) el.classList.add('pain-low');
+    else if(lv<=6) el.classList.add('pain-mid');
+    else if(lv>6) el.classList.add('pain-high');
+  });
+}
+
+function renderActivePains(){
+  const { e:entry } = getEntry();
+  const active = Object.entries(entry.bol).filter(([,v])=>v.level>0);
+  const el = document.getElementById('active-pains');
+  if(!active.length){ el.innerHTML=''; return; }
+  el.innerHTML = '<div style="font-size:.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Aktivne lokacije</div>' +
+    active.map(([id,v])=>{
+      const lv=v.level;
+      const col = lv<=3?'var(--pain3)':lv<=6?'var(--pain6)':'var(--pain9)';
+      return `<div class="pain-item">
+        <span style="color:var(--text2);font-size:.8rem;">${REG[id]?.label||id}</span>
+        <span class="pain-badge" style="color:${col};">${lv}/10</span>
+      </div>`;
+    }).join('');
+}
+
+// ── Simple sliders (umor, hernija, stres) ──────────
+const simMap = { umor:'umor-sl', cHernija:'c-sl', lHernija:'l-sl', stres:'stres-sl' };
+function onSimpleSlider(key, valId, fillId, v){
+  document.getElementById(valId).textContent = v;
+  const pct = +v/10*100;
+  document.getElementById(fillId).style.width = pct+'%';
+  const { d, e:entry } = getEntry();
+  entry.sim[key] = +v;
+  DB.save(d);
+  autoSave();
+}
+
+// ── Pill / option pickers ──────────────────────────
+function pickPill(el, key, cls){
+  const grp = el.closest('.pill-group');
+  grp.querySelectorAll('.pill-opt').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  const { d, e:entry } = getEntry();
+  entry.sim[key] = el.dataset.v;
+  DB.save(d); autoSave();
+}
+
+function pickWeather(el){
+  document.querySelectorAll('#weather-grp .weather-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  const { d, e:entry } = getEntry();
+  entry.fak.vreme = el.dataset.v;
+  DB.save(d); autoSave();
+}
+
+function setStars(n){
+  document.querySelectorAll('.star').forEach(s=>{
+    s.classList.toggle('lit', +s.dataset.v <= n);
+  });
+  const { d, e:entry } = getEntry();
+  entry.fak.kvalitetSna = n;
+  DB.save(d); autoSave();
+}
+
+// ── Auto save ──────────────────────────────────────
+function autoSave(){
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(()=>{
+    const { d, e:entry } = getEntry();
+    entry.fak.sanSati  = parseFloat(document.getElementById('san-sati').value)||0;
+    entry.fak.stres    = +document.getElementById('stres-sl').value;
+    entry.fak.aktivnost = (document.querySelector('#aktivnost-grp .pill-opt.active')?.dataset.v)||'';
+    entry.napomene = document.getElementById('notes-ta').value;
+    entry.savedAt  = new Date().toISOString();
+    DB.save(d);
+    refreshTODStatus();
+    updateCompletion();
+  }, 600);
+}
+
+function saveExplicit(e){
+  const { d, e:entry } = getEntry();
+  entry.fak.sanSati   = parseFloat(document.getElementById('san-sati').value)||0;
+  entry.fak.stres     = +document.getElementById('stres-sl').value;
+  entry.fak.aktivnost = (document.querySelector('#aktivnost-grp .pill-opt.active')?.dataset.v)||'';
+  entry.napomene = document.getElementById('notes-ta').value;
+  entry.savedAt  = new Date().toISOString();
+  DB.save(d);
+  refreshTODStatus();
+  updateCompletion();
+  showToast('✓ Unos sačuvan');
+}
+
+// ── Completion ring ────────────────────────────────
+function updateCompletion(){
+  const d=DB.get(), k=todayKey();
+  let done=0, total=3;
+  ['jutro','podne','vece'].forEach(t=>{ if(d[k]?.[t]?.savedAt) done++; });
+  const pct = Math.round(done/total*100);
+  const circ = 2*Math.PI*17;
+  document.getElementById('ring-fill').style.strokeDashoffset = circ*(1-pct/100);
+  document.getElementById('completion-pct').textContent = pct+'%';
+}
+
+// ── Load UI from storage ───────────────────────────
+function loadUI(){
+  const { e:entry } = getEntry();
+  const s=entry.sim||{}, f=entry.fak||{};
+
+  // Sliders
+  ['umor','cHernija','lHernija'].forEach(k=>{
+    const cfg = { umor:['umor-sl','umor-val','umor-fill'], cHernija:['c-sl','c-val','c-fill'], lHernija:['l-sl','l-val','l-fill'] }[k];
+    document.getElementById(cfg[0]).value = s[k]||0;
+    document.getElementById(cfg[1]).textContent = s[k]||0;
+    document.getElementById(cfg[2]).style.width = ((s[k]||0)/10*100)+'%';
+  });
+  document.getElementById('stres-sl').value = f.stres||0;
+  document.getElementById('stres-val').textContent = f.stres||0;
+  document.getElementById('stres-fill').style.width = ((f.stres||0)/10*100)+'%';
+  document.getElementById('san-sati').value = f.sanSati||'';
+  document.getElementById('notes-ta').value = entry.napomene||'';
+
+  // Stars
+  setStarsUI(f.kvalitetSna||0);
+
+  // Pills
+  const pillMaps = [
+    ['ukocenost-grp','ukocenost','ra'],['oticanje-grp','oticanje','ra'],
+    ['maglina-grp','maglina','fibro'],['allodynia-grp','allodynia','fibro'],
+    ['iscijadis-grp','iscijadis','disc'],['aktivnost-grp','aktivnost','neutral']
+  ];
+  pillMaps.forEach(([grp,key,cls])=>{
+    document.querySelectorAll('#'+grp+' .pill-opt').forEach(p=>p.classList.remove('active'));
+    const v = s[key]||entry.fak?.[key]||'';
+    if(v){ const t = document.querySelector(`#${grp} [data-v="${v}"]`); if(t) t.classList.add('active'); }
+  });
+
+  // Weather
+  document.querySelectorAll('#weather-grp .weather-btn').forEach(b=>b.classList.remove('active'));
+  if(f.vreme){ const t=document.querySelector(`#weather-grp [data-v="${f.vreme}"]`); if(t) t.classList.add('active'); }
+
+  // Body
+  selReg=null;
+  document.getElementById('region-placeholder').style.display='block';
+  document.getElementById('region-detail').style.display='none';
+  document.querySelectorAll('.body-region').forEach(el=>el.classList.remove('active-region'));
+  updateBodyColors();
+  renderActivePains();
+  refreshTODStatus();
+  renderMedsToday();
+  updateCompletion();
+}
+
+function setStarsUI(n){
+  document.querySelectorAll('.star').forEach(s=>s.classList.toggle('lit', +s.dataset.v<=n));
+}
+
+// ── Medications ────────────────────────────────────
+const FREQ = { dnevno:'Dnevno','2x':'2× dnevno','3x':'3× dnevno',nedeljno:'Nedeljno','po-potrebi':'Po potrebi' };
+
+function renderMedsMain(){
+  const list=MDB.get(), el=document.getElementById('meds-main-list');
+  if(!list.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">💊</div><div class="empty-text">Nema unesenih lekova.<br>Dodaj prvi lek iznad.</div></div>';
+    return;
+  }
+  el.innerHTML = list.map((m,i)=>`
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:14px;border:1px solid var(--border);border-radius:var(--r2);background:var(--glass);margin-bottom:8px;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;color:var(--text);font-size:.92rem;">${m.naziv} <span style="font-weight:400;color:var(--text3);font-size:.8rem;">${m.doza||''}</span></div>
+        <div style="font-size:.78rem;color:var(--text2);margin-top:3px;">${FREQ[m.freq]||m.freq}${m.vreme?' · '+m.vreme:''}</div>
+        ${m.note?`<div style="font-size:.75rem;color:var(--text3);margin-top:2px;">📝 ${m.note}</div>`:''}
+      </div>
+      <button class="btn btn-danger btn-icon" onclick="deleteMed(${i},event)">✕</button>
+    </div>`).join('');
+}
+
+function toggleAddMedForm(e){
+  const f=document.getElementById('add-med-form');
+  const open = f.style.display==='block';
+  f.style.display = open?'none':'block';
+  document.getElementById('add-med-btn').textContent = open?'+ Dodaj lek':'✕ Otkaži';
+  if(!open) f.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function addMed(e){
+  const naziv=document.getElementById('nm-naziv').value.trim();
+  if(!naziv){ showToast('⚠ Unesite naziv leka'); return; }
+  const list=MDB.get();
+  list.push({
+    naziv, doza:document.getElementById('nm-doza').value.trim(),
+    freq:document.getElementById('nm-freq').value,
+    vreme:document.getElementById('nm-vreme').value.trim(),
+    note:document.getElementById('nm-note').value.trim(),
+    id:Date.now()
+  });
+  MDB.save(list);
+  ['nm-naziv','nm-doza','nm-vreme','nm-note'].forEach(id=>document.getElementById(id).value='');
+  toggleAddMedForm();
+  renderMedsMain(); renderMedsToday();
+  showToast('✓ Lek dodan');
+}
+
+function deleteMed(i,e){
+  if(!confirm('Obrisati lek?')) return;
+  const list=MDB.get(); list.splice(i,1); MDB.save(list);
+  renderMedsMain(); renderMedsToday();
+  showToast('Lek obrisan');
+}
+
+function renderMedsToday(){
+  const list=MDB.get(), el=document.getElementById('meds-today-list');
+  if(!list.length){
+    el.innerHTML='<div style="font-size:.82rem;color:var(--text3);">Nema unesenih lekova.</div>';
+    return;
+  }
+  const { d, e:entry } = getEntry();
+  entry.lekovi = entry.lekovi||{};
+  el.innerHTML = list.map((m,i)=>{
+    const key='lek_'+(m.id||i);
+    const taken=!!entry.lekovi[key];
+    return `<div class="med-row${taken?' taken':''} ripple-host" onclick="toggleMed('${key}',${i})">
+      <div class="med-checkbox">${taken?'✓':''}</div>
+      <div class="med-info">
+        <div class="med-name">${m.naziv} <span style="font-weight:400;color:var(--text3);font-size:.8rem;">${m.doza||''}</span></div>
+        <div class="med-meta">${FREQ[m.freq]||m.freq}${m.vreme?'':''}</div>
+        ${m.vreme?`<div class="med-time">⏰ ${m.vreme}</div>`:''}
+      </div>
+      <span style="font-size:.78rem;font-weight:700;color:${taken?'var(--green)':'var(--text3)'};">${taken?'Uzeto':'—'}</span>
+    </div>`;
+  }).join('');
+}
+
+function toggleMed(key,i){
+  const { d, e:entry } = getEntry();
+  entry.lekovi = entry.lekovi||{};
+  entry.lekovi[key] = !entry.lekovi[key];
+  DB.save(d);
+  renderMedsToday();
+  showToast(entry.lekovi[key]?'✓ Lek uzet':'Lek poništen');
+}
+
+// ── Charts ─────────────────────────────────────────
+function daysBack(n){
+  return Array.from({length:n},(_,i)=>{
+    const d=new Date(); d.setDate(d.getDate()-(n-1-i));
+    return d.toISOString().slice(0,10);
+  });
+}
+
+function avgPain(dayData){
+  if(!dayData) return null;
+  const vals=[];
+  ['jutro','podne','vece'].forEach(t=>{
+    const e=dayData[t];
+    if(!e?.bol) return;
+    Object.values(e.bol).forEach(v=>{ if(v.level>0) vals.push(v.level); });
+  });
+  return vals.length ? +(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1) : null;
+}
+
+function renderCharts(){
+  const data=DB.get(), days=daysBack(histRange);
+  const labels=days.map(d=>{ const[,m,dd]=d.split('-'); return dd+'.'+m; });
+  const pain=days.map(d=>avgPain(data[d]));
+  const sleep=days.map(d=>{
+    const e=data[d]; if(!e) return null;
+    return ['jutro','podne','vece'].map(t=>e[t]?.fak?.sanSati).find(v=>v)||null;
+  });
+  const fatigue=days.map(d=>{
+    const e=data[d]; if(!e) return null;
+    return ['jutro','podne','vece'].map(t=>e[t]?.sim?.umor).find(v=>v!=null)??null;
+  });
+
+  const chartDefaults = {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ labels:{ color:'#94a3b8', font:{ size:11 } } } },
+    scales:{
+      x:{ ticks:{ color:'#475569', font:{ size:10 } }, grid:{ color:'rgba(255,255,255,.04)' } },
+      y:{ ticks:{ color:'#475569' }, grid:{ color:'rgba(255,255,255,.06)' } }
+    }
+  };
+
+  if(painChart) painChart.destroy();
+  painChart = new Chart(document.getElementById('pain-chart'),{
+    type:'line',
+    data:{
+      labels,
+      datasets:[{
+        label:'Prosječan bol',
+        data:pain,
+        borderColor:'#f97316',
+        backgroundColor:'rgba(249,115,22,.1)',
+        tension:.4, fill:true, pointRadius:4,
+        pointBackgroundColor:'#f97316',
+        pointBorderColor:'#fff', pointBorderWidth:2,
+        spanGaps:true
+      }]
+    },
+    options:{
+      ...chartDefaults,
+      plugins:{ legend:{ display:false } },
+      scales:{
+        x:{ ticks:{ color:'#475569', font:{ size:10 } }, grid:{ color:'rgba(255,255,255,.04)' } },
+        y:{ min:0, max:10, ticks:{ color:'#475569', stepSize:2 }, grid:{ color:'rgba(255,255,255,.06)' } }
+      }
+    }
+  });
+
+  if(sleepChart) sleepChart.destroy();
+  sleepChart = new Chart(document.getElementById('sleep-chart'),{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        { label:'Sati sna', data:sleep, backgroundColor:'rgba(0,217,255,.2)', borderColor:'#00d9ff', borderWidth:1, borderRadius:4, yAxisID:'y' },
+        { label:'Umor', data:fatigue, type:'line', borderColor:'#a78bfa', backgroundColor:'transparent', tension:.4, pointRadius:3, pointBackgroundColor:'#a78bfa', spanGaps:true, yAxisID:'y2' }
+      ]
+    },
+    options:{
+      ...chartDefaults,
+      scales:{
+        x:{ ticks:{ color:'#475569', font:{ size:10 } }, grid:{ color:'rgba(255,255,255,.04)' } },
+        y:  { min:0, max:12, ticks:{ color:'#475569' }, grid:{ color:'rgba(255,255,255,.06)' }, title:{ display:true, text:'Sati', color:'#475569', font:{size:10} } },
+        y2: { min:0, max:10, position:'right', ticks:{ color:'#a78bfa' }, grid:{ drawOnChartArea:false }, title:{ display:true, text:'Umor', color:'#a78bfa', font:{size:10} } }
+      }
+    }
+  });
+
+  renderHistList(data, days);
+}
+
+function setRange(n){
+  histRange=n;
+  [7,30,90].forEach(x=>document.getElementById('rt-'+x).classList.toggle('active',x===n));
+  renderCharts();
+}
+
+function renderHistList(data, days){
+  const el=document.getElementById('hist-list');
+  const entries=days.filter(d=>data[d]).reverse().slice(0,20);
+  if(!entries.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">Nema unosa u ovom periodu.</div></div>';
+    return;
+  }
+  el.innerHTML=entries.map(d=>{
+    const dd=data[d], avg=avgPain(dd);
+    const col=!avg?'#475569':avg<=3?'#34d399':avg<=6?'#f97316':'#ef4444';
+    const note=['jutro','podne','vece'].map(t=>dd[t]?.napomene).filter(Boolean).join(' / ');
+    const [y,m,dn]=d.split('-');
+    const days2=['Ned','Pon','Uto','Sri','Čet','Pet','Sub'];
+    const wd=days2[new Date(d).getDay()];
+    return `<div class="hist-entry" style="border-left-color:${col};">
+      <div class="hist-top">
+        <span class="hist-date">${wd}, ${dn}.${m}.${y}.</span>
+        <span class="hist-pain" style="color:${col};">${avg?avg+'/10':'Bez bola'}</span>
+      </div>
+      ${note?`<div class="hist-note">${note}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ── Report ─────────────────────────────────────────
+function renderReport(){
+  const period=+document.getElementById('rpt-period').value;
+  const data=DB.get(), days=daysBack(period);
+  const meds=MDB.get();
+  const now=new Date();
+
+  const allPain=[]; const locCnt={};
+  let entries=0;
+  days.forEach(d=>{
+    if(!data[d]) return;
+    ['jutro','podne','vece'].forEach(t=>{
+      const e=data[d][t];
+      if(!e?.savedAt) return;
+      entries++;
+      Object.entries(e.bol||{}).forEach(([loc,v])=>{
+        if(v.level>0){ allPain.push(v.level); locCnt[loc]=(locCnt[loc]||0)+1; }
+      });
+    });
+  });
+
+  const avgP = allPain.length ? (allPain.reduce((a,b)=>a+b,0)/allPain.length).toFixed(1):'—';
+  const maxP = allPain.length ? Math.max(...allPain):'—';
+  const topLoc = Object.entries(locCnt).sort((a,b)=>b[1]-a[1]).slice(0,6);
+
+  document.getElementById('rpt-content').innerHTML=`
+    <div class="card">
+      <div class="report-header">
+        <div class="report-title">Medicinski dnevnik bola</div>
+        <div class="report-sub">
+          Period: ${period} dana · Generisano ${now.toLocaleDateString('sr-RS')}<br>
+          Dijagnoze: Reumatoidni artritis · Fibromijalgija · Discus hernija C &amp; L
+        </div>
+      </div>
+
+      <div class="stats-row" style="margin-bottom:20px;">
+        <div class="stat-card">
+          <div class="stat-val" style="color:var(--cyan);">${avgP}</div>
+          <div class="stat-label">Prosj. bol</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" style="color:var(--rose);">${maxP}</div>
+          <div class="stat-label">Maks. bol</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" style="color:var(--purple);">${entries}</div>
+          <div class="stat-label">Unosa</div>
+        </div>
+      </div>
+
+      ${topLoc.length?`
+      <div style="margin-bottom:20px;">
+        <div class="card-title" style="margin-bottom:12px;">📍 Najčešće lokacije bola</div>
+        ${topLoc.map(([loc,cnt])=>`
+          <div class="location-bar-wrap">
+            <span class="location-bar-label">${REG[loc]?.label||loc}</span>
+            <div class="location-bar-track">
+              <div class="location-bar-fill" style="width:${Math.min(100,(cnt/Math.max(entries,1))*100)}%;"></div>
+            </div>
+            <span class="location-bar-count">${cnt}×</span>
+          </div>`).join('')}
+      </div>
+      `:''}
+
+      ${meds.length?`
+      <div style="margin-bottom:20px;">
+        <div class="card-title" style="margin-bottom:12px;">💊 Trenutna terapija</div>
+        <table class="report-table">
+          <tr><th>Lek</th><th>Doza</th><th>Učestalost</th><th>Vreme</th></tr>
+          ${meds.map(m=>`<tr>
+            <td style="font-weight:700;">${m.naziv}</td>
+            <td>${m.doza||'—'}</td>
+            <td>${FREQ[m.freq]||m.freq}</td>
+            <td>${m.vreme||'—'}</td>
+          </tr>`).join('')}
+        </table>
+      </div>
+      `:''}
+
+      <div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);border-radius:var(--r2);padding:12px;font-size:.78rem;color:var(--amber);line-height:1.6;">
+        ⚠ Ovaj dokument je generisan iz pacijentovog dnevnika i koristi se kao pomoćni materijal za ljekara. Nije zamjena za kliničku procjenu.
+      </div>
+    </div>`;
+}
+
+function printRpt(e){
+  renderReport();
+  setTimeout(()=>window.print(), 400);
+}
+
+// ── Init ───────────────────────────────────────────
+(function init(){
+  // Header date
+  const now=new Date();
+  const days=['Nedjelja','Ponedjeljak','Utorak','Srijeda','Četvrtak','Petak','Subota'];
+  const months=['januar','februar','mart','april','maj','juni','juli','august','septembar','oktobar','novembar','decembar'];
+  document.getElementById('header-date').textContent=
+    `${days[now.getDay()]}, ${now.getDate()}. ${months[now.getMonth()]}`;
+
+  // Auto-set TOD
+  const h=now.getHours();
+  const t = h<12?'jutro':h<18?'podne':'vece';
+  document.getElementById('tod-'+t).classList.add('active');
+  tod=t;
+
+  loadUI();
+})();
+</script>
+</body>
+</html>
