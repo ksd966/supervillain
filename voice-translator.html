@@ -492,8 +492,29 @@
     </div>
 
     <p style="font-size:0.8rem;color:var(--text-muted);text-align:center;" id="micHint">
-      Klikni dugme i govori srpski
+      Tapni dugme i govori srpski
     </p>
+
+    <!-- Manual input fallback -->
+    <div style="width:100%;max-width:500px;">
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input id="manualInput" type="text" inputmode="text" autocomplete="off" spellcheck="false"
+          placeholder="Ili ukucaj srpski tekst..." style="
+          flex:1;background:var(--bg-elevated);border:1px solid var(--border);
+          border-radius:10px;color:var(--text-primary);padding:11px 14px;
+          font-family:'Space Grotesk',sans-serif;font-size:0.9rem;outline:none;
+          transition:border-color 0.2s;min-width:0;
+        " onfocus="this.style.borderColor='var(--border-bright)'"
+           onblur="this.style.borderColor='var(--border)'"
+           onkeydown="if(event.key==='Enter'){this.blur();translateManual();}">
+        <button onclick="translateManual()" style="
+          background:oklch(55% 0.200 250 / 0.15);border:1px solid oklch(55% 0.200 250 / 0.4);
+          border-radius:10px;color:var(--blue-bright);padding:11px 14px;
+          font-family:'Space Grotesk',sans-serif;font-size:0.85rem;cursor:pointer;
+          white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent;
+        ">Prevedi</button>
+      </div>
+    </div>
   </div>
 
   <!-- Text panels -->
@@ -625,7 +646,7 @@ function initSpeechRecognition() {
   if (!SpeechRecognition) return;
 
   recognition = new SpeechRecognition();
-  recognition.lang = 'sr-RS';
+  recognition.lang = 'sr';
   recognition.continuous = false; // false = mobile compatible
   recognition.interimResults = true;
   recognition.maxAlternatives = 1;
@@ -777,6 +798,16 @@ function updateEnPanel(text, isTranslating) {
 
 function escHtml(t) {
   return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function translateManual() {
+  const input = document.getElementById('manualInput');
+  const text = input.value.trim();
+  if (!text) return;
+  currentSrText = text;
+  updateSrPanel(text, '');
+  doTranslate(text);
+  input.value = '';
 }
 
 // ── Translation (Google Translate → MyMemory fallback, bez API ključa) ──
