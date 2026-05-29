@@ -488,6 +488,126 @@ tailwind.config = {
   .reveal-delay-4 { transition-delay: 0.4s; }
   .reveal-delay-5 { transition-delay: 0.5s; }
 
+  /* ── Section description ── */
+  .section-desc {
+    font-size: 0.88rem; line-height: 1.8;
+    color: var(--text-secondary); max-width: 560px;
+    margin-top: 24px;
+  }
+
+  /* ── System Dominion Terminals ── */
+  .terminals-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 64px;
+  }
+  .terminal {
+    border: 1px solid var(--border);
+    overflow: hidden;
+    font-family: 'Courier New', 'Consolas', monospace;
+    font-size: 0.76rem;
+  }
+  .terminal-bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px;
+    background: oklch(12% 0.008 22);
+    border-bottom: 1px solid var(--border);
+  }
+  .t-dots { display: flex; gap: 6px; }
+  .t-dot { width: 11px; height: 11px; border-radius: 50%; }
+  .t-dot-r { background: #ff5f57; }
+  .t-dot-y { background: #ffbd2e; }
+  .t-dot-g { background: #28ca41; }
+  .terminal-bar-title {
+    font-size: 0.66rem; color: var(--text-muted);
+    letter-spacing: 0.06em; margin-left: 4px;
+  }
+  .terminal-body {
+    padding: 20px 24px;
+    background: oklch(4% 0.004 22);
+    min-height: 300px;
+    display: flex; flex-direction: column; gap: 5px;
+    overflow: hidden;
+  }
+  .t-line { line-height: 1.65; white-space: nowrap; }
+  .t-prompt-lx { color: oklch(65% 0.22 142); font-weight: bold; }
+  .t-cmd { color: oklch(90% 0.005 85); }
+  .t-out { color: oklch(50% 0.007 85); padding-left: 2ch; }
+  .t-success { color: oklch(65% 0.20 142); padding-left: 2ch; }
+  .t-warn { color: oklch(72% 0.16 78); padding-left: 2ch; }
+  .terminal-bar-win {
+    background: oklch(14% 0.04 250);
+    justify-content: space-between;
+  }
+  .terminal-bar-title-win {
+    font-size: 0.66rem;
+    color: oklch(72% 0.010 250);
+    letter-spacing: 0.06em;
+  }
+  .win-ctl {
+    display: flex; gap: 12px;
+    font-size: 0.70rem; color: oklch(55% 0.010 250);
+  }
+  .terminal-body-win { background: oklch(5% 0.015 250); }
+  .t-prompt-win { color: oklch(62% 0.15 250); }
+  .t-cmd-win { color: oklch(92% 0.005 250); }
+  .t-out-win { color: oklch(55% 0.010 250); padding-left: 2ch; }
+  .t-success-win { color: oklch(65% 0.18 162); padding-left: 2ch; }
+  .t-warn-win { color: oklch(70% 0.16 300); padding-left: 2ch; }
+  .t-cursor {
+    display: inline-block; width: 0.55em; height: 1em;
+    background: oklch(65% 0.22 142);
+    animation: tBlink 1s step-end infinite;
+    vertical-align: text-bottom;
+  }
+  .t-cursor-win {
+    display: inline-block; width: 0.55em; height: 1em;
+    background: oklch(62% 0.15 250);
+    animation: tBlink 1s step-end infinite;
+    vertical-align: text-bottom;
+  }
+  @keyframes tBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  .os-dominion {
+    display: flex; align-items: stretch;
+    margin-top: 64px;
+    border: 1px solid var(--border);
+    background: var(--bg-surface);
+  }
+  .os-stat-cell {
+    flex: 1; padding: 48px 40px; text-align: center;
+    border-right: 1px solid var(--border);
+  }
+  .os-stat-cell:last-child { border-right: none; }
+  .os-stat-badge {
+    font-size: 0.64rem; letter-spacing: 0.3em; text-transform: uppercase;
+    padding: 5px 12px; border: 1px solid var(--border-bright);
+    color: var(--text-muted); display: inline-block;
+    margin-bottom: 24px;
+  }
+  .os-stat-badge.lx {
+    border-color: oklch(40% 0.18 142);
+    color: oklch(60% 0.20 142);
+  }
+  .os-stat-badge.win {
+    border-color: oklch(35% 0.12 250);
+    color: oklch(60% 0.14 250);
+  }
+  .os-dominion-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.4rem, 4vw, 3.6rem);
+    font-weight: 600; line-height: 1;
+    color: var(--text-primary);
+  }
+  .os-dominion-num span { color: var(--crimson-bright); }
+  .os-dominion-label {
+    font-size: 0.62rem; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--text-muted); margin-top: 8px;
+  }
+
   /* ── Responsive ── */
   @media (max-width: 1024px) {
     nav { padding: 24px 32px; }
@@ -497,6 +617,11 @@ tailwind.config = {
     section { padding: 100px 32px; }
     .caps-grid { grid-template-columns: 1fr; }
     footer { padding: 32px; flex-direction: column; gap: 16px; text-align: center; }
+    .terminals-grid { grid-template-columns: 1fr; }
+    .os-dominion { flex-direction: column; }
+    .os-stat-cell { border-right: none; border-bottom: 1px solid var(--border); }
+    .os-stat-cell:last-child { border-bottom: none; }
+    .os-stat-cell { padding: 32px 24px; }
   }
   @media (max-width: 640px) {
     nav { padding: 20px 20px; }
@@ -521,6 +646,7 @@ tailwind.config = {
   <a href="#" class="nav-logo">Nexus Dominion</a>
   <ul class="nav-links">
     <li><a href="#capabilities">Capabilities</a></li>
+    <li><a href="#infiltration">Infiltration</a></li>
     <li><a href="#plans">Operations</a></li>
     <li><a href="#join">Recruitment</a></li>
   </ul>
@@ -583,16 +709,16 @@ tailwind.config = {
     <div class="marquee-item"><div class="marquee-dot"></div>Orbital Systems</div>
     <div class="marquee-item"><div class="marquee-dot"></div>Economic Warfare</div>
     <div class="marquee-item"><div class="marquee-dot"></div>Shadow Diplomacy</div>
-    <div class="marquee-item"><div class="marquee-dot"></div>Biological Leverage</div>
-    <div class="marquee-item"><div class="marquee-dot"></div>Quantum Encryption</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Linux Kernel Exploitation</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Windows Registry Control</div>
     <div class="marquee-item"><div class="marquee-dot"></div>Global Surveillance</div>
     <div class="marquee-item"><div class="marquee-dot"></div>Weapons Research</div>
     <div class="marquee-item"><div class="marquee-dot"></div>Mind Control Division</div>
     <div class="marquee-item"><div class="marquee-dot"></div>Orbital Systems</div>
     <div class="marquee-item"><div class="marquee-dot"></div>Economic Warfare</div>
     <div class="marquee-item"><div class="marquee-dot"></div>Shadow Diplomacy</div>
-    <div class="marquee-item"><div class="marquee-dot"></div>Biological Leverage</div>
-    <div class="marquee-item"><div class="marquee-dot"></div>Quantum Encryption</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Linux Kernel Exploitation</div>
+    <div class="marquee-item"><div class="marquee-dot"></div>Windows Registry Control</div>
   </div>
 </div>
 
@@ -643,6 +769,79 @@ tailwind.config = {
   </div>
 </section>
 
+<!-- SYSTEM DOMINION -->
+<section id="infiltration">
+  <div class="section-label reveal">System Dominion</div>
+  <h2 class="section-title reveal reveal-delay-1">
+    Cross-platform <em>infiltration</em>
+  </h2>
+  <p class="section-desc reveal reveal-delay-2">
+    Operating system boundaries are constructs for the uninitiated.
+    Our operations penetrate every layer — kernel to registry, bash to PowerShell.
+  </p>
+
+  <div class="terminals-grid">
+    <div class="terminal reveal reveal-delay-1">
+      <div class="terminal-bar">
+        <div class="t-dots">
+          <span class="t-dot t-dot-r"></span>
+          <span class="t-dot t-dot-y"></span>
+          <span class="t-dot t-dot-g"></span>
+        </div>
+        <span class="terminal-bar-title">root@nexus — bash — 80×24</span>
+      </div>
+      <div class="terminal-body">
+        <div class="t-line"><span class="t-prompt-lx">root@nexus:~#</span> <span class="t-cmd">./ops/infiltrate --target global --silent</span></div>
+        <div class="t-line t-out">[+] Probing 14,892,341 endpoints...</div>
+        <div class="t-line t-out">[+] Kernel exploit loaded: CVE-2024-████</div>
+        <div class="t-line"><span class="t-prompt-lx">root@nexus:~#</span> <span class="t-cmd">ssh -i ~/.nexus/priv.key admin@████████</span></div>
+        <div class="t-line t-success">[✓] Shell acquired. Privilege: root</div>
+        <div class="t-line"><span class="t-prompt-lx">root@nexus:~#</span> <span class="t-cmd">cat /etc/shadow | ./bin/exfil --quiet</span></div>
+        <div class="t-line t-out">[████████████████████] 100% — 4.2 MB exfiltrated</div>
+        <div class="t-line"><span class="t-prompt-lx">root@nexus:~#</span> <span class="t-cmd">rm -rf /var/log/* &amp;&amp; history -c</span></div>
+        <div class="t-line t-warn">[!] Traces eliminated. Persistence daemon installed.</div>
+        <div class="t-line"><span class="t-prompt-lx">root@nexus:~#</span> <span class="t-cursor"></span></div>
+      </div>
+    </div>
+
+    <div class="terminal reveal reveal-delay-2">
+      <div class="terminal-bar terminal-bar-win">
+        <span class="terminal-bar-title-win">Windows PowerShell — NEXUS_OPS v7.4</span>
+        <span class="win-ctl"><span>─</span><span>□</span><span>✕</span></span>
+      </div>
+      <div class="terminal-body terminal-body-win">
+        <div class="t-line"><span class="t-prompt-win">PS C:\Nexus\Ops&gt;</span> <span class="t-cmd-win">.\Invoke-Infiltration.ps1 -Silent</span></div>
+        <div class="t-line t-out-win">[*] Enumerating AD forest... 4,291 objects found</div>
+        <div class="t-line t-out-win">[*] WMI subscription persistence configured</div>
+        <div class="t-line"><span class="t-prompt-win">PS C:\Nexus\Ops&gt;</span> <span class="t-cmd-win">Get-ADUser -Filter * | Export-Csv .\intel.csv</span></div>
+        <div class="t-line t-success-win">[+] 4,291 accounts catalogued to intel.csv</div>
+        <div class="t-line"><span class="t-prompt-win">PS C:\Nexus\Ops&gt;</span> <span class="t-cmd-win">Set-ItemProperty "HKLM:\...\Run" "Nexus" $payload</span></div>
+        <div class="t-line t-out-win">[*] Registry implant deployed. Autorun confirmed.</div>
+        <div class="t-line"><span class="t-prompt-win">PS C:\Nexus\Ops&gt;</span> <span class="t-cmd-win">Clear-EventLog Security,System,Application</span></div>
+        <div class="t-line t-warn-win">[!] Event logs purged. Zero footprint maintained.</div>
+        <div class="t-line"><span class="t-prompt-win">PS C:\Nexus\Ops&gt;</span> <span class="t-cursor-win"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="os-dominion reveal reveal-delay-3">
+    <div class="os-stat-cell">
+      <div class="os-stat-badge lx">Linux</div>
+      <div class="os-dominion-num">3.2<span>B</span></div>
+      <div class="os-dominion-label">Linux Devices Owned</div>
+    </div>
+    <div class="os-stat-cell">
+      <div class="os-dominion-num">100<span>%</span></div>
+      <div class="os-dominion-label">Cross-Platform Coverage</div>
+    </div>
+    <div class="os-stat-cell">
+      <div class="os-stat-badge win">Windows</div>
+      <div class="os-dominion-num">1.4<span>B</span></div>
+      <div class="os-dominion-label">Windows Systems Infiltrated</div>
+    </div>
+  </div>
+</section>
+
 <!-- MANIFESTO -->
 <section class="manifesto">
   <div class="manifesto-inner">
@@ -684,6 +883,11 @@ tailwind.config = {
       <div class="plan-index">V</div>
       <div class="plan-name">The Elysium Succession</div>
       <div class="plan-status">Classified</div>
+    </div>
+    <div class="plan-row reveal reveal-delay-5">
+      <div class="plan-index">VI</div>
+      <div class="plan-name">Operation Dual Platform</div>
+      <div class="plan-status active">Active</div>
     </div>
   </div>
 </section>
