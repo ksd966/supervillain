@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexOS — Manjaro × Windows 11</title>
+<style>
+:root {
+  --accent:  #16c181;
+  --accent2: #0078d4;
+  --bg:      #080c18;
+  --surf:    rgba(18,22,36,0.92);
+  --surf2:   rgba(24,28,44,0.97);
+  --surf3:   rgba(14,18,30,0.98);
+  --border:  rgba(255,255,255,0.07);
+  --borderl: rgba(255,255,255,0.13);
+  --text:    #dce2f0;
+  --dim:     #8892aa;
+  --muted:   #464e66;
+  --r:       12px;
+  --rs:      8px;
+  --shadow:  0 28px 72px rgba(0,0,0,0.72),0 4px 20px rgba(0,0,0,0.5);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  font-size:14px;background:var(--bg);color:var(--text);user-select:none}
+
+/* ── Desktop ── */
+#desktop{
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse at 18% 62%,rgba(22,193,129,.08) 0%,transparent 52%),
+    radial-gradient(ellipse at 82% 22%,rgba(90,60,220,.10) 0%,transparent 48%),
+    radial-gradient(ellipse at 55% 88%,rgba(0,120,212,.06) 0%,transparent 44%),
+    linear-gradient(148deg,#090d1a 0%,#0b1020 42%,#08091a 100%);
+  overflow:hidden;
+}
+#desktop::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background-image:
+    radial-gradient(1px 1px at 18% 28%,rgba(255,255,255,.18) 0%,transparent 100%),
+    radial-gradient(1px 1px at 72% 14%,rgba(255,255,255,.12) 0%,transparent 100%),
+    radial-gradient(1px 1px at 44% 72%,rgba(255,255,255,.14) 0%,transparent 100%),
+    radial-gradient(1px 1px at 92% 56%,rgba(255,255,255,.10) 0%,transparent 100%),
+    radial-gradient(1px 1px at 8%  86%,rgba(255,255,255,.12) 0%,transparent 100%),
+    radial-gradient(1px 1px at 60% 40%,rgba(255,255,255,.08) 0%,transparent 100%);
+}
+
+/* ── Desktop Icons ── */
+#desk-icons{position:absolute;top:24px;left:24px;display:flex;flex-direction:column;gap:6px}
+.dicon{display:flex;flex-direction:column;align-items:center;gap:5px;
+  padding:10px 8px;width:80px;border-radius:var(--rs);cursor:pointer;
+  transition:background .15s}
+.dicon:hover{background:rgba(255,255,255,.08)}
+.dicon:active{background:rgba(255,255,255,.14)}
+.dicon-img{width:48px;height:48px;display:flex;align-items:center;
+  justify-content:center;font-size:28px;border-radius:10px}
+.dicon-label{font-size:11.5px;color:var(--text);text-align:center;
+  line-height:1.3;text-shadow:0 1px 5px rgba(0,0,0,.9)}
+
+/* ── Taskbar ── */
+#taskbar{
+  position:fixed;bottom:0;left:0;right:0;height:48px;z-index:10000;
+  background:rgba(10,13,22,.84);
+  backdrop-filter:blur(28px) saturate(1.6);
+  -webkit-backdrop-filter:blur(28px) saturate(1.6);
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+}
+#tb-left{position:absolute;left:12px;display:flex;align-items:center;gap:4px}
+#tb-center{display:flex;align-items:center;gap:3px}
+#tb-right{position:absolute;right:12px;display:flex;align-items:center;gap:6px}
+.tbtn{
+  width:40px;height:40px;display:flex;align-items:center;justify-content:center;
+  border-radius:var(--rs);cursor:pointer;font-size:19px;
+  transition:background .14s;position:relative;
+}
+.tbtn:hover{background:rgba(255,255,255,.09)}
+.tbtn.active{background:rgba(255,255,255,.08)}
+.tbtn.active::after{
+  content:'';position:absolute;bottom:4px;left:50%;transform:translateX(-50%);
+  width:18px;height:3px;border-radius:2px;background:var(--accent);
+}
+.tbtn.open::after{
+  content:'';position:absolute;bottom:4px;left:50%;transform:translateX(-50%);
+  width:6px;height:3px;border-radius:2px;background:var(--dim);
+}
+.tb-sep{width:1px;height:24px;background:var(--borderl);margin:0 4px}
+.tb-start{
+  width:40px;height:40px;display:flex;align-items:center;justify-content:center;
+  border-radius:var(--rs);cursor:pointer;transition:background .14s;
+}
+.tb-start:hover{background:rgba(255,255,255,.09)}
+.tb-start.active{background:rgba(22,193,129,.12)}
+#clock{text-align:right;font-size:11.5px;color:var(--dim);
+  line-height:1.5;cursor:pointer;padding:0 4px}
+.tray{width:32px;height:32px;display:flex;align-items:center;
+  justify-content:center;font-size:16px;border-radius:6px;
+  cursor:pointer;transition:background .14s}
+.tray:hover{background:rgba(255,255,255,.08)}
+
+/* ── Start Menu ── */
+#start-menu{
+  position:fixed;bottom:56px;left:50%;
+  transform:translateX(-50%) translateY(12px);
+  width:640px;
+  background:rgba(14,17,28,.96);
+  backdrop-filter:blur(44px) saturate(1.9);
+  -webkit-backdrop-filter:blur(44px) saturate(1.9);
+  border:1px solid var(--borderl);border-radius:16px;
+  padding:22px 24px;box-shadow:var(--shadow);
+  z-index:9999;display:none;opacity:0;
+  transition:opacity .18s ease,transform .18s ease;
+}
+#start-menu.vis{display:block;opacity:1;transform:translateX(-50%) translateY(0)}
+.sm-search{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,.06);border:1px solid var(--borderl);
+  border-radius:var(--rs);padding:9px 14px;margin-bottom:18px;
+}
+.sm-search input{background:none;border:none;outline:none;
+  color:var(--text);font-size:13px;flex:1;font-family:inherit}
+.sm-search input::placeholder{color:var(--muted)}
+.sm-lbl{font-size:11px;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--dim);margin-bottom:10px}
+.sm-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:3px;margin-bottom:18px}
+.sm-app{display:flex;flex-direction:column;align-items:center;gap:5px;
+  padding:11px 6px;border-radius:var(--rs);cursor:pointer;transition:background .13s}
+.sm-app:hover{background:rgba(255,255,255,.07)}
+.sm-app-ico{width:40px;height:40px;display:flex;align-items:center;
+  justify-content:center;border-radius:10px;font-size:22px}
+.sm-app-name{font-size:11px;color:var(--text);text-align:center;line-height:1.3}
+.sm-foot{border-top:1px solid var(--border);padding-top:14px;
+  display:flex;justify-content:space-between;align-items:center}
+.sm-user{display:flex;align-items:center;gap:10px}
+.sm-avatar{width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;color:#fff}
+.sm-uname{font-size:13px;font-weight:500}
+.sm-power{width:34px;height:34px;border-radius:var(--rs);
+  background:rgba(255,255,255,.05);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:17px;transition:background .13s,border-color .13s}
+.sm-power:hover{background:rgba(255,70,70,.15);border-color:rgba(255,70,70,.3)}
+
+/* ── Windows ── */
+.window{
+  position:fixed;display:flex;flex-direction:column;
+  background:var(--surf2);border:1px solid var(--borderl);
+  border-radius:var(--r);box-shadow:var(--shadow);
+  overflow:hidden;min-width:280px;min-height:180px;
+  animation:wopen .18s ease forwards;
+}
+.window.maxd{border-radius:0!important}
+.wtbar{
+  height:36px;min-height:36px;
+  display:flex;align-items:center;
+  background:rgba(12,15,26,.98);
+  border-bottom:1px solid var(--border);
+  padding:0 10px 0 14px;cursor:default;
+}
+.wtitle{flex:1;font-size:12.5px;font-weight:500;color:var(--dim);letter-spacing:.01em}
+.wctls{display:flex;gap:7px}
+.wbtn{width:12px;height:12px;border-radius:50%;border:none;cursor:pointer;flex-shrink:0;transition:filter .1s}
+.wbtn.cl{background:#ff5f57}.wbtn.mn{background:#ffbd2e}.wbtn.mx{background:#28ca41}
+.wbtn:hover{filter:brightness(1.2)}
+.wbody{flex:1;overflow:hidden;position:relative}
+@keyframes wopen{from{opacity:0;transform:scale(.94) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+
+/* ── Context Menu ── */
+#ctx{
+  position:fixed;z-index:99998;
+  background:rgba(18,22,36,.97);
+  backdrop-filter:blur(24px);
+  border:1px solid var(--borderl);border-radius:var(--rs);
+  padding:6px;min-width:196px;
+  box-shadow:0 10px 40px rgba(0,0,0,.55);display:none;
+}
+.cxi{padding:7px 12px;border-radius:6px;font-size:13px;cursor:pointer;
+  display:flex;align-items:center;gap:9px;transition:background .11s;color:var(--text)}
+.cxi:hover{background:rgba(255,255,255,.08)}
+.cxs{height:1px;background:var(--border);margin:4px 0}
+
+/* ── Terminal ── */
+.term-app{background:#0a0f1a;height:100%;display:flex;flex-direction:column;
+  font-family:'Cascadia Code','Fira Code','Courier New',monospace;font-size:13px}
+.term-out{flex:1;overflow-y:auto;padding:12px 16px;
+  scrollbar-width:thin;scrollbar-color:#222 transparent}
+.term-out::-webkit-scrollbar{width:6px}
+.term-out::-webkit-scrollbar-thumb{background:#333;border-radius:3px}
+.tl{line-height:1.72;white-space:pre-wrap;word-break:break-all}
+.tpline{display:flex;align-items:baseline;gap:0}
+.tps1{color:#16c181;font-weight:bold}
+.tcmd{color:#dce2f0}
+.tout{color:#788098;padding-left:2px}
+.terr{color:#f87171}
+.tok{color:#4ade80}
+.tinf{color:#60a5fa}
+.twrn{color:#fbbf24}
+.term-inrow{
+  display:flex;align-items:center;gap:6px;
+  padding:7px 16px;
+  border-top:1px solid rgba(255,255,255,.06);
+  background:rgba(0,0,0,.22);
+}
+.tip1{color:#16c181;font-weight:bold;font-family:inherit;font-size:13px;white-space:nowrap}
+.tinput{flex:1;background:none;border:none;outline:none;
+  color:#dce2f0;font-family:inherit;font-size:13px;caret-color:#16c181}
+
+/* ── Files ── */
+.files-app{display:flex;height:100%;font-size:13px}
+.fside{width:176px;min-width:176px;background:rgba(10,13,22,.8);
+  border-right:1px solid var(--border);padding:10px 7px;
+  display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.fsi{display:flex;align-items:center;gap:8px;padding:7px 9px;
+  border-radius:6px;cursor:pointer;color:var(--dim);
+  transition:background .12s,color .12s;font-size:12.5px}
+.fsi:hover{background:rgba(255,255,255,.06);color:var(--text)}
+.fsi.act{background:rgba(22,193,129,.12);color:var(--accent)}
+.fmain{flex:1;padding:14px;overflow-y:auto}
+.ftbar{display:flex;align-items:center;gap:8px;
+  margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.fpath{flex:1;font-size:12px;color:var(--dim);
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:6px;padding:5px 10px}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:6px}
+.fitem{display:flex;flex-direction:column;align-items:center;gap:5px;
+  padding:10px 5px;border-radius:8px;cursor:pointer;
+  transition:background .12s;text-align:center}
+.fitem:hover{background:rgba(255,255,255,.07)}
+.fitem-ico{font-size:30px}
+.fitem-name{font-size:11px;color:var(--text);line-height:1.3}
+
+/* ── Settings ── */
+.sett-app{display:flex;height:100%}
+.sside{width:216px;min-width:216px;background:rgba(10,13,22,.7);
+  border-right:1px solid var(--border);padding:14px 8px;overflow-y:auto}
+.smain{flex:1;padding:22px;overflow-y:auto}
+.sgrp{margin-bottom:26px}
+.sgrp-t{font-size:11px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.srow{display:flex;align-items:center;justify-content:space-between;
+  padding:11px 15px;background:rgba(255,255,255,.04);
+  border-radius:var(--rs);margin-bottom:4px;border:1px solid var(--border)}
+.sname{font-size:13px;color:var(--text)}
+.sdesc{font-size:11.5px;color:var(--dim);margin-top:2px}
+.tog{width:40px;height:22px;border-radius:11px;
+  background:rgba(255,255,255,.14);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.tog.on{background:var(--accent)}
+.tog::after{content:'';position:absolute;width:16px;height:16px;
+  border-radius:50%;background:#fff;top:3px;left:3px;transition:left .2s}
+.tog.on::after{left:21px}
+
+/* ── Editor ── */
+.ed-app{height:100%;display:flex;flex-direction:column;
+  background:#1e1e2e;font-family:'Cascadia Code','Fira Code',monospace;font-size:13px}
+.ed-tabs{display:flex;background:#12121e;border-bottom:1px solid var(--border)}
+.ed-tab{padding:8px 16px;font-size:12px;color:var(--dim);cursor:pointer}
+.ed-tab.act{color:var(--accent);border-bottom:2px solid var(--accent)}
+.ed-body{flex:1;display:flex;overflow:hidden}
+.ed-nums{width:40px;background:#15152a;padding:8px 0;
+  text-align:right;overflow:hidden;flex-shrink:0}
+.ed-num{padding:0 8px;font-size:12px;color:#333a52;line-height:1.8}
+.ed-code{flex:1;padding:8px 14px;color:#cdd6f4;line-height:1.8;overflow-y:auto}
+.ed-foot{background:#12121e;border-top:1px solid var(--border);
+  padding:4px 14px;font-size:11px;color:var(--dim);display:flex;gap:14px}
+
+/* ── Notepad ── */
+.np-app{height:100%;display:flex;flex-direction:column;background:var(--surf2)}
+.np-menu{padding:5px 10px;background:rgba(0,0,0,.22);
+  border-bottom:1px solid var(--border);font-size:12px;
+  color:var(--dim);display:flex;gap:4px}
+.np-mi{cursor:pointer;padding:3px 8px;border-radius:4px;transition:background .12s}
+.np-mi:hover{background:rgba(255,255,255,.08)}
+.np-area{flex:1;background:rgba(10,14,24,.98);border:none;outline:none;
+  padding:16px;color:var(--text);font-size:13px;line-height:1.85;
+  resize:none;font-family:inherit;user-select:text}
+
+/* ── Task Manager ── */
+.tm-app{height:100%;display:flex;flex-direction:column;font-size:12.5px}
+.tm-stats{padding:12px 16px;border-bottom:1px solid var(--border);
+  display:flex;gap:12px;align-items:center}
+.tm-stat{display:flex;flex-direction:column;align-items:center;
+  padding:8px 18px;border-radius:8px}
+.tm-list{flex:1;overflow-y:auto}
+.tm-thead tr{background:rgba(0,0,0,.3);text-align:left}
+.tm-thead th{padding:8px 16px;color:var(--dim);font-weight:500;
+  font-size:12px;letter-spacing:.03em}
+.tm-tr{border-bottom:1px solid var(--border);transition:background .12s}
+.tm-tr:hover{background:rgba(255,255,255,.04)}
+.tm-tr td{padding:7px 16px;color:var(--text)}
+
+/* ── Browser ── */
+.br-app{height:100%;display:flex;flex-direction:column;background:#131320}
+.br-bar{display:flex;align-items:center;gap:8px;padding:7px 12px;
+  background:rgba(0,0,0,.3);border-bottom:1px solid var(--border)}
+.br-btn{background:rgba(255,255,255,.06);border:1px solid var(--border);
+  color:var(--dim);border-radius:6px;padding:5px 10px;cursor:pointer;
+  font-size:13px;transition:background .12s}
+.br-btn:hover{background:rgba(255,255,255,.10)}
+.br-url{flex:1;background:rgba(255,255,255,.06);border:1px solid var(--borderl);
+  border-radius:20px;padding:6px 16px;color:var(--text);
+  font-size:13px;outline:none;font-family:inherit}
+.br-main{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:18px}
+.br-srch{width:380px;background:rgba(255,255,255,.07);
+  border:1px solid var(--borderl);border-radius:24px;
+  padding:11px 20px;color:var(--text);font-size:14px;
+  outline:none;text-align:center;font-family:inherit}
+
+/* ── Pacman ── */
+.pac-app{height:100%;overflow-y:auto;
+  background:#0a0f1a;font-family:'Cascadia Code','Fira Code',monospace;
+  font-size:12.5px;color:#788098;padding:16px;line-height:1.7}
+
+/* ── Neofetch ── */
+.nf-wrap{display:flex;gap:22px;font-family:'Cascadia Code','Fira Code',monospace;
+  font-size:12px;line-height:1.82}
+.nf-art{color:#16c181;white-space:pre;line-height:1.3}
+.nf-info{display:flex;flex-direction:column;justify-content:center;gap:1px}
+.nfk{color:#16c181;font-weight:bold}
+.nfv{color:#788098}
+
+/* ── About ── */
+.about-box{background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:var(--rs);padding:14px;font-size:12.5px;
+  color:var(--dim);line-height:1.9}
+.about-box span{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<!-- ─ Desktop ─ -->
+<div id="desktop">
+  <div id="desk-icons">
+    <div class="dicon" ondblclick="openApp('terminal')">
+      <div class="dicon-img" style="background:rgba(22,193,129,.14)">&#x1F4BB;</div>
+      <span class="dicon-label">Terminal</span>
+    </div>
+    <div class="dicon" ondblclick="openApp('files')">
+      <div class="dicon-img" style="background:rgba(255,200,60,.12)">&#x1F4C1;</div>
+      <span class="dicon-label">Files</span>
+    </div>
+    <div class="dicon" ondblclick="openApp('browser')">
+      <div class="dicon-img" style="background:rgba(255,110,40,.12)">&#x1F310;</div>
+      <span class="dicon-label">NexFox</span>
+    </div>
+    <div class="dicon" ondblclick="openApp('editor')">
+      <div class="dicon-img" style="background:rgba(0,122,204,.14)">&#x1F4DD;</div>
+      <span class="dicon-label">VS Code</span>
+    </div>
+    <div class="dicon" ondblclick="openApp('settings')">
+      <div class="dicon-img" style="background:rgba(100,110,255,.12)">&#x2699;&#xFE0F;</div>
+      <span class="dicon-label">Settings</span>
+    </div>
+  </div>
+</div>
+
+<!-- ─ Context Menu ─ -->
+<div id="ctx">
+  <div class="cxi" onclick="ctxDo('terminal')">&#x1F4BB; &nbsp;Open Terminal</div>
+  <div class="cxi" onclick="ctxDo('files')">&#x1F4C1; &nbsp;Open Files</div>
+  <div class="cxs"></div>
+  <div class="cxi" onclick="ctxDo('settings')">&#x2699;&#xFE0F; &nbsp;Display Settings</div>
+  <div class="cxi" onclick="ctxDo('wallpaper')">&#x1F5BC;&#xFE0F; &nbsp;Change Wallpaper</div>
+  <div class="cxs"></div>
+  <div class="cxi" onclick="ctxDo('refresh')">&#x1F504; &nbsp;Refresh Desktop</div>
+</div>
+
+<!-- ─ Start Menu ─ -->
+<div id="start-menu">
+  <div class="sm-search">
+    <span style="color:var(--muted);font-size:15px">&#x1F50D;</span>
+    <input type="text" id="sm-q" placeholder="Search apps, files, settings&#x2026;">
+  </div>
+  <div class="sm-lbl">Pinned</div>
+  <div class="sm-grid" id="sm-grid">
+    <div class="sm-app" onclick="openApp('terminal');smClose()">
+      <div class="sm-app-ico" style="background:rgba(22,193,129,.14)">&#x1F4BB;</div>
+      <span class="sm-app-name">Terminal</span>
+    </div>
+    <div class="sm-app" onclick="openApp('files');smClose()">
+      <div class="sm-app-ico" style="background:rgba(255,200,60,.12)">&#x1F4C1;</div>
+      <span class="sm-app-name">Files</span>
+    </div>
+    <div class="sm-app" onclick="openApp('settings');smClose()">
+      <div class="sm-app-ico" style="background:rgba(100,110,255,.12)">&#x2699;&#xFE0F;</div>
+      <span class="sm-app-name">Settings</span>
+    </div>
+    <div class="sm-app" onclick="openApp('browser');smClose()">
+      <div class="sm-app-ico" style="background:rgba(255,110,40,.12)">&#x1F310;</div>
+      <span class="sm-app-name">NexFox</span>
+    </div>
+    <div class="sm-app" onclick="openApp('editor');smClose()">
+      <div class="sm-app-ico" style="background:rgba(0,122,204,.14)">&#x1F4DD;</div>
+      <span class="sm-app-name">VS Code</span>
+    </div>
+    <div class="sm-app" onclick="openApp('pacman');smClose()">
+      <div class="sm-app-ico" style="background:rgba(22,193,129,.12)">&#x1F4E6;</div>
+      <span class="sm-app-name">Pacman</span>
+    </div>
+    <div class="sm-app" onclick="openApp('taskman');smClose()">
+      <div class="sm-app-ico" style="background:rgba(255,70,70,.12)">&#x1F4CA;</div>
+      <span class="sm-app-name">Task Mgr</span>
+    </div>
+    <div class="sm-app" onclick="openApp('notepad');smClose()">
+      <div class="sm-app-ico" style="background:rgba(255,255,255,.07)">&#x1F5D2;&#xFE0F;</div>
+      <span class="sm-app-name">Notepad</span>
+    </div>
+    <div class="sm-app">
+      <div class="sm-app-ico" style="background:rgba(255,190,40,.12)">&#x1F3B5;</div>
+      <span class="sm-app-name">Music</span>
+    </div>
+    <div class="sm-app">
+      <div class="sm-app-ico" style="background:rgba(255,90,140,.10)">&#x1F5BC;&#xFE0F;</div>
+      <span class="sm-app-name">Photos</span>
+    </div>
+    <div class="sm-app">
+      <div class="sm-app-ico" style="background:rgba(50,190,255,.10)">&#x1F4E7;</div>
+      <span class="sm-app-name">Mail</span>
+    </div>
+    <div class="sm-app">
+      <div class="sm-app-ico" style="background:rgba(90,255,140,.10)">&#x1F5FA;&#xFE0F;</div>
+      <span class="sm-app-name">Maps</span>
+    </div>
+  </div>
+  <div class="sm-foot">
+    <div class="sm-user">
+      <div class="sm-avatar">N</div>
+      <span class="sm-uname">nexus</span>
+    </div>
+    <div class="sm-power" title="Power off" onclick="if(confirm('Shut down NexOS?'))document.body.innerHTML='<div style=background:#000;color:#16c181;display:flex;align-items:center;justify-content:center;height:100vh;font-family:monospace;font-size:18px>NexOS is shutting down&#x2026;</div>'">&#x23FB;</div>
+  </div>
+</div>
+
+<!-- ─ Taskbar ─ -->
+<div id="taskbar">
+  <div id="tb-left"></div>
+  <div id="tb-center">
+    <div class="tb-start" id="tb-start" onclick="smToggle()" title="Start">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <rect x="1"    y="1"    width="8" height="8" rx="1.5" fill="#16c181"/>
+        <rect x="11"   y="1"    width="8" height="8" rx="1.5" fill="#0078d4"/>
+        <rect x="1"    y="11"   width="8" height="8" rx="1.5" fill="#0078d4"/>
+        <rect x="11"   y="11"   width="8" height="8" rx="1.5" fill="#16c181"/>
+      </svg>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tbtn" id="tb-terminal" onclick="tbClick('terminal')" title="Terminal">&#x1F4BB;</div>
+    <div class="tbtn" id="tb-files"    onclick="tbClick('files')"    title="Files">&#x1F4C1;</div>
+    <div class="tbtn" id="tb-browser"  onclick="tbClick('browser')"  title="NexFox">&#x1F310;</div>
+    <div class="tbtn" id="tb-editor"   onclick="tbClick('editor')"   title="VS Code">&#x1F4DD;</div>
+    <div class="tbtn" id="tb-settings" onclick="tbClick('settings')" title="Settings">&#x2699;&#xFE0F;</div>
+    <div class="tbtn" id="tb-taskman"  onclick="tbClick('taskman')"  title="Task Manager">&#x1F4CA;</div>
+  </div>
+  <div id="tb-right">
+    <div class="tray" title="Network">&#x1F4F6;</div>
+    <div class="tray" title="Volume">&#x1F50A;</div>
+    <div class="tray" title="Battery">&#x1F50B;</div>
+    <div id="clock"></div>
+  </div>
+</div>
+
+<script>
+function tickClock(){
+  const n=new Date();
+  const t=n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  const d=n.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  document.getElementById('clock').innerHTML=`<div>${t}</div><div style="font-size:10.5px">${d}</div>`;
+}
+tickClock(); setInterval(tickClock,1000);
+
+let zTop=200;
+const wins={};
+
+function bringFront(el){el.style.zIndex=++zTop}
+
+function createWin(id,title,w,h,html){
+  if(wins[id]){
+    if(wins[id].min){wins[id].el.style.display='flex';wins[id].min=false}
+    bringFront(wins[id].el);tbState(id,'active');
+    return wins[id].el;
+  }
+  const off=Object.keys(wins).length*28;
+  const x=Math.max(50,Math.round((window.innerWidth-w)/2+off-50));
+  const y=Math.max(10,Math.round((window.innerHeight-h-48)/2+off-40));
+  const el=document.createElement('div');
+  el.className='window';
+  el.id='win-'+id;
+  el.style.cssText=`left:${x}px;top:${y}px;width:${w}px;height:${h}px;`;
+  el.innerHTML=`
+    <div class="wtbar" data-id="${id}">
+      <span class="wtitle">${title}</span>
+      <div class="wctls">
+        <button class="wbtn cl" onclick="closeWin('${id}')" title="Close"></button>
+        <button class="wbtn mn" onclick="minWin('${id}')"   title="Minimize"></button>
+        <button class="wbtn mx" onclick="maxWin('${id}')"   title="Maximize"></button>
+      </div>
+    </div>
+    <div class="wbody">${html}</div>`;
+  document.body.appendChild(el);
+  bringFront(el);
+  makeDrag(el,id);
+  el.addEventListener('mousedown',()=>{bringFront(el);tbState(id,'active')});
+  wins[id]={el,min:false,max:false,prev:''};
+  tbState(id,'active');
+  return el;
+}
+
+function closeWin(id){
+  if(!wins[id])return;
+  wins[id].el.remove();delete wins[id];tbState(id,'closed');
+}
+function minWin(id){
+  if(!wins[id])return;
+  wins[id].el.style.display='none';wins[id].min=true;tbState(id,'open');
+}
+function maxWin(id){
+  if(!wins[id])return;
+  const w=wins[id];
+  if(w.max){
+    w.el.style.cssText=w.prev;
+    w.el.classList.remove('maxd');w.max=false;
+  }else{
+    w.prev=w.el.style.cssText;
+    w.el.style.cssText=`left:0;top:0;width:100vw;height:calc(100vh - 48px);z-index:${++zTop};`;
+    w.el.classList.add('maxd');w.max=true;
+  }
+}
+function makeDrag(win,id){
+  const tb=win.querySelector('.wtbar');
+  let drag=false,ox=0,oy=0;
+  tb.addEventListener('mousedown',e=>{
+    if(e.target.closest('.wctls'))return;
+    if(wins[id]&&wins[id].max)return;
+    drag=true;ox=e.clientX-win.offsetLeft;oy=e.clientY-win.offsetTop;
+    document.body.style.cursor='grabbing';e.preventDefault();
+  });
+  tb.addEventListener('dblclick',e=>{if(!e.target.closest('.wctls'))maxWin(id)});
+  document.addEventListener('mousemove',e=>{
+    if(!drag)return;
+    win.style.left=Math.max(0,Math.min(e.clientX-ox,window.innerWidth-win.offsetWidth))+'px';
+    win.style.top =Math.max(0,Math.min(e.clientY-oy,window.innerHeight-48-win.offsetHeight))+'px';
+  });
+  document.addEventListener('mouseup',()=>{drag=false;document.body.style.cursor=''});
+}
+function tbState(id,state){
+  const el=document.getElementById('tb-'+id);
+  if(!el)return;
+  el.classList.remove('active','open');
+  if(state==='active')el.classList.add('active');
+  else if(state==='open')el.classList.add('open');
+}
+function tbClick(id){
+  if(!wins[id]){openApp(id);return}
+  if(wins[id].min){wins[id].el.style.display='flex';wins[id].min=false;bringFront(wins[id].el);tbState(id,'active')}
+  else{minWin(id)}
+}
+
+function termHTML(){
+  return`<div class="term-app">
+    <div class="term-out" id="tout"></div>
+    <div class="term-inrow">
+      <span class="tip1" id="tps1">nexus@nexos:~$</span>
+      <input class="tinput" id="tin" type="text" autocomplete="off" spellcheck="false">
+    </div>
+  </div>`;
+}
+function filesHTML(){
+  return`<div class="files-app">
+    <div class="fside">
+      <div class="fsi act" onclick="fsNav(this,'home')"><span>&#x1F3E0;</span>Home</div>
+      <div class="fsi" onclick="fsNav(this,'desktop')"><span>&#x1F5A5;&#xFE0F;</span>Desktop</div>
+      <div class="fsi" onclick="fsNav(this,'documents')"><span>&#x1F4C4;</span>Documents</div>
+      <div class="fsi" onclick="fsNav(this,'downloads')"><span>&#x2B07;&#xFE0F;</span>Downloads</div>
+      <div class="fsi" onclick="fsNav(this,'pictures')"><span>&#x1F5BC;&#xFE0F;</span>Pictures</div>
+      <div class="fsi" onclick="fsNav(this,'music')"><span>&#x1F3B5;</span>Music</div>
+      <div class="fsi" onclick="fsNav(this,'videos')"><span>&#x1F3AC;</span>Videos</div>
+      <div style="height:1px;background:var(--border);margin:8px 0"></div>
+      <div class="fsi" onclick="fsNav(this,'root')"><span>&#x1F4BE;</span>/ (root)</div>
+      <div class="fsi" onclick="fsNav(this,'usr')"><span>&#x1F4E6;</span>/usr</div>
+      <div class="fsi" onclick="fsNav(this,'etc')"><span>&#x2699;&#xFE0F;</span>/etc</div>
+    </div>
+    <div class="fmain">
+      <div class="ftbar"><div class="fpath" id="fpath">/home/nexus</div></div>
+      <div class="fgrid" id="fgrid"></div>
+    </div>
+  </div>`;
+}
+function settHTML(){
+  return`<div class="sett-app">
+    <div class="sside">
+      <div class="fsi act"><span>&#x1F5A5;&#xFE0F;</span>System</div>
+      <div class="fsi"><span>&#x1F3A8;</span>Appearance</div>
+      <div class="fsi"><span>&#x1F4F6;</span>Network</div>
+      <div class="fsi"><span>&#x1F50A;</span>Sound</div>
+      <div class="fsi"><span>&#x1F50B;</span>Power</div>
+      <div class="fsi"><span>&#x1F512;</span>Privacy</div>
+      <div class="fsi"><span>&#x1F504;</span>Updates</div>
+      <div class="fsi"><span>&#x2139;&#xFE0F;</span>About</div>
+    </div>
+    <div class="smain">
+      <div style="margin-bottom:22px">
+        <div style="font-size:21px;font-weight:300;margin-bottom:5px">System</div>
+        <div style="font-size:13px;color:var(--dim)">NexOS &#x2014; Manjaro &#xD7; Windows 11</div>
+      </div>
+      <div class="sgrp">
+        <div class="sgrp-t">Display</div>
+        <div class="srow"><div><div class="sname">Dark Mode</div><div class="sdesc">Use dark theme system-wide</div></div><div class="tog on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="srow"><div><div class="sname">Transparency Effects</div><div class="sdesc">Blur and acrylic window materials</div></div><div class="tog on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="srow"><div><div class="sname">Centered Taskbar</div><div class="sdesc">Windows 11-style icon alignment</div></div><div class="tog on" onclick="this.classList.toggle('on')"></div></div>
+      </div>
+      <div class="sgrp">
+        <div class="sgrp-t">Performance</div>
+        <div class="srow"><div><div class="sname">Window Animations</div><div class="sdesc">Open/close transition effects</div></div><div class="tog on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="srow"><div><div class="sname">Compositing</div><div class="sdesc">KDE-style hardware compositing</div></div><div class="tog on" onclick="this.classList.toggle('on')"></div></div>
+      </div>
+      <div class="sgrp">
+        <div class="sgrp-t">About NexOS</div>
+        <div class="about-box">
+          <div><span>OS:</span>       NexOS 1.0 (Manjaro &#xD7; Windows 11)</div>
+          <div><span>Kernel:</span>   6.6.10-1-MANJARO x86_64</div>
+          <div><span>Desktop:</span>  NexShell 1.0</div>
+          <div><span>Display:</span>  Wayland</div>
+          <div><span>Packages:</span> 1,847 (pacman)</div>
+          <div><span>Shell:</span>    bash 5.2.21</div>
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);color:var(--text)">&#xA9; MMXXV Nexus Dominion</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+function brHTML(){
+  return`<div class="br-app">
+    <div class="br-bar">
+      <button class="br-btn">&#x2190;</button>
+      <button class="br-btn">&#x2192;</button>
+      <button class="br-btn">&#x27F3;</button>
+      <input class="br-url" value="nexos://newtab">
+    </div>
+    <div class="br-main">
+      <div style="font-size:52px">&#x1F310;</div>
+      <div style="font-size:24px;font-weight:300">NexFox</div>
+      <div style="font-size:13px;color:var(--dim)">Secure Browser &#xB7; NexOS Edition</div>
+      <input class="br-srch" placeholder="Search the web or enter a URL">
+    </div>
+  </div>`;
+}
+function edHTML(){
+  const lines=[
+    `<div><span style="color:#89b4fa">#!/bin/bash</span></div>`,
+    `<div></div>`,
+    `<div><span style="color:#6c7086"># NexOS System Initialization Script</span></div>`,
+    `<div><span style="color:#cba6f7">set</span> <span style="color:#fab387">-euo</span> pipefail</div>`,
+    `<div></div>`,
+    `<div><span style="color:#cba6f7">readonly</span> <span style="color:#89dceb">NEXOS_VERSION</span>=<span style="color:#a6e3a1">"1.0.0"</span></div>`,
+    `<div><span style="color:#cba6f7">readonly</span> <span style="color:#89dceb">KERNEL</span>=<span style="color:#a6e3a1">"6.6.10-1-MANJARO"</span></div>`,
+    `<div><span style="color:#cba6f7">readonly</span> <span style="color:#89dceb">DESKTOP</span>=<span style="color:#a6e3a1">"NexShell"</span></div>`,
+    `<div></div>`,
+    `<div><span style="color:#cba6f7">function</span> <span style="color:#89b4fa">log</span>() {</div>`,
+    `<div>&nbsp;&nbsp;<span style="color:#89b4fa">echo</span> <span style="color:#a6e3a1">"[NexOS] $*"</span> &gt;&amp;2</div>`,
+    `<div>}</div>`,
+    `<div></div>`,
+    `<div><span style="color:#cba6f7">function</span> <span style="color:#89b4fa">init_desktop</span>() {</div>`,
+    `<div>&nbsp;&nbsp;<span style="color:#89b4fa">log</span> <span style="color:#a6e3a1">"Starting NexShell..."</span></div>`,
+    `<div>&nbsp;&nbsp;<span style="color:#89b4fa">systemctl</span> start nexshell.service</div>`,
+    `<div>&nbsp;&nbsp;<span style="color:#89b4fa">pacman</span> <span style="color:#fab387">-Syu --noconfirm</span></div>`,
+    `<div>&nbsp;&nbsp;<span style="color:#89b4fa">log</span> <span style="color:#a6e3a1">"Desktop ready."</span></div>`,
+    `<div>}</div>`,
+    `<div></div>`,
+    `<div><span style="color:#89b4fa">init_desktop</span></div>`,
+  ];
+  const nums=lines.map((_,i)=>`<div class="ed-num">${i+1}</div>`).join('');
+  return`<div class="ed-app">
+    <div class="ed-tabs">
+      <div class="ed-tab act">main.sh</div>
+      <div class="ed-tab">config.toml</div>
+      <div class="ed-tab">README.md</div>
+    </div>
+    <div class="ed-body">
+      <div class="ed-nums">${nums}</div>
+      <div class="ed-code">${lines.join('')}</div>
+    </div>
+    <div class="ed-foot"><span>Ln 1, Col 1</span><span>Bash</span><span>UTF-8</span><span style="color:var(--accent)">NexOS Dev</span></div>
+  </div>`;
+}
+function npHTML(){
+  return`<div class="np-app">
+    <div class="np-menu">
+      <span class="np-mi">File</span>
+      <span class="np-mi">Edit</span>
+      <span class="np-mi">View</span>
+    </div>
+    <textarea class="np-area" id="np-area">Welcome to NexOS Notepad.\n\nNexOS blends Manjaro Linux with Windows 11:\n  - pacman package manager\n  - Fluent Design UI with Manjaro green\n  - Wayland display server\n  - KDE compositing\n  - bash + zsh shell support\n\nTry the Terminal: type 'neofetch' or 'help'.\n</textarea>
+  </div>`;
+}
+function tmHTML(){
+  const procs=[
+    ['nexshell',  '2.1', '48.2',  'S'],
+    ['kwin_way',  '3.4', '64.1',  'S'],
+    ['Xwayland',  '1.2', '32.6',  'S'],
+    ['nexfox',    '18.2','318.4', 'S'],
+    ['nexterm',   '0.7', '21.8',  'S'],
+    ['pipewire',  '0.4', '18.0',  'S'],
+    ['systemd',   '0.0', '12.2',  'S'],
+    ['pacman',    '0.2', '7.8',   'R'],
+    ['polkitd',   '0.0', '6.0',   'S'],
+    ['nexfiles',  '1.0', '40.4',  'S'],
+    ['kded5',     '0.1', '22.0',  'S'],
+    ['dbus-dae',  '0.0', '8.8',   'S'],
+  ];
+  const rows=procs.map(([n,c,m,s])=>`
+    <tr class="tm-tr">
+      <td>${n}</td>
+      <td style="color:${parseFloat(c)>10?'#f87171':'var(--dim)'}">${c}%</td>
+      <td style="color:var(--dim)">${m}</td>
+      <td><span style="color:${s==='R'?'var(--accent)':'var(--muted)'}">&#x25CF; ${s}</span></td>
+    </tr>`).join('');
+  return`<div class="tm-app">
+    <div class="tm-stats">
+      <div class="tm-stat" style="background:rgba(22,193,129,.1);border:1px solid rgba(22,193,129,.2);border-radius:8px">
+        <div style="font-size:20px;font-weight:600;color:var(--accent)">14%</div>
+        <div style="font-size:10px;color:var(--dim)">CPU</div>
+      </div>
+      <div class="tm-stat" style="background:rgba(0,120,212,.1);border:1px solid rgba(0,120,212,.2);border-radius:8px">
+        <div style="font-size:20px;font-weight:600;color:#0078d4">6.1 GB</div>
+        <div style="font-size:10px;color:var(--dim)">RAM / 16 GB</div>
+      </div>
+      <div class="tm-stat" style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.18);border-radius:8px">
+        <div style="font-size:20px;font-weight:600;color:#f59e0b">${procs.length}</div>
+        <div style="font-size:10px;color:var(--dim)">Procs</div>
+      </div>
+    </div>
+    <div class="tm-list">
+      <table style="width:100%;border-collapse:collapse">
+        <thead class="tm-thead"><tr>
+          <th>Process</th><th>CPU %</th><th>RAM MB</th><th>State</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+function pacHTML(){
+  return`<div class="pac-app">
+    <div style="color:#16c181;font-weight:bold;font-size:14px;margin-bottom:10px">::: Pacman Package Manager 6.0.2 :::</div>
+    <div style="color:#60a5fa;margin-bottom:6px">:: Synchronizing package databases...</div>
+    <div style="padding-left:12px;color:#4ade80"> core      [######################] 100%</div>
+    <div style="padding-left:12px;color:#4ade80"> extra     [######################] 100%</div>
+    <div style="padding-left:12px;color:#4ade80"> community [######################] 100%</div>
+    <div style="padding-left:12px;color:#4ade80"> manjaro   [######################] 100%</div>
+    <div style="color:#60a5fa;margin-top:10px">:: Starting full system upgrade...</div>
+    <div style="color:#788098">resolving dependencies...</div>
+    <div style="color:#788098">looking for conflicting packages...</div>
+    <div style="margin-top:8px;color:#dce2f0">Packages (8) linux66-6.6.10-2  mesa-24.0.1  nexshell-1.0.1</div>
+    <div style="color:#dce2f0">             firefox-123.0  gcc-13.2.1  glibc-2.39</div>
+    <div style="color:#dce2f0">             pacman-6.0.3  systemd-255.3</div>
+    <div style="margin-top:8px;color:#788098">Total Download Size:   248.32 MiB</div>
+    <div style="color:#788098">Total Installed Size: 1024.17 MiB</div>
+    <div style="margin-top:10px;color:#fbbf24">:: Proceed with installation? [Y/n]</div>
+    <div style="color:#dce2f0">Y</div>
+    <div style="margin-top:8px;color:#60a5fa">:: Retrieving packages...</div>
+    <div style="padding-left:12px;color:#4ade80"> linux66 [#############----------] 58%</div>
+    <div style="margin-top:12px;padding:10px 12px;background:rgba(22,193,129,.10);border:1px solid rgba(22,193,129,.22);border-radius:6px;color:#16c181">
+      &#x2713; System up-to-date &#x2014; all packages current
+    </div>
+    <div style="margin-top:14px;color:#464e66;font-size:11px">
+      Open Terminal and run: pacman -S &lt;package&gt; to install packages interactively
+    </div>
+  </div>`;
+}
+
+const APPS={
+  terminal:{title:'&#x1F4BB;  Terminal &#x2014; bash', w:700,h:440,fn:termHTML},
+  files:   {title:'&#x1F4C1;  Files &#x2014; /home/nexus',w:760,h:500,fn:filesHTML},
+  settings:{title:'&#x2699;&#xFE0F;  Settings',         w:720,h:520,fn:settHTML},
+  browser: {title:'&#x1F310;  NexFox',                  w:800,h:560,fn:brHTML},
+  editor:  {title:'&#x1F4DD;  VS Code &#x2014; main.sh',w:760,h:520,fn:edHTML},
+  notepad: {title:'&#x1F5D2;&#xFE0F;  Notepad',         w:580,h:440,fn:npHTML},
+  taskman: {title:'&#x1F4CA;  Task Manager',            w:560,h:440,fn:tmHTML},
+  pacman:  {title:'&#x1F4E6;  Pacman &#x2014; System Update',w:640,h:420,fn:pacHTML},
+};
+
+function openApp(id){
+  const a=APPS[id];if(!a)return;
+  const fresh=!wins[id];
+  createWin(id,a.title,a.w,a.h,a.fn());
+  if(fresh){
+    if(id==='terminal')initTerm();
+    if(id==='files')fsLoad('home');
+  }
+}
+
+let tHist=[],tHidx=-1,tCwd='/home/nexus';
+const FSTREE={
+  '/home/nexus':['Desktop/','Documents/','Downloads/','Music/','Pictures/','Videos/','.bashrc','.config/'],
+  '/home/nexus/Desktop':['README.txt','nexos.lnk'],
+  '/home/nexus/Documents':['reports/','manifesto.txt','todo.md'],
+  '/home/nexus/Downloads':['manjaro-24.0-x86_64.iso','chrome-setup.exe','pkg.tar.gz'],
+  '/home/nexus/Pictures':['wallpapers/','screenshots/'],
+  '/home/nexus/Music':['playlist.m3u'],
+  '/home/nexus/Videos':[],
+  '/':['boot/','dev/','etc/','home/','lib/','opt/','proc/','root/','sys/','usr/','var/'],
+  '/usr':['bin/','include/','lib/','local/','share/'],
+  '/etc':['fstab','hostname','hosts','pacman.conf','passwd','shadow','sudoers','X11/'],
+};
+const FCAT={
+  '.bashrc':'# NexOS bash configuration\nexport PS1="[32m\\u@nexos[0m:[34m\\w[0m\\$ "\nexport PATH="$HOME/.local/bin:$PATH"\nalias ls="ls --color=auto"\nalias ll="ls -la"\nalias update="sudo pacman -Syu"',
+  'manifesto.txt':'The world was never yours to keep.\n\n— Director, Nexus Dominion · MMXXV',
+  'README.txt':'Welcome to NexOS Desktop.\nDouble-click icons to open apps.\nRight-click for context menu.\n\nTry the Terminal: type \'neofetch\'',
+  'todo.md':'# TODO\n- [ ] World domination\n- [ ] Upgrade kernel to 6.7\n- [x] Install NexOS\n- [x] Configure pacman',
+  'hostname':'nexos\n',
+  'hosts':'127.0.0.1   localhost\n127.0.1.1   nexos\n::1         localhost\n',
+};
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function tPrint(html,cls='tout'){
+  const o=document.getElementById('tout');if(!o)return;
+  const d=document.createElement('div');d.className='tl '+cls;d.innerHTML=html;
+  o.appendChild(d);o.scrollTop=o.scrollHeight;
+}
+function tPrompt(cmd){
+  const o=document.getElementById('tout');if(!o)return;
+  const d=document.createElement('div');d.className='tl tpline';
+  const cwd=tCwd.replace('/home/nexus','~');
+  d.innerHTML=`<span class="tps1">nexus@nexos:${esc(cwd)}$&nbsp;</span><span class="tcmd">${esc(cmd)}</span>`;
+  o.appendChild(d);o.scrollTop=o.scrollHeight;
+}
+function updateTPs1(){
+  const el=document.getElementById('tps1');
+  if(el)el.textContent=`nexus@nexos:${tCwd.replace('/home/nexus','~')}$`;
+}
+
+const NF_ART=
+`     ████████
+   ████████████
+  ████████████████
+  ██▄▄▄▄██▄▄▄▄████
+  ██    ██    ████
+  ████████████████
+   ████████████
+     ████████     `;
+
+function runCmd(raw){
+  const parts=raw.trim().split(/\s+/);
+  const p=parts[0],a=parts.slice(1);
+  switch(p){
+    case'':return;
+    case'clear':document.getElementById('tout').innerHTML='';return;
+    case'help':
+      tPrint('<span class="tps1">NexOS bash 5.2.21</span>','');
+      tPrint('──────────────────────────────','tout');
+      [['ls [path]','list directory contents'],['pwd','print working directory'],['cd [path]','change directory'],['cat [file]','display file contents'],['echo [text]','print text to stdout'],['neofetch','system information'],['pacman -Syu','update all packages'],['pacman -S [pkg]','install a package'],['pacman -R [pkg]','remove a package'],['pacman -Ss [q]','search packages'],['pacman -Q','list installed packages'],['uname [-a]','kernel information'],['whoami','current user name'],['date','current date and time'],['ps','list running processes'],['clear','clear terminal screen'],['exit','close the terminal']].forEach(([c,d])=>tPrint(`  <span class="tps1">${esc(c)}</span><span class="tout" style="padding-left:1ch"> — ${d}</span>`,''));
+      return;
+    case'ls':{
+      const dir=a[0]?(a[0].startsWith('/')?a[0]:tCwd+'/'+a[0]):tCwd;
+      const norm=dir.replace(/\/+$/,'');
+      if(!FSTREE[norm]){tPrint(`ls: cannot access '${esc(a[0])}': No such file or directory`,'terr');return}
+      const f=FSTREE[norm];
+      if(!f.length){tPrint('(empty)');return}
+      tPrint(f.map(n=>n.endsWith('/')?`<span style="color:#89b4fa">${esc(n)}</span>`:`<span class="tcmd">${esc(n)}</span>`).join('  '));
+      return;
+    }
+    case'pwd':tPrint(tCwd);return;
+    case'cd':{
+      if(!a[0]||a[0]==='~'){tCwd='/home/nexus';updateTPs1();return}
+      if(a[0]==='..'){const s=tCwd.split('/');s.pop();tCwd=s.join('/')||'/';updateTPs1();return}
+      const t=a[0].startsWith('/')?a[0].replace(/\/$/,''):tCwd+'/'+a[0].replace(/\/$/,'');
+      if(FSTREE[t]!==undefined){tCwd=t;updateTPs1()}
+      else tPrint(`cd: ${esc(a[0])}: No such file or directory`,'terr');
+      return;
+    }
+    case'cat':{
+      if(!a[0]){tPrint('cat: missing operand','terr');return}
+      const key=a[0].split('/').pop();
+      const c=FCAT[a[0]]||FCAT[key];
+      if(c)tPrint(esc(c).replace(/\n/g,'<br>'));
+      else tPrint(`cat: ${esc(a[0])}: No such file or directory`,'terr');
+      return;
+    }
+    case'echo':tPrint(esc(a.join(' ')));return;
+    case'whoami':tPrint('nexus');return;
+    case'date':tPrint(new Date().toString());return;
+    case'uname':
+      tPrint(a.includes('-a')?'Linux nexos 6.6.10-1-MANJARO #1 SMP PREEMPT_DYNAMIC x86_64 GNU/Linux':'Linux');
+      return;
+    case'ps':
+      tPrint('<span class="tout">  PID TTY          TIME CMD</span>');
+      [['    1','?     ','00:00:01','systemd'],['  421','?     ','00:00:00','nexshell'],['  842','pts/0 ','00:00:00','bash'],[' 1337','pts/0 ','00:00:00','ps']].forEach(([pid,tty,t,c])=>tPrint(`${pid} ${tty}   ${t} ${c}`));
+      return;
+    case'pacman':{
+      if(a[0]==='-Syu'||a[0]==='-Syuu'){
+        tPrint(':: Synchronizing package databases...','tinf');
+        ['core','extra','community','manjaro'].forEach(r=>tPrint(`  ${r} is up to date`));
+        tPrint(':: Starting full system upgrade...','tinf');
+        tPrint(' there is nothing to do','tok');
+      }else if(a[0]==='-S'&&a[1]){
+        tPrint('resolving dependencies...');tPrint('looking for conflicting packages...');
+        tPrint(`Packages (1) ${esc(a[1])}-latest`);tPrint('');
+        tPrint('Total Download Size:  2.34 MiB');
+        tPrint(`:: Proceed with installation? [Y/n] <span class="tcmd">Y</span>`,'');
+        tPrint(':: Retrieving packages...','tinf');
+        tPrint(`  ${esc(a[1])} [######################] 100%`);
+        tPrint(`(1/1) installing ${esc(a[1])}...`,'tok');
+        tPrint(`[NexOS] Installation complete.`,'tok');
+      }else if(a[0]==='-R'&&a[1]){
+        tPrint('checking dependencies...');
+        tPrint(`(1/1) removing ${esc(a[1])}...`,'tok');
+      }else if(a[0]==='-Ss'&&a[1]){
+        tPrint(`<span class="tinf">extra/${esc(a[1])}</span> latest-1`,'');
+        tPrint(`    ${esc(a[1])} package for NexOS`);
+      }else if(a[0]==='-Q'){
+        ['linux66 6.6.10-2','mesa 24.0.1','firefox 123.0','nexshell 1.0.1','bash 5.2.21','git 2.43.0'].forEach(l=>tPrint('local/'+l));
+      }else{
+        tPrint('usage: pacman -S [pkg] | -Syu | -R [pkg] | -Ss [q] | -Q','terr');
+      }
+      return;
+    }
+    case'neofetch':{
+      const o=document.getElementById('tout');if(!o)return;
+      const d=document.createElement('div');
+      d.className='tl';d.style.margin='8px 0';
+      const swatch=['#1e1e2e','#f38ba8','#a6e3a1','#f9e2af','#89b4fa','#f5c2e7','#94e2d5','#cdd6f4'].map(c=>`<span style="background:${c};width:18px;height:13px;display:inline-block;border-radius:2px"></span>`).join('');
+      d.innerHTML=`<div class="nf-wrap"><pre class="nf-art">${NF_ART}</pre><div class="nf-info"><div><span class="nfk">nexus</span><span style="color:var(--muted)">@</span><span class="nfk">nexos</span></div><div class="nfv" style="margin:2px 0">──────────────────────────</div><div><span class="nfk">OS:       </span><span class="nfv">NexOS 1.0 (Manjaro x Win11)</span></div><div><span class="nfk">Kernel:   </span><span class="nfv">6.6.10-1-MANJARO x86_64</span></div><div><span class="nfk">Uptime:   </span><span class="nfv">3 hours, 21 mins</span></div><div><span class="nfk">Packages: </span><span class="nfv">1,847 (pacman)</span></div><div><span class="nfk">Shell:    </span><span class="nfv">bash 5.2.21</span></div><div><span class="nfk">DE:       </span><span class="nfv">NexShell 1.0</span></div><div><span class="nfk">WM:       </span><span class="nfv">kwin_wayland</span></div><div><span class="nfk">Terminal: </span><span class="nfv">NexTerm 1.0</span></div><div><span class="nfk">CPU:      </span><span class="nfv">Intel Core i9-13900K (24) @ 5.8GHz</span></div><div><span class="nfk">GPU:      </span><span class="nfv">NVIDIA GeForce RTX 4090</span></div><div><span class="nfk">Memory:   </span><span class="nfv">6.2 GiB / 16.0 GiB</span></div><div style="margin-top:5px">${swatch}</div></div></div>`;
+      o.appendChild(d);o.scrollTop=o.scrollHeight;
+      return;
+    }
+    case'sudo':
+      if(a[0]==='pacman'){runCmd('pacman '+a.slice(1).join(' '));return}
+      tPrint('[sudo] password for nexus: ');
+      tPrint('nexus is not in the sudoers file. This incident will be reported.','terr');
+      return;
+    case'exit':closeWin('terminal');return;
+    default:
+      tPrint(`bash: ${esc(p)}: command not found`,'terr');
+      tPrint(`Type <span class="tps1">'help'</span> for available commands.`,'tout');
+  }
+}
+
+function initTerm(){
+  setTimeout(()=>{
+    const inp=document.getElementById('tin');if(!inp)return;
+    tPrint(`<span class="tok">NexOS 1.0</span> — Manjaro \xD7 Windows 11`,'');
+    tPrint(`Kernel 6.6.10-1-MANJARO | bash 5.2.21`,'tinf');
+    tPrint(`Type <span class="tps1">'help'</span> for commands or <span class="tps1">'neofetch'</span> for system info.`,'');
+    tPrint('','');
+    inp.focus();
+    inp.onkeydown=e=>{
+      if(e.key==='Enter'){
+        const v=inp.value;tPrompt(v);
+        if(v.trim()){tHist.unshift(v);tHidx=-1}
+        inp.value='';if(v.trim())runCmd(v);
+      }else if(e.key==='ArrowUp'){
+        if(tHidx<tHist.length-1){tHidx++;inp.value=tHist[tHidx]}
+        e.preventDefault();
+      }else if(e.key==='ArrowDown'){
+        if(tHidx>0){tHidx--;inp.value=tHist[tHidx]}else{tHidx=-1;inp.value=''}
+        e.preventDefault();
+      }else if(e.key==='l'&&e.ctrlKey){
+        document.getElementById('tout').innerHTML='';e.preventDefault();
+      }
+    };
+    document.getElementById('tout').onclick=()=>inp.focus();
+  },60);
+}
+
+const FSDIRS={
+  home:{path:'/home/nexus',files:[{n:'Desktop',icon:'&#x1F4C1;',t:'dir'},{n:'Documents',icon:'&#x1F4C4;',t:'dir'},{n:'Downloads',icon:'&#x2B07;&#xFE0F;',t:'dir'},{n:'Music',icon:'&#x1F3B5;',t:'dir'},{n:'Pictures',icon:'&#x1F5BC;&#xFE0F;',t:'dir'},{n:'Videos',icon:'&#x1F3AC;',t:'dir'},{n:'.bashrc',icon:'&#x1F4C3;',t:'file'},{n:'.config',icon:'&#x1F4C1;',t:'dir'}]},
+  desktop:{path:'/home/nexus/Desktop',files:[{n:'README.txt',icon:'&#x1F4C4;',t:'file'},{n:'nexos.lnk',icon:'&#x1F517;',t:'file'}]},
+  documents:{path:'/home/nexus/Documents',files:[{n:'reports',icon:'&#x1F4C1;',t:'dir'},{n:'manifesto.txt',icon:'&#x1F4C4;',t:'file'},{n:'todo.md',icon:'&#x1F4DD;',t:'file'}]},
+  downloads:{path:'/home/nexus/Downloads',files:[{n:'manjaro-24.0-x86_64.iso',icon:'&#x1F4BF;',t:'file'},{n:'chrome-setup.exe',icon:'&#x2699;&#xFE0F;',t:'file'},{n:'pkg.tar.gz',icon:'&#x1F4E6;',t:'file'}]},
+  pictures:{path:'/home/nexus/Pictures',files:[{n:'wallpapers',icon:'&#x1F4C1;',t:'dir'},{n:'screenshots',icon:'&#x1F4C1;',t:'dir'}]},
+  music:{path:'/home/nexus/Music',files:[{n:'playlist.m3u',icon:'&#x1F3B5;',t:'file'}]},
+  videos:{path:'/home/nexus/Videos',files:[]},
+  root:{path:'/',files:[{n:'boot',icon:'&#x1F4C1;',t:'dir'},{n:'dev',icon:'&#x1F4C1;',t:'dir'},{n:'etc',icon:'&#x1F4C1;',t:'dir'},{n:'home',icon:'&#x1F4C1;',t:'dir'},{n:'lib',icon:'&#x1F4C1;',t:'dir'},{n:'opt',icon:'&#x1F4C1;',t:'dir'},{n:'proc',icon:'&#x1F4C1;',t:'dir'},{n:'root',icon:'&#x1F4C1;',t:'dir'},{n:'sys',icon:'&#x1F4C1;',t:'dir'},{n:'usr',icon:'&#x1F4C1;',t:'dir'},{n:'var',icon:'&#x1F4C1;',t:'dir'}]},
+  usr:{path:'/usr',files:[{n:'bin',icon:'&#x1F4C1;',t:'dir'},{n:'include',icon:'&#x1F4C1;',t:'dir'},{n:'lib',icon:'&#x1F4C1;',t:'dir'},{n:'local',icon:'&#x1F4C1;',t:'dir'},{n:'share',icon:'&#x1F4C1;',t:'dir'}]},
+  etc:{path:'/etc',files:[{n:'fstab',icon:'&#x1F4C4;',t:'file'},{n:'hostname',icon:'&#x1F4C4;',t:'file'},{n:'hosts',icon:'&#x1F4C4;',t:'file'},{n:'pacman.conf',icon:'&#x2699;&#xFE0F;',t:'file'},{n:'passwd',icon:'&#x1F512;',t:'file'},{n:'shadow',icon:'&#x1F512;',t:'file'},{n:'sudoers',icon:'&#x1F512;',t:'file'},{n:'X11',icon:'&#x1F4C1;',t:'dir'}]},
+};
+function fsNav(el,key){
+  document.querySelectorAll('.fsi').forEach(e=>e.classList.remove('act'));
+  el.classList.add('act');
+  fsLoad(key);
+}
+function fsLoad(key){
+  const d=FSDIRS[key];if(!d)return;
+  const pe=document.getElementById('fpath');
+  const ge=document.getElementById('fgrid');
+  if(!pe||!ge)return;
+  pe.textContent=d.path;
+  ge.innerHTML=d.files.length===0
+    ?'<div style="color:var(--muted);font-size:12px;padding:16px">Empty folder</div>'
+    :d.files.map(f=>`<div class="fitem" ondblclick="fsOpen('${f.n}','${f.t}','${key}')">
+      <div class="fitem-ico">${f.icon}</div>
+      <div class="fitem-name">${esc(f.n)}</div>
+    </div>`).join('');
+}
+function fsOpen(name,type,parentKey){
+  if(type==='dir'){
+    const k=Object.keys(FSDIRS).find(k=>FSDIRS[k].path.split('/').pop()===name);
+    if(k){
+      document.querySelectorAll('.fsi').forEach(e=>e.classList.remove('act'));
+      fsLoad(k);
+    }
+  }else{
+    const content=FCAT[name];
+    if(content){
+      const fresh=!wins['notepad'];
+      openApp('notepad');
+      setTimeout(()=>{const ta=document.getElementById('np-area');if(ta)ta.value=content;},fresh?120:20);
+    }
+  }
+}
+
+let smOpen=false;
+function smToggle(){
+  const m=document.getElementById('start-menu');
+  const b=document.getElementById('tb-start');
+  smOpen=!smOpen;
+  if(smOpen){
+    m.style.display='block';
+    requestAnimationFrame(()=>m.classList.add('vis'));
+    b.classList.add('active');
+  }else smClose();
+}
+function smClose(){
+  const m=document.getElementById('start-menu');
+  const b=document.getElementById('tb-start');
+  m.classList.remove('vis');b.classList.remove('active');
+  setTimeout(()=>{m.style.display='none';},200);
+  smOpen=false;
+}
+
+const ctxEl=document.getElementById('ctx');
+document.getElementById('desktop').addEventListener('contextmenu',e=>{
+  e.preventDefault();
+  ctxEl.style.display='block';
+  const x=Math.min(e.clientX,window.innerWidth-210);
+  const y=Math.min(e.clientY,window.innerHeight-180);
+  ctxEl.style.left=x+'px';ctxEl.style.top=y+'px';
+});
+document.addEventListener('click',e=>{
+  if(!ctxEl.contains(e.target))ctxEl.style.display='none';
+  if(smOpen&&!document.getElementById('start-menu').contains(e.target)&&!document.getElementById('tb-start').contains(e.target))smClose();
+});
+function ctxDo(a){
+  ctxEl.style.display='none';
+  if(a==='terminal'||a==='files'||a==='settings')openApp(a);
+  else if(a==='wallpaper')openApp('settings');
+  else if(a==='refresh'){
+    const d=document.getElementById('desktop');
+    d.style.transition='opacity .3s';d.style.opacity='.4';
+    setTimeout(()=>{d.style.opacity='1';setTimeout(()=>d.style.transition='',320)},300);
+  }
+}
+
+window.addEventListener('load',()=>{setTimeout(()=>openApp('terminal'),500)});
+</script>
+</body>
+</html>
