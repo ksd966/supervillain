@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pozivnica · Jovana &amp; Stefan · Vencanje 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+
+/* ═══════════════════════════════════════
+   SRPSKA NARODNA PALETA
+   Pirotski ćilim + Freska + Narodni vez
+   ═══════════════════════════════════════ */
+:root {
+  --bg:             #0e0308;   /* duboko bordo-crna, kao stara srpska zemlja */
+  --bg-surface:     #190610;   /* površina */
+  --bg-card:        #220a16;   /* kartica */
+  --gold:           #d4a535;   /* zlatni list, freska */
+  --gold-light:     #e8c460;
+  --gold-dim:       #8a6218;
+  --crimson:        #8b1428;   /* crveni vez, Pirot */
+  --crimson-bright: #b5223e;
+  --crimson-glow:   #6b0e1e;
+  --cream:          #f5edd8;   /* lan, staro platno */
+  --cream-dim:      #c8b090;
+  --cream-muted:    #7a6048;
+  --border:         rgba(212,165,53,0.15);
+  --border-bright:  rgba(212,165,53,0.38);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--cream);
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 300;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Fina tekstura na pozadini — kao tkano platno */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.032;
+  pointer-events: none;
+}
+
+/* ═══ Izgled sadržaja ═══ */
+.page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 32px;
+  position: relative; z-index: 1;
+}
+
+/* ═══ Ornamentalna bordura (Pirot/vez motiv) ═══ */
+.folk-strip {
+  width: 100%;
+  height: 52px;
+  display: block;
+  position: relative; z-index: 1;
+}
+
+/* ═══ HERO ═══ */
+.hero {
+  padding: 72px 32px 56px;
+  text-align: center;
+  position: relative; z-index: 1;
+  overflow: hidden;
+}
+
+/* Ambijentalno svetlo iza čuture */
+.hero-glow {
+  position: absolute;
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(212,165,53,0.08) 0%,
+    rgba(139,20,40,0.06) 40%,
+    transparent 70%
+  );
+  top: 50%; left: 50%;
+  transform: translate(-50%, -45%);
+  pointer-events: none;
+}
+
+.eyebrow {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.78rem;
+  font-style: italic;
+  letter-spacing: 0.28em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 36px;
+}
+
+/* Čutura centrirana u heroju */
+.cutura-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 40px 0 44px;
+}
+
+.cutura-svg {
+  width: clamp(210px, 44vw, 330px);
+  height: auto;
+  animation: floatUp 6s ease-in-out infinite, glowPulse 4s ease-in-out infinite;
+}
+
+@keyframes floatUp {
+  0%, 100% { transform: translateY(0px) rotate(-1deg); }
+  50%       { transform: translateY(-16px) rotate(1deg); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { filter: drop-shadow(0 16px 36px rgba(0,0,0,0.7)) drop-shadow(0 0 24px rgba(212,165,53,0.08)); }
+  50%       { filter: drop-shadow(0 20px 42px rgba(0,0,0,0.6)) drop-shadow(0 0 48px rgba(212,165,53,0.22)); }
+}
+
+/* Imena mladenaca */
+.names-block {
+  margin-bottom: 28px;
+}
+
+.name {
+  font-family: 'Cinzel Decorative', serif;
+  font-weight: 700;
+  font-size: clamp(2.4rem, 7vw, 5.5rem);
+  letter-spacing: 0.08em;
+  line-height: 1;
+  color: var(--cream);
+  display: block;
+}
+
+.names-connector {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: clamp(1.6rem, 4vw, 3rem);
+  color: var(--gold);
+  display: block;
+  line-height: 1.2;
+  margin: 6px 0;
+  letter-spacing: 0.1em;
+}
+
+.event-title {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
+  color: var(--gold-light);
+  letter-spacing: 0.2em;
+  margin-top: 12px;
+}
+
+/* Tekst pozivnice */
+.invite-para {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: clamp(1rem, 2.2vw, 1.3rem);
+  line-height: 2;
+  color: var(--cream-dim);
+  text-align: center;
+  max-width: 560px;
+  margin: 0 auto;
+}
+.invite-para strong {
+  color: var(--cream);
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* ═══ Ornamentalni separator ═══ */
+.sep {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin: 48px 0;
+  position: relative; z-index: 1;
+}
+.sep-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--border-bright), transparent);
+}
+.sep-symbol {
+  color: var(--gold);
+  font-size: 1.1rem;
+  opacity: 0.75;
+  letter-spacing: 8px;
+}
+
+/* ═══ DETALJI (Datum / Vreme / Mesto) ═══ */
+.details-section {
+  padding: 0 32px 72px;
+  position: relative; z-index: 1;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+
+.detail-card {
+  background: var(--bg-card);
+  padding: 44px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.4s;
+}
+.detail-card::before {
+  content: '';
+  position: absolute; bottom: 0; left: 0; width: 100%; height: 2px;
+  background: linear-gradient(to right, var(--crimson), transparent);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 0.5s ease;
+}
+.detail-card:hover { background: var(--bg-surface); }
+.detail-card:hover::before { transform: scaleX(1); }
+
+.detail-icon {
+  font-size: 1.5rem;
+  margin-bottom: 14px;
+  display: block;
+  opacity: 0.65;
+}
+.detail-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 14px;
+  display: block;
+}
+.detail-value {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 0.95rem;
+  color: var(--cream);
+  line-height: 1.5;
+}
+.detail-sub {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: 0.82rem;
+  color: var(--cream-muted);
+  margin-top: 8px;
+}
+
+/* Dresscode note */
+.dresscode-note {
+  text-align: center;
+  margin-top: 28px;
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--cream-muted);
+  letter-spacing: 0.12em;
+}
+.dresscode-note span {
+  color: var(--gold);
+  font-style: normal;
+  letter-spacing: 0.2em;
+}
+
+/* ═══ ZDRAVICA (Citat) ═══ */
+.zdravica-section {
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 80px 32px;
+  text-align: center;
+  position: relative; z-index: 1;
+}
+
+.zdravica-quote {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: clamp(1.2rem, 3vw, 2rem);
+  line-height: 1.7;
+  color: var(--cream);
+  max-width: 680px;
+  margin: 0 auto 28px;
+  position: relative;
+}
+.zdravica-quote::before {
+  content: '\201E';
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 5rem;
+  line-height: 0;
+  position: absolute;
+  left: -20px; top: 30px;
+  color: var(--crimson);
+  opacity: 0.4;
+}
+.zdravica-quote em {
+  color: var(--gold);
+  font-style: normal;
+}
+.zdravica-attr {
+  font-size: 0.65rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--cream-muted);
+}
+
+/* ═══ RSVP ═══ */
+.rsvp-section {
+  padding: 80px 32px;
+  text-align: center;
+  position: relative; z-index: 1;
+}
+
+.rsvp-label {
+  font-size: 0.62rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--crimson-bright);
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+.rsvp-label::before,
+.rsvp-label::after { content: '✦'; color: var(--gold); }
+
+.rsvp-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(1.6rem, 3.5vw, 2.8rem);
+  color: var(--cream);
+  margin-bottom: 20px;
+  line-height: 1.2;
+}
+
+.rsvp-text {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--cream-dim);
+  line-height: 1.9;
+  margin-bottom: 44px;
+}
+.rsvp-text .deadline { color: var(--gold); font-style: normal; }
+
+.rsvp-contacts {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.btn-rsvp {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 44px;
+  background: transparent;
+  border: 1px solid var(--gold-dim);
+  color: var(--gold);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.78rem;
+  font-weight: 400;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  position: relative; overflow: hidden;
+  transition: color 0.3s, border-color 0.3s;
+}
+.btn-rsvp::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: var(--gold-dim);
+  transform: translateY(101%);
+  transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+.btn-rsvp:hover { color: var(--bg); border-color: var(--gold); }
+.btn-rsvp:hover::before { transform: translateY(0); }
+.btn-rsvp span { position: relative; z-index: 1; }
+
+/* ═══ Footer ═══ */
+footer {
+  border-top: 1px solid var(--border);
+  background: var(--bg-surface);
+  padding: 36px 32px;
+  text-align: center;
+  position: relative; z-index: 1;
+}
+.footer-names {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 0.8rem;
+  color: var(--cream-dim);
+  letter-spacing: 0.25em;
+  margin-bottom: 8px;
+}
+.footer-copy {
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  color: var(--cream-muted);
+  text-transform: uppercase;
+}
+
+/* ═══ Scroll Reveal ═══ */
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.16,1,0.3,1);
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.d1 { transition-delay: 0.12s; }
+.d2 { transition-delay: 0.24s; }
+.d3 { transition-delay: 0.36s; }
+.d4 { transition-delay: 0.48s; }
+.d5 { transition-delay: 0.60s; }
+
+/* ═══ Responsive ═══ */
+@media (max-width: 640px) {
+  .page { padding: 0 20px; }
+  .hero { padding: 52px 20px 44px; }
+  .details-grid { grid-template-columns: 1fr; }
+  .details-section { padding: 0 20px 56px; }
+  .zdravica-section { padding: 60px 20px; }
+  .rsvp-section { padding: 60px 20px; }
+  .zdravica-quote::before { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════
+     ORNAMENTALNA BORDURA — VRH
+     ════════════════════════════ -->
+<svg class="folk-strip" viewBox="0 0 900 52" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <!-- Pirot-vez kombinovani motiv, 45×52 jedinica -->
+    <pattern id="topBorder" x="0" y="0" width="45" height="52" patternUnits="userSpaceOnUse">
+      <!-- Gornja i donja tanke linije -->
+      <line x1="0" y1="1" x2="45" y2="1" stroke="#d4a535" stroke-width="0.8" opacity="0.55"/>
+      <line x1="0" y1="51" x2="45" y2="51" stroke="#d4a535" stroke-width="0.8" opacity="0.55"/>
+      <!-- Cik-cak gornji -->
+      <polyline points="0,6 11,14 22,6 33,14 45,6" fill="none" stroke="#d4a535" stroke-width="1" opacity="0.5"/>
+      <!-- Cik-cak donji -->
+      <polyline points="0,46 11,38 22,46 33,38 45,46" fill="none" stroke="#d4a535" stroke-width="1" opacity="0.5"/>
+      <!-- Centralni dijamant (Pirot) -->
+      <polygon points="22,18 29,26 22,34 15,26" fill="none" stroke="#d4a535" stroke-width="1.1" opacity="0.65"/>
+      <!-- Mali krst u dijanantu (vez) -->
+      <line x1="22" y1="21" x2="22" y2="31" stroke="#d4a535" stroke-width="0.7" opacity="0.45"/>
+      <line x1="17" y1="26" x2="27" y2="26" stroke="#d4a535" stroke-width="0.7" opacity="0.45"/>
+      <!-- Tačke u uglovima između dijamanta i cik-caka -->
+      <circle cx="22" cy="11"  r="1.8" fill="#8b1428" opacity="0.6"/>
+      <circle cx="22" cy="41"  r="1.8" fill="#8b1428" opacity="0.6"/>
+      <circle cx="6"  cy="26"  r="1.4" fill="#d4a535" opacity="0.4"/>
+      <circle cx="38" cy="26"  r="1.4" fill="#d4a535" opacity="0.4"/>
+    </pattern>
+  </defs>
+  <rect width="900" height="52" fill="url(#topBorder)"/>
+</svg>
+
+
+<!-- ════════════════════════════
+     HERO: POZIVNICA I ČUTURA
+     ════════════════════════════ -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="page">
+
+    <!-- Uvodni tekst -->
+    <p class="eyebrow reveal">S velikom radošću Vas pozivamo na</p>
+
+    <!-- Čutura — centralni element -->
+    <div class="cutura-wrap reveal d1">
+      <svg class="cutura-svg" viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- Drvo: toplo mahagonij, kao rezbarena čutura -->
+          <radialGradient id="cWood" cx="36%" cy="30%" r="68%" gradientUnits="objectBoundingBox">
+            <stop offset="0%"   stop-color="#e0b870"/>
+            <stop offset="18%"  stop-color="#bf8a38"/>
+            <stop offset="48%"  stop-color="#8a5418"/>
+            <stop offset="78%"  stop-color="#562e0a"/>
+            <stop offset="100%" stop-color="#280e02"/>
+          </radialGradient>
+          <!-- Zlatni sjaj — freska highlight -->
+          <radialGradient id="cHL" cx="28%" cy="24%" r="42%">
+            <stop offset="0%"   stop-color="rgba(255,238,180,0.45)"/>
+            <stop offset="100%" stop-color="rgba(255,215,120,0)"/>
+          </radialGradient>
+          <!-- Vrat — linearni (stablo drveta) -->
+          <linearGradient id="cNeck" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   stop-color="#230c02"/>
+            <stop offset="25%"  stop-color="#703c12"/>
+            <stop offset="54%"  stop-color="#b88440"/>
+            <stop offset="80%"  stop-color="#703c12"/>
+            <stop offset="100%" stop-color="#230c02"/>
+          </linearGradient>
+          <!-- Čep -->
+          <radialGradient id="cCap" cx="38%" cy="30%" r="68%">
+            <stop offset="0%"   stop-color="#a87038"/>
+            <stop offset="100%" stop-color="#280e02"/>
+          </radialGradient>
+          <!-- Ambijentalni sjaj oko čuture (zlatno-bordo) -->
+          <radialGradient id="cAmbient" cx="50%" cy="50%" r="50%">
+            <stop offset="0%"   stop-color="rgba(212,165,53,0.16)"/>
+            <stop offset="55%"  stop-color="rgba(139,20,40,0.06)"/>
+            <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+          </radialGradient>
+          <!-- Senka -->
+          <filter id="cShadow" x="-30%" y="-20%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="14" stdDeviation="22" flood-color="#080002" flood-opacity="0.72"/>
+          </filter>
+          <!-- Isecanje na telo čuture -->
+          <clipPath id="cBodyClip">
+            <circle cx="150" cy="253" r="113"/>
+          </clipPath>
+        </defs>
+
+        <!-- Ambijentalni aureola -->
+        <ellipse cx="154" cy="260" rx="142" ry="138" fill="url(#cAmbient)"/>
+
+        <!-- Senka tela -->
+        <circle cx="150" cy="253" r="113" fill="#060002" opacity="0.52" filter="url(#cShadow)"/>
+
+        <!-- ── TELO ČUTURE (krug) ── -->
+        <circle cx="150" cy="253" r="113" fill="url(#cWood)"/>
+
+        <!-- Drveni godovi (klipirani na krug) -->
+        <g clip-path="url(#cBodyClip)" fill="none" stroke="#1c0802" stroke-width="1.05" opacity="0.13">
+          <path d="M 38,233 Q 150,217 262,233"/>
+          <path d="M 38,251 Q 150,235 262,251"/>
+          <path d="M 38,269 Q 150,253 262,269"/>
+          <path d="M 41,287 Q 150,271 259,287"/>
+          <path d="M 48,305 Q 150,289 252,305"/>
+          <path d="M 58,323 Q 150,307 242,323"/>
+          <path d="M 40,215 Q 150,199 260,215"/>
+          <path d="M 50,197 Q 150,181 250,197"/>
+        </g>
+
+        <!-- Dekorativni rezbareni prstenovi (Pirot/vez motiv) -->
+        <circle cx="150" cy="253" r="106" fill="none" stroke="#180602" stroke-width="3.5" opacity="0.55"/>
+        <circle cx="150" cy="253" r="102" fill="none" stroke="#c49038" stroke-width="1.2" opacity="0.30"/>
+        <circle cx="150" cy="253" r="98"  fill="none" stroke="#180602" stroke-width="2"   opacity="0.48"/>
+
+        <!-- ── 8 PIROTSKIH DIJAMANTA na prstenu ── -->
+        <g transform="translate(150,253)">
+          <!-- Dijamanti na r=91, svaki rotiran za 45° -->
+          <g fill="#c49038" opacity="0.54">
+            <polygon points="0,-99 6,-91 0,-83 -6,-91" transform="rotate(0)"/>
+            <polygon points="0,-99 6,-91 0,-83 -6,-91" transform="rotate(45)"/>
+            <polygon points="0,-99 6,-91 0,-83 -6,-91" transform="rotate(90)"/>
+            <polygon points="0,-99 6,-91 0,-83 -6,-91" transform="rotate(135)"/>
+            <polygon points="0,-99 6,-91 0,-83 -6,-91" transform="rotate(180)"/>
+            <polygon points="0,-99 6,-91 0,-83 -6,-91" transform="rotate(225)"/>
+            <polygon points="0,-99 6,-91 0,-83 -6,-91" transform="rotate(270)"/>
+            <polygon points="0,-99 6,-91 0,-83 -6,-91" transform="rotate(315)"/>
+          </g>
+          <!-- Male tačke između dijamanta (vez ornament) -->
+          <g fill="#7a3c10" opacity="0.42">
+            <circle cx="0" cy="-91" r="3.2" transform="rotate(22.5)"/>
+            <circle cx="0" cy="-91" r="3.2" transform="rotate(67.5)"/>
+            <circle cx="0" cy="-91" r="3.2" transform="rotate(112.5)"/>
+            <circle cx="0" cy="-91" r="3.2" transform="rotate(157.5)"/>
+            <circle cx="0" cy="-91" r="3.2" transform="rotate(202.5)"/>
+            <circle cx="0" cy="-91" r="3.2" transform="rotate(247.5)"/>
+            <circle cx="0" cy="-91" r="3.2" transform="rotate(292.5)"/>
+            <circle cx="0" cy="-91" r="3.2" transform="rotate(337.5)"/>
+          </g>
+
+          <!-- ── CENTRALNI VEZ-MOTIV: 8-latična ruža ── -->
+          <!-- 4 glavne latice (N,S,E,W) — vez emblem -->
+          <g fill="#c49038" opacity="0.50">
+            <ellipse cx="0"  cy="-36" rx="12" ry="27"/>
+            <ellipse cx="0"  cy="36"  rx="12" ry="27"/>
+            <ellipse cx="-36" cy="0"  rx="27" ry="12"/>
+            <ellipse cx="36"  cy="0"  rx="27" ry="12"/>
+          </g>
+          <!-- 4 dijagonalne latice (kosi vez) -->
+          <g fill="#8a5418" opacity="0.36" transform="rotate(45)">
+            <ellipse cx="0"  cy="-36" rx="9" ry="20"/>
+            <ellipse cx="0"  cy="36"  rx="9" ry="20"/>
+            <ellipse cx="-36" cy="0"  rx="20" ry="9"/>
+            <ellipse cx="36"  cy="0"  rx="20" ry="9"/>
+          </g>
+          <!-- Vrhovi latica — crvene tačke (vez detalj) -->
+          <g fill="#8b1428" opacity="0.55">
+            <circle cx="0"   cy="-62" r="5"/>
+            <circle cx="0"   cy="62"  r="5"/>
+            <circle cx="-62" cy="0"   r="5"/>
+            <circle cx="62"  cy="0"   r="5"/>
+          </g>
+          <!-- Dijagonalni vrhovi -->
+          <g fill="#c49038" opacity="0.30">
+            <circle cx="-43" cy="-43" r="3.5"/>
+            <circle cx="43"  cy="-43" r="3.5"/>
+            <circle cx="-43" cy="43"  r="3.5"/>
+            <circle cx="43"  cy="43"  r="3.5"/>
+          </g>
+          <!-- Centar cveta -->
+          <circle cx="0" cy="0" r="19" fill="#4e2408" opacity="0.58"/>
+          <circle cx="0" cy="0" r="14" fill="#c49038" opacity="0.46"/>
+          <circle cx="0" cy="0" r="8"  fill="#1e0802" opacity="0.82"/>
+          <circle cx="0" cy="0" r="3.5" fill="#e8c060" opacity="0.58"/>
+        </g>
+
+        <!-- Zlatni highlight (freska sjaj) -->
+        <circle cx="150" cy="253" r="113" fill="url(#cHL)"/>
+
+        <!-- ── VRAT ČUTURE ── -->
+        <!-- Telo circle vrh: y=253-113=140, vrat počinje malo više -->
+        <rect x="130" y="103" width="40" height="56" rx="8" fill="url(#cNeck)"/>
+        <!-- Rezbareni prstenovi na vratu -->
+        <rect x="128" y="115" width="44" height="4.5" rx="2" fill="#180602" opacity="0.50"/>
+        <rect x="128" y="147" width="44" height="4.5" rx="2" fill="#180602" opacity="0.50"/>
+        <!-- Sjaj na vratu -->
+        <rect x="138" y="107" width="9" height="48" rx="4.5" fill="rgba(235,205,125,0.22)"/>
+
+        <!-- ── ČEP / ZAPUŠAČ ── -->
+        <ellipse cx="150" cy="100" rx="26" ry="10" fill="url(#cCap)"/>
+        <ellipse cx="150" cy="96"  rx="15" ry="6"  fill="#280e02"/>
+        <ellipse cx="150" cy="94"  rx="9"  ry="3.5" fill="#4a1e08"/>
+        <!-- Highlight na čepu -->
+        <ellipse cx="144" cy="93"  rx="5"  ry="2"  fill="rgba(235,205,125,0.30)"/>
+
+        <!-- ── KAJ / KAIS (kožna traka za nošenje) ── -->
+        <path d="M 41,248 Q 26,195 52,148 Q 72,112 122,101"
+              fill="none" stroke="#361208" stroke-width="7" stroke-linecap="round"/>
+        <path d="M 41,248 Q 26,195 52,148 Q 72,112 122,101"
+              fill="none" stroke="#663618" stroke-width="4" stroke-linecap="round"/>
+        <path d="M 41,248 Q 26,195 52,148 Q 72,112 122,101"
+              fill="none" stroke="#9a5628" stroke-width="1.5" stroke-linecap="round"
+              stroke-dasharray="5,6" opacity="0.55"/>
+        <!-- Halka za pričvršćivanje kajsa -->
+        <circle cx="122" cy="103" r="5.5" fill="none" stroke="#663618" stroke-width="2.5"/>
+        <circle cx="122" cy="103" r="2.5" fill="#8a4820" opacity="0.7"/>
+
+        <!-- Kais donji kraj (slobodan) -->
+        <path d="M 41,248 Q 35,290 44,320"
+              fill="none" stroke="#361208" stroke-width="6" stroke-linecap="round" opacity="0.7"/>
+        <path d="M 41,248 Q 35,290 44,320"
+              fill="none" stroke="#663618" stroke-width="3.5" stroke-linecap="round" opacity="0.6"/>
+      </svg>
+    </div>
+
+    <!-- Imenа mladenaca (ispod čuture, ili iznad — po želji) -->
+    <div class="names-block">
+      <span class="name reveal d2">Jovana</span>
+      <span class="names-connector reveal d3">&amp;</span>
+      <span class="name reveal d2">Stefan</span>
+    </div>
+
+    <p class="event-title reveal d4">Vencanje</p>
+
+    <!-- Separator -->
+    <div class="sep reveal d4">
+      <div class="sep-line"></div>
+      <span class="sep-symbol">✦ ✦ ✦</span>
+      <div class="sep-line"></div>
+    </div>
+
+    <!-- Tekst pozivnice -->
+    <p class="invite-para reveal d5">
+      Čast nam je pozvati Vas da nam se pridružite<br>
+      na <strong>proslavi našeg vencanja</strong><br>
+      uz rakiju, tambure i srpski duh.<br>
+      <em>Čutura neće biti prazna, a srce nam je puno.</em>
+    </p>
+
+  </div>
+</section>
+
+
+<!-- ════════════════════════════
+     ORNAMENTALNA TRAKA — SREDINA
+     ════════════════════════════ -->
+<svg class="folk-strip" viewBox="0 0 900 52" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <pattern id="midBorder" x="0" y="0" width="45" height="52" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="1" x2="45" y2="1" stroke="#d4a535" stroke-width="0.8" opacity="0.55"/>
+      <line x1="0" y1="51" x2="45" y2="51" stroke="#d4a535" stroke-width="0.8" opacity="0.55"/>
+      <polyline points="0,6 11,14 22,6 33,14 45,6" fill="none" stroke="#d4a535" stroke-width="1" opacity="0.5"/>
+      <polyline points="0,46 11,38 22,46 33,38 45,46" fill="none" stroke="#d4a535" stroke-width="1" opacity="0.5"/>
+      <polygon points="22,18 29,26 22,34 15,26" fill="none" stroke="#d4a535" stroke-width="1.1" opacity="0.65"/>
+      <line x1="22" y1="21" x2="22" y2="31" stroke="#d4a535" stroke-width="0.7" opacity="0.45"/>
+      <line x1="17" y1="26" x2="27" y2="26" stroke="#d4a535" stroke-width="0.7" opacity="0.45"/>
+      <circle cx="22" cy="11"  r="1.8" fill="#8b1428" opacity="0.6"/>
+      <circle cx="22" cy="41"  r="1.8" fill="#8b1428" opacity="0.6"/>
+      <circle cx="6"  cy="26"  r="1.4" fill="#d4a535" opacity="0.4"/>
+      <circle cx="38" cy="26"  r="1.4" fill="#d4a535" opacity="0.4"/>
+    </pattern>
+  </defs>
+  <rect width="900" height="52" fill="url(#midBorder)"/>
+</svg>
+
+
+<!-- ════════════════════════════
+     DETALJI: DATUM / VREME / MESTO
+     ════════════════════════════ -->
+<section class="details-section">
+  <div class="page">
+    <div class="details-grid">
+
+      <!-- Datum -->
+      <div class="detail-card reveal">
+        <span class="detail-icon">☽</span>
+        <span class="detail-label">Datum</span>
+        <div class="detail-value">14. juna<br>2026.</div>
+        <div class="detail-sub">Subota</div>
+      </div>
+
+      <!-- Vreme -->
+      <div class="detail-card reveal d1">
+        <span class="detail-icon">⌚</span>
+        <span class="detail-label">Vreme</span>
+        <div class="detail-value">18:00h</div>
+        <div class="detail-sub">Počinjemo tačno</div>
+      </div>
+
+      <!-- Mesto -->
+      <div class="detail-card reveal d2">
+        <span class="detail-icon">⌂</span>
+        <span class="detail-label">Mesto</span>
+        <div class="detail-value" style="font-size:0.82rem;">Restoran<br>Šumadija</div>
+        <div class="detail-sub">Topola, Srbija</div>
+      </div>
+
+    </div>
+
+    <p class="dresscode-note reveal d3">
+      Dresscode: <span>SVEČANO</span> · Tradicionalne nošnje dobrodošle
+    </p>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════
+     ZDRAVICA — SRPSKA NARODNA
+     ════════════════════════════ -->
+<section class="zdravica-section">
+  <div class="page">
+    <blockquote class="zdravica-quote reveal">
+      Neka je sretno, zdravo i napredno!<br>
+      A čutura neka peva, rakija neka teče —<br>
+      jer gde ima <em>ljubavi i pjesme</em>,<br>
+      tamo nema tuge.
+    </blockquote>
+    <p class="zdravica-attr reveal d2">— Srpska narodna zdravica</p>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════
+     RSVP
+     ════════════════════════════ -->
+<section class="rsvp-section">
+  <div class="page">
+    <p class="rsvp-label reveal">Potvrda prisustva</p>
+    <h2 class="rsvp-title reveal d1">Budite naš gost</h2>
+    <p class="rsvp-text reveal d2">
+      Molimo Vas da potvrdite prisustvo<br>
+      najkasnije do <span class="deadline">1. juna 2026.</span>
+    </p>
+    <div class="rsvp-contacts reveal d3">
+      <a href="tel:+381601234567" class="btn-rsvp">
+        <span>☏ &nbsp;Pozovite nas</span>
+      </a>
+      <a href="mailto:jovana.stefan@example.com" class="btn-rsvp">
+        <span>✉ &nbsp;Pišite nam</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════
+     ORNAMENTALNA BORDURA — DNo
+     ════════════════════════════ -->
+<svg class="folk-strip" viewBox="0 0 900 52" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <pattern id="botBorder" x="0" y="0" width="45" height="52" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="1" x2="45" y2="1" stroke="#d4a535" stroke-width="0.8" opacity="0.55"/>
+      <line x1="0" y1="51" x2="45" y2="51" stroke="#d4a535" stroke-width="0.8" opacity="0.55"/>
+      <polyline points="0,6 11,14 22,6 33,14 45,6" fill="none" stroke="#d4a535" stroke-width="1" opacity="0.5"/>
+      <polyline points="0,46 11,38 22,46 33,38 45,46" fill="none" stroke="#d4a535" stroke-width="1" opacity="0.5"/>
+      <polygon points="22,18 29,26 22,34 15,26" fill="none" stroke="#d4a535" stroke-width="1.1" opacity="0.65"/>
+      <line x1="22" y1="21" x2="22" y2="31" stroke="#d4a535" stroke-width="0.7" opacity="0.45"/>
+      <line x1="17" y1="26" x2="27" y2="26" stroke="#d4a535" stroke-width="0.7" opacity="0.45"/>
+      <circle cx="22" cy="11"  r="1.8" fill="#8b1428" opacity="0.6"/>
+      <circle cx="22" cy="41"  r="1.8" fill="#8b1428" opacity="0.6"/>
+      <circle cx="6"  cy="26"  r="1.4" fill="#d4a535" opacity="0.4"/>
+      <circle cx="38" cy="26"  r="1.4" fill="#d4a535" opacity="0.4"/>
+    </pattern>
+  </defs>
+  <rect width="900" height="52" fill="url(#botBorder)"/>
+</svg>
+
+
+<!-- ════════════════════════════
+     FOOTER
+     ════════════════════════════ -->
+<footer>
+  <p class="footer-names">Jovana &amp; Stefan · Vencanje · 14. juna 2026.</p>
+  <p class="footer-copy">Sa ljubavlju napravljeno · Svi doći, niko ne piti sam</p>
+</footer>
+
+
+<script>
+// Scroll reveal (Intersection Observer)
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      io.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
