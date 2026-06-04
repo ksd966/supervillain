@@ -1139,7 +1139,7 @@ function fsLoad(key){
   pe.textContent=d.path;
   ge.innerHTML=d.files.length===0
     ?'<div style="color:var(--muted);font-size:12px;padding:16px">Empty folder</div>'
-    :d.files.map(f=>`<div class="fitem" ondblclick="fsOpen('${f.n}','${f.t}','${key}')">
+    :d.files.map(f=>`<div class="fitem" onclick="fsOpen('${f.n}','${f.t}','${key}')">
       <div class="fitem-ico">${f.icon}</div>
       <div class="fitem-name">${esc(f.n)}</div>
     </div>`).join('');
