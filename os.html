@@ -328,6 +328,75 @@ html,body{width:100%;height:100%;overflow:hidden;
   border-radius:var(--rs);padding:14px;font-size:12.5px;
   color:var(--dim);line-height:1.9}
 .about-box span{color:var(--accent)}
+
+/* ── Mobile / Touch ── */
+@media (max-width:768px){
+  html,body{font-size:13px}
+  #desk-icons{top:14px;left:10px;gap:4px}
+  .dicon{width:68px;padding:8px 4px}
+  .dicon-img{width:42px;height:42px;font-size:23px}
+  #taskbar{height:52px}
+  #tb-center{gap:1px;max-width:calc(100vw - 88px);overflow-x:auto;-webkit-overflow-scrolling:touch}
+  #tb-center::-webkit-scrollbar{display:none}
+  .tbtn{width:38px;height:38px;font-size:17px}
+  .tb-start{width:38px;height:38px}
+  .tb-sep{display:none}
+  #tb-right{gap:3px}
+  .tray{width:28px;height:28px;font-size:13px}
+  #clock{font-size:10px}
+  #start-menu{
+    left:8px;right:8px;width:auto;
+    bottom:60px;
+    transform:translateY(14px)
+  }
+  #start-menu.vis{transform:translateY(0)}
+  .sm-grid{grid-template-columns:repeat(4,1fr)}
+  .window{
+    left:0!important;top:0!important;
+    width:100vw!important;
+    height:calc(100vh - 52px)!important;
+    border-radius:0!important
+  }
+  .wtbar{height:44px;min-height:44px}
+  .wbtn{width:18px;height:18px}
+  .files-app{flex-direction:column}
+  .fside{
+    width:100%!important;min-width:unset!important;
+    height:46px;min-height:46px;
+    flex-direction:row;overflow-x:auto;overflow-y:hidden;
+    border-right:none;border-bottom:1px solid var(--border);
+    padding:6px 8px;gap:2px;-webkit-overflow-scrolling:touch
+  }
+  .fside::-webkit-scrollbar{display:none}
+  .fsi{min-width:max-content;padding:5px 10px;font-size:12px}
+  .fmain{padding:10px}
+  .sett-app{flex-direction:column}
+  .sside{
+    width:100%!important;min-width:unset!important;
+    height:44px;min-height:44px;
+    flex-direction:row;overflow-x:auto;overflow-y:hidden;
+    border-right:none;border-bottom:1px solid var(--border);
+    padding:6px 8px;gap:2px;-webkit-overflow-scrolling:touch
+  }
+  .sside::-webkit-scrollbar{display:none}
+  .smain{padding:14px}
+  .nf-wrap{flex-direction:column;gap:8px}
+  .nf-art{font-size:10px}
+  .br-srch{width:90%}
+  .br-main{gap:12px}
+  .term-app{font-size:12px}
+  .tinput,.tip1{font-size:12px}
+  .pac-app{font-size:12px}
+  .tm-stats{gap:8px;padding:10px 12px}
+  .tm-stat{padding:6px 12px}
+  .srow{padding:9px 12px}
+}
+@media (max-width:480px){
+  .sm-grid{grid-template-columns:repeat(3,1fr)}
+  .smain{padding:10px}
+  .fmain{padding:8px}
+  #tb-center{max-width:calc(100vw - 70px)}
+}
 </style>
 </head>
 <body>
@@ -335,23 +404,23 @@ html,body{width:100%;height:100%;overflow:hidden;
 <!-- ─ Desktop ─ -->
 <div id="desktop">
   <div id="desk-icons">
-    <div class="dicon" ondblclick="openApp('terminal')">
+    <div class="dicon" onclick="openApp('terminal')">
       <div class="dicon-img" style="background:rgba(22,193,129,.14)">💻</div>
       <span class="dicon-label">Terminal</span>
     </div>
-    <div class="dicon" ondblclick="openApp('files')">
+    <div class="dicon" onclick="openApp('files')">
       <div class="dicon-img" style="background:rgba(255,200,60,.12)">📁</div>
       <span class="dicon-label">Files</span>
     </div>
-    <div class="dicon" ondblclick="openApp('browser')">
+    <div class="dicon" onclick="openApp('browser')">
       <div class="dicon-img" style="background:rgba(255,110,40,.12)">🌐</div>
       <span class="dicon-label">NexFox</span>
     </div>
-    <div class="dicon" ondblclick="openApp('editor')">
+    <div class="dicon" onclick="openApp('editor')">
       <div class="dicon-img" style="background:rgba(0,122,204,.14)">📝</div>
       <span class="dicon-label">VS Code</span>
     </div>
-    <div class="dicon" ondblclick="openApp('settings')">
+    <div class="dicon" onclick="openApp('settings')">
       <div class="dicon-img" style="background:rgba(100,110,255,.12)">⚙️</div>
       <span class="dicon-label">Settings</span>
     </div>
@@ -476,6 +545,7 @@ tickClock(); setInterval(tickClock,1000);
 /* ══ Window Manager ══ */
 let zTop=200;
 const wins={};
+function isMobile(){return window.innerWidth<=768}
 
 function bringFront(el){el.style.zIndex=++zTop}
 
@@ -521,6 +591,7 @@ function minWin(id){
 }
 function maxWin(id){
   if(!wins[id])return;
+  if(isMobile())return;
   const w=wins[id];
   if(w.max){
     w.el.style.cssText=w.prev;
@@ -534,19 +605,35 @@ function maxWin(id){
 function makeDrag(win,id){
   const tb=win.querySelector('.wtbar');
   let drag=false,ox=0,oy=0;
+  const startDrag=(cx,cy)=>{
+    if(wins[id]&&wins[id].max)return;
+    drag=true;ox=cx-win.offsetLeft;oy=cy-win.offsetTop;
+  };
+  const moveDrag=(cx,cy)=>{
+    if(!drag)return;
+    win.style.left=Math.max(0,Math.min(cx-ox,window.innerWidth-win.offsetWidth))+'px';
+    win.style.top =Math.max(0,Math.min(cy-oy,window.innerHeight-48-win.offsetHeight))+'px';
+  };
   tb.addEventListener('mousedown',e=>{
     if(e.target.closest('.wctls'))return;
-    if(wins[id]&&wins[id].max)return;
-    drag=true;ox=e.clientX-win.offsetLeft;oy=e.clientY-win.offsetTop;
+    startDrag(e.clientX,e.clientY);
     document.body.style.cursor='grabbing';e.preventDefault();
   });
+  tb.addEventListener('touchstart',e=>{
+    if(e.target.closest('.wctls'))return;
+    if(isMobile())return;
+    const t=e.touches[0];startDrag(t.clientX,t.clientY);
+    e.preventDefault();
+  },{passive:false});
   tb.addEventListener('dblclick',e=>{if(!e.target.closest('.wctls'))maxWin(id)});
-  document.addEventListener('mousemove',e=>{
-    if(!drag)return;
-    win.style.left=Math.max(0,Math.min(e.clientX-ox,window.innerWidth-win.offsetWidth))+'px';
-    win.style.top =Math.max(0,Math.min(e.clientY-oy,window.innerHeight-48-win.offsetHeight))+'px';
-  });
+  document.addEventListener('mousemove',e=>moveDrag(e.clientX,e.clientY));
   document.addEventListener('mouseup',()=>{drag=false;document.body.style.cursor=''});
+  document.addEventListener('touchmove',e=>{
+    if(!drag)return;
+    moveDrag(e.touches[0].clientX,e.touches[0].clientY);
+    e.preventDefault();
+  },{passive:false});
+  document.addEventListener('touchend',()=>{drag=false});
 }
 function tbState(id,state){
   const el=document.getElementById('tb-'+id);
