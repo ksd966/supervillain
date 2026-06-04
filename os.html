@@ -328,6 +328,75 @@ html,body{width:100%;height:100%;overflow:hidden;
   border-radius:var(--rs);padding:14px;font-size:12.5px;
   color:var(--dim);line-height:1.9}
 .about-box span{color:var(--accent)}
+
+/* ── Mobile / Touch ── */
+@media (max-width:768px){
+  html,body{font-size:13px}
+  #desk-icons{top:14px;left:10px;gap:4px}
+  .dicon{width:68px;padding:8px 4px}
+  .dicon-img{width:42px;height:42px;font-size:23px}
+  #taskbar{height:52px}
+  #tb-center{gap:1px;max-width:calc(100vw - 88px);overflow-x:auto;-webkit-overflow-scrolling:touch}
+  #tb-center::-webkit-scrollbar{display:none}
+  .tbtn{width:38px;height:38px;font-size:17px}
+  .tb-start{width:38px;height:38px}
+  .tb-sep{display:none}
+  #tb-right{gap:3px}
+  .tray{width:28px;height:28px;font-size:13px}
+  #clock{font-size:10px}
+  #start-menu{
+    left:8px;right:8px;width:auto;
+    bottom:60px;
+    transform:translateY(14px)
+  }
+  #start-menu.vis{transform:translateY(0)}
+  .sm-grid{grid-template-columns:repeat(4,1fr)}
+  .window{
+    left:0!important;top:0!important;
+    width:100vw!important;
+    height:calc(100vh - 52px)!important;
+    border-radius:0!important
+  }
+  .wtbar{height:44px;min-height:44px}
+  .wbtn{width:18px;height:18px}
+  .files-app{flex-direction:column}
+  .fside{
+    width:100%!important;min-width:unset!important;
+    height:46px;min-height:46px;
+    flex-direction:row;overflow-x:auto;overflow-y:hidden;
+    border-right:none;border-bottom:1px solid var(--border);
+    padding:6px 8px;gap:2px;-webkit-overflow-scrolling:touch
+  }
+  .fside::-webkit-scrollbar{display:none}
+  .fsi{min-width:max-content;padding:5px 10px;font-size:12px}
+  .fmain{padding:10px}
+  .sett-app{flex-direction:column}
+  .sside{
+    width:100%!important;min-width:unset!important;
+    height:44px;min-height:44px;
+    flex-direction:row;overflow-x:auto;overflow-y:hidden;
+    border-right:none;border-bottom:1px solid var(--border);
+    padding:6px 8px;gap:2px;-webkit-overflow-scrolling:touch
+  }
+  .sside::-webkit-scrollbar{display:none}
+  .smain{padding:14px}
+  .nf-wrap{flex-direction:column;gap:8px}
+  .nf-art{font-size:10px}
+  .br-srch{width:90%}
+  .br-main{gap:12px}
+  .term-app{font-size:12px}
+  .tinput,.tip1{font-size:12px}
+  .pac-app{font-size:12px}
+  .tm-stats{gap:8px;padding:10px 12px}
+  .tm-stat{padding:6px 12px}
+  .srow{padding:9px 12px}
+}
+@media (max-width:480px){
+  .sm-grid{grid-template-columns:repeat(3,1fr)}
+  .smain{padding:10px}
+  .fmain{padding:8px}
+  #tb-center{max-width:calc(100vw - 70px)}
+}
 </style>
 </head>
 <body>
@@ -335,24 +404,24 @@ html,body{width:100%;height:100%;overflow:hidden;
 <!-- ─ Desktop ─ -->
 <div id="desktop">
   <div id="desk-icons">
-    <div class="dicon" ondblclick="openApp('terminal')">
-      <div class="dicon-img" style="background:rgba(22,193,129,.14)">&#x1F4BB;</div>
+    <div class="dicon" onclick="openApp('terminal')">
+      <div class="dicon-img" style="background:rgba(22,193,129,.14)">💻</div>
       <span class="dicon-label">Terminal</span>
     </div>
-    <div class="dicon" ondblclick="openApp('files')">
-      <div class="dicon-img" style="background:rgba(255,200,60,.12)">&#x1F4C1;</div>
+    <div class="dicon" onclick="openApp('files')">
+      <div class="dicon-img" style="background:rgba(255,200,60,.12)">📁</div>
       <span class="dicon-label">Files</span>
     </div>
-    <div class="dicon" ondblclick="openApp('browser')">
-      <div class="dicon-img" style="background:rgba(255,110,40,.12)">&#x1F310;</div>
+    <div class="dicon" onclick="openApp('browser')">
+      <div class="dicon-img" style="background:rgba(255,110,40,.12)">🌐</div>
       <span class="dicon-label">NexFox</span>
     </div>
-    <div class="dicon" ondblclick="openApp('editor')">
-      <div class="dicon-img" style="background:rgba(0,122,204,.14)">&#x1F4DD;</div>
+    <div class="dicon" onclick="openApp('editor')">
+      <div class="dicon-img" style="background:rgba(0,122,204,.14)">📝</div>
       <span class="dicon-label">VS Code</span>
     </div>
-    <div class="dicon" ondblclick="openApp('settings')">
-      <div class="dicon-img" style="background:rgba(100,110,255,.12)">&#x2699;&#xFE0F;</div>
+    <div class="dicon" onclick="openApp('settings')">
+      <div class="dicon-img" style="background:rgba(100,110,255,.12)">⚙️</div>
       <span class="dicon-label">Settings</span>
     </div>
   </div>
@@ -360,69 +429,69 @@ html,body{width:100%;height:100%;overflow:hidden;
 
 <!-- ─ Context Menu ─ -->
 <div id="ctx">
-  <div class="cxi" onclick="ctxDo('terminal')">&#x1F4BB; &nbsp;Open Terminal</div>
-  <div class="cxi" onclick="ctxDo('files')">&#x1F4C1; &nbsp;Open Files</div>
+  <div class="cxi" onclick="ctxDo('terminal')">💻 &nbsp;Open Terminal</div>
+  <div class="cxi" onclick="ctxDo('files')">📁 &nbsp;Open Files</div>
   <div class="cxs"></div>
-  <div class="cxi" onclick="ctxDo('settings')">&#x2699;&#xFE0F; &nbsp;Display Settings</div>
-  <div class="cxi" onclick="ctxDo('wallpaper')">&#x1F5BC;&#xFE0F; &nbsp;Change Wallpaper</div>
+  <div class="cxi" onclick="ctxDo('settings')">⚙️ &nbsp;Display Settings</div>
+  <div class="cxi" onclick="ctxDo('wallpaper')">🖼️ &nbsp;Change Wallpaper</div>
   <div class="cxs"></div>
-  <div class="cxi" onclick="ctxDo('refresh')">&#x1F504; &nbsp;Refresh Desktop</div>
+  <div class="cxi" onclick="ctxDo('refresh')">🔄 &nbsp;Refresh Desktop</div>
 </div>
 
 <!-- ─ Start Menu ─ -->
 <div id="start-menu">
   <div class="sm-search">
-    <span style="color:var(--muted);font-size:15px">&#x1F50D;</span>
-    <input type="text" id="sm-q" placeholder="Search apps, files, settings&#x2026;">
+    <span style="color:var(--muted);font-size:15px">🔍</span>
+    <input type="text" id="sm-q" placeholder="Search apps, files, settings…">
   </div>
   <div class="sm-lbl">Pinned</div>
   <div class="sm-grid" id="sm-grid">
     <div class="sm-app" onclick="openApp('terminal');smClose()">
-      <div class="sm-app-ico" style="background:rgba(22,193,129,.14)">&#x1F4BB;</div>
+      <div class="sm-app-ico" style="background:rgba(22,193,129,.14)">💻</div>
       <span class="sm-app-name">Terminal</span>
     </div>
     <div class="sm-app" onclick="openApp('files');smClose()">
-      <div class="sm-app-ico" style="background:rgba(255,200,60,.12)">&#x1F4C1;</div>
+      <div class="sm-app-ico" style="background:rgba(255,200,60,.12)">📁</div>
       <span class="sm-app-name">Files</span>
     </div>
     <div class="sm-app" onclick="openApp('settings');smClose()">
-      <div class="sm-app-ico" style="background:rgba(100,110,255,.12)">&#x2699;&#xFE0F;</div>
+      <div class="sm-app-ico" style="background:rgba(100,110,255,.12)">⚙️</div>
       <span class="sm-app-name">Settings</span>
     </div>
     <div class="sm-app" onclick="openApp('browser');smClose()">
-      <div class="sm-app-ico" style="background:rgba(255,110,40,.12)">&#x1F310;</div>
+      <div class="sm-app-ico" style="background:rgba(255,110,40,.12)">🌐</div>
       <span class="sm-app-name">NexFox</span>
     </div>
     <div class="sm-app" onclick="openApp('editor');smClose()">
-      <div class="sm-app-ico" style="background:rgba(0,122,204,.14)">&#x1F4DD;</div>
+      <div class="sm-app-ico" style="background:rgba(0,122,204,.14)">📝</div>
       <span class="sm-app-name">VS Code</span>
     </div>
     <div class="sm-app" onclick="openApp('pacman');smClose()">
-      <div class="sm-app-ico" style="background:rgba(22,193,129,.12)">&#x1F4E6;</div>
+      <div class="sm-app-ico" style="background:rgba(22,193,129,.12)">📦</div>
       <span class="sm-app-name">Pacman</span>
     </div>
     <div class="sm-app" onclick="openApp('taskman');smClose()">
-      <div class="sm-app-ico" style="background:rgba(255,70,70,.12)">&#x1F4CA;</div>
+      <div class="sm-app-ico" style="background:rgba(255,70,70,.12)">📊</div>
       <span class="sm-app-name">Task Mgr</span>
     </div>
     <div class="sm-app" onclick="openApp('notepad');smClose()">
-      <div class="sm-app-ico" style="background:rgba(255,255,255,.07)">&#x1F5D2;&#xFE0F;</div>
+      <div class="sm-app-ico" style="background:rgba(255,255,255,.07)">🗒️</div>
       <span class="sm-app-name">Notepad</span>
     </div>
     <div class="sm-app">
-      <div class="sm-app-ico" style="background:rgba(255,190,40,.12)">&#x1F3B5;</div>
+      <div class="sm-app-ico" style="background:rgba(255,190,40,.12)">🎵</div>
       <span class="sm-app-name">Music</span>
     </div>
     <div class="sm-app">
-      <div class="sm-app-ico" style="background:rgba(255,90,140,.10)">&#x1F5BC;&#xFE0F;</div>
+      <div class="sm-app-ico" style="background:rgba(255,90,140,.10)">🖼️</div>
       <span class="sm-app-name">Photos</span>
     </div>
     <div class="sm-app">
-      <div class="sm-app-ico" style="background:rgba(50,190,255,.10)">&#x1F4E7;</div>
+      <div class="sm-app-ico" style="background:rgba(50,190,255,.10)">📧</div>
       <span class="sm-app-name">Mail</span>
     </div>
     <div class="sm-app">
-      <div class="sm-app-ico" style="background:rgba(90,255,140,.10)">&#x1F5FA;&#xFE0F;</div>
+      <div class="sm-app-ico" style="background:rgba(90,255,140,.10)">🗺️</div>
       <span class="sm-app-name">Maps</span>
     </div>
   </div>
@@ -431,7 +500,7 @@ html,body{width:100%;height:100%;overflow:hidden;
       <div class="sm-avatar">N</div>
       <span class="sm-uname">nexus</span>
     </div>
-    <div class="sm-power" title="Power off" onclick="if(confirm('Shut down NexOS?'))document.body.innerHTML='<div style=background:#000;color:#16c181;display:flex;align-items:center;justify-content:center;height:100vh;font-family:monospace;font-size:18px>NexOS is shutting down&#x2026;</div>'">&#x23FB;</div>
+    <div class="sm-power" title="Power off" onclick="if(confirm('Shut down NexOS?'))document.body.innerHTML='<div style=background:#000;color:#16c181;display:flex;align-items:center;justify-content:center;height:100vh;font-family:monospace;font-size:18px>NexOS is shutting down…</div>'">⏻</div>
   </div>
 </div>
 
@@ -448,22 +517,23 @@ html,body{width:100%;height:100%;overflow:hidden;
       </svg>
     </div>
     <div class="tb-sep"></div>
-    <div class="tbtn" id="tb-terminal" onclick="tbClick('terminal')" title="Terminal">&#x1F4BB;</div>
-    <div class="tbtn" id="tb-files"    onclick="tbClick('files')"    title="Files">&#x1F4C1;</div>
-    <div class="tbtn" id="tb-browser"  onclick="tbClick('browser')"  title="NexFox">&#x1F310;</div>
-    <div class="tbtn" id="tb-editor"   onclick="tbClick('editor')"   title="VS Code">&#x1F4DD;</div>
-    <div class="tbtn" id="tb-settings" onclick="tbClick('settings')" title="Settings">&#x2699;&#xFE0F;</div>
-    <div class="tbtn" id="tb-taskman"  onclick="tbClick('taskman')"  title="Task Manager">&#x1F4CA;</div>
+    <div class="tbtn" id="tb-terminal" onclick="tbClick('terminal')" title="Terminal">💻</div>
+    <div class="tbtn" id="tb-files"    onclick="tbClick('files')"    title="Files">📁</div>
+    <div class="tbtn" id="tb-browser"  onclick="tbClick('browser')"  title="NexFox">🌐</div>
+    <div class="tbtn" id="tb-editor"   onclick="tbClick('editor')"   title="VS Code">📝</div>
+    <div class="tbtn" id="tb-settings" onclick="tbClick('settings')" title="Settings">⚙️</div>
+    <div class="tbtn" id="tb-taskman"  onclick="tbClick('taskman')"  title="Task Manager">📊</div>
   </div>
   <div id="tb-right">
-    <div class="tray" title="Network">&#x1F4F6;</div>
-    <div class="tray" title="Volume">&#x1F50A;</div>
-    <div class="tray" title="Battery">&#x1F50B;</div>
+    <div class="tray" title="Network">📶</div>
+    <div class="tray" title="Volume">🔊</div>
+    <div class="tray" title="Battery">🔋</div>
     <div id="clock"></div>
   </div>
 </div>
 
 <script>
+/* ══ Clock ══ */
 function tickClock(){
   const n=new Date();
   const t=n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
@@ -472,8 +542,10 @@ function tickClock(){
 }
 tickClock(); setInterval(tickClock,1000);
 
+/* ══ Window Manager ══ */
 let zTop=200;
 const wins={};
+function isMobile(){return window.innerWidth<=768}
 
 function bringFront(el){el.style.zIndex=++zTop}
 
@@ -519,6 +591,7 @@ function minWin(id){
 }
 function maxWin(id){
   if(!wins[id])return;
+  if(isMobile())return;
   const w=wins[id];
   if(w.max){
     w.el.style.cssText=w.prev;
@@ -532,19 +605,35 @@ function maxWin(id){
 function makeDrag(win,id){
   const tb=win.querySelector('.wtbar');
   let drag=false,ox=0,oy=0;
+  const startDrag=(cx,cy)=>{
+    if(wins[id]&&wins[id].max)return;
+    drag=true;ox=cx-win.offsetLeft;oy=cy-win.offsetTop;
+  };
+  const moveDrag=(cx,cy)=>{
+    if(!drag)return;
+    win.style.left=Math.max(0,Math.min(cx-ox,window.innerWidth-win.offsetWidth))+'px';
+    win.style.top =Math.max(0,Math.min(cy-oy,window.innerHeight-48-win.offsetHeight))+'px';
+  };
   tb.addEventListener('mousedown',e=>{
     if(e.target.closest('.wctls'))return;
-    if(wins[id]&&wins[id].max)return;
-    drag=true;ox=e.clientX-win.offsetLeft;oy=e.clientY-win.offsetTop;
+    startDrag(e.clientX,e.clientY);
     document.body.style.cursor='grabbing';e.preventDefault();
   });
+  tb.addEventListener('touchstart',e=>{
+    if(e.target.closest('.wctls'))return;
+    if(isMobile())return;
+    const t=e.touches[0];startDrag(t.clientX,t.clientY);
+    e.preventDefault();
+  },{passive:false});
   tb.addEventListener('dblclick',e=>{if(!e.target.closest('.wctls'))maxWin(id)});
-  document.addEventListener('mousemove',e=>{
-    if(!drag)return;
-    win.style.left=Math.max(0,Math.min(e.clientX-ox,window.innerWidth-win.offsetWidth))+'px';
-    win.style.top =Math.max(0,Math.min(e.clientY-oy,window.innerHeight-48-win.offsetHeight))+'px';
-  });
+  document.addEventListener('mousemove',e=>moveDrag(e.clientX,e.clientY));
   document.addEventListener('mouseup',()=>{drag=false;document.body.style.cursor=''});
+  document.addEventListener('touchmove',e=>{
+    if(!drag)return;
+    moveDrag(e.touches[0].clientX,e.touches[0].clientY);
+    e.preventDefault();
+  },{passive:false});
+  document.addEventListener('touchend',()=>{drag=false});
 }
 function tbState(id,state){
   const el=document.getElementById('tb-'+id);
@@ -559,6 +648,7 @@ function tbClick(id){
   else{minWin(id)}
 }
 
+/* ══ App Content ══ */
 function termHTML(){
   return`<div class="term-app">
     <div class="term-out" id="tout"></div>
@@ -571,17 +661,17 @@ function termHTML(){
 function filesHTML(){
   return`<div class="files-app">
     <div class="fside">
-      <div class="fsi act" onclick="fsNav(this,'home')"><span>&#x1F3E0;</span>Home</div>
-      <div class="fsi" onclick="fsNav(this,'desktop')"><span>&#x1F5A5;&#xFE0F;</span>Desktop</div>
-      <div class="fsi" onclick="fsNav(this,'documents')"><span>&#x1F4C4;</span>Documents</div>
-      <div class="fsi" onclick="fsNav(this,'downloads')"><span>&#x2B07;&#xFE0F;</span>Downloads</div>
-      <div class="fsi" onclick="fsNav(this,'pictures')"><span>&#x1F5BC;&#xFE0F;</span>Pictures</div>
-      <div class="fsi" onclick="fsNav(this,'music')"><span>&#x1F3B5;</span>Music</div>
-      <div class="fsi" onclick="fsNav(this,'videos')"><span>&#x1F3AC;</span>Videos</div>
+      <div class="fsi act" onclick="fsNav(this,'home')"><span>🏠</span>Home</div>
+      <div class="fsi" onclick="fsNav(this,'desktop')"><span>🖥️</span>Desktop</div>
+      <div class="fsi" onclick="fsNav(this,'documents')"><span>📄</span>Documents</div>
+      <div class="fsi" onclick="fsNav(this,'downloads')"><span>⬇️</span>Downloads</div>
+      <div class="fsi" onclick="fsNav(this,'pictures')"><span>🖼️</span>Pictures</div>
+      <div class="fsi" onclick="fsNav(this,'music')"><span>🎵</span>Music</div>
+      <div class="fsi" onclick="fsNav(this,'videos')"><span>🎬</span>Videos</div>
       <div style="height:1px;background:var(--border);margin:8px 0"></div>
-      <div class="fsi" onclick="fsNav(this,'root')"><span>&#x1F4BE;</span>/ (root)</div>
-      <div class="fsi" onclick="fsNav(this,'usr')"><span>&#x1F4E6;</span>/usr</div>
-      <div class="fsi" onclick="fsNav(this,'etc')"><span>&#x2699;&#xFE0F;</span>/etc</div>
+      <div class="fsi" onclick="fsNav(this,'root')"><span>💾</span>/ (root)</div>
+      <div class="fsi" onclick="fsNav(this,'usr')"><span>📦</span>/usr</div>
+      <div class="fsi" onclick="fsNav(this,'etc')"><span>⚙️</span>/etc</div>
     </div>
     <div class="fmain">
       <div class="ftbar"><div class="fpath" id="fpath">/home/nexus</div></div>
@@ -592,19 +682,19 @@ function filesHTML(){
 function settHTML(){
   return`<div class="sett-app">
     <div class="sside">
-      <div class="fsi act"><span>&#x1F5A5;&#xFE0F;</span>System</div>
-      <div class="fsi"><span>&#x1F3A8;</span>Appearance</div>
-      <div class="fsi"><span>&#x1F4F6;</span>Network</div>
-      <div class="fsi"><span>&#x1F50A;</span>Sound</div>
-      <div class="fsi"><span>&#x1F50B;</span>Power</div>
-      <div class="fsi"><span>&#x1F512;</span>Privacy</div>
-      <div class="fsi"><span>&#x1F504;</span>Updates</div>
-      <div class="fsi"><span>&#x2139;&#xFE0F;</span>About</div>
+      <div class="fsi act"><span>🖥️</span>System</div>
+      <div class="fsi"><span>🎨</span>Appearance</div>
+      <div class="fsi"><span>📶</span>Network</div>
+      <div class="fsi"><span>🔊</span>Sound</div>
+      <div class="fsi"><span>🔋</span>Power</div>
+      <div class="fsi"><span>🔒</span>Privacy</div>
+      <div class="fsi"><span>🔄</span>Updates</div>
+      <div class="fsi"><span>ℹ️</span>About</div>
     </div>
     <div class="smain">
       <div style="margin-bottom:22px">
         <div style="font-size:21px;font-weight:300;margin-bottom:5px">System</div>
-        <div style="font-size:13px;color:var(--dim)">NexOS &#x2014; Manjaro &#xD7; Windows 11</div>
+        <div style="font-size:13px;color:var(--dim)">NexOS — Manjaro × Windows 11</div>
       </div>
       <div class="sgrp">
         <div class="sgrp-t">Display</div>
@@ -620,13 +710,13 @@ function settHTML(){
       <div class="sgrp">
         <div class="sgrp-t">About NexOS</div>
         <div class="about-box">
-          <div><span>OS:</span>       NexOS 1.0 (Manjaro &#xD7; Windows 11)</div>
+          <div><span>OS:</span>       NexOS 1.0 (Manjaro × Windows 11)</div>
           <div><span>Kernel:</span>   6.6.10-1-MANJARO x86_64</div>
           <div><span>Desktop:</span>  NexShell 1.0</div>
           <div><span>Display:</span>  Wayland</div>
           <div><span>Packages:</span> 1,847 (pacman)</div>
           <div><span>Shell:</span>    bash 5.2.21</div>
-          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);color:var(--text)">&#xA9; MMXXV Nexus Dominion</div>
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);color:var(--text)">© MMXXV Nexus Dominion</div>
         </div>
       </div>
     </div>
@@ -635,15 +725,15 @@ function settHTML(){
 function brHTML(){
   return`<div class="br-app">
     <div class="br-bar">
-      <button class="br-btn">&#x2190;</button>
-      <button class="br-btn">&#x2192;</button>
-      <button class="br-btn">&#x27F3;</button>
+      <button class="br-btn">←</button>
+      <button class="br-btn">→</button>
+      <button class="br-btn">⟳</button>
       <input class="br-url" value="nexos://newtab">
     </div>
     <div class="br-main">
-      <div style="font-size:52px">&#x1F310;</div>
+      <div style="font-size:52px">🌐</div>
       <div style="font-size:24px;font-weight:300">NexFox</div>
-      <div style="font-size:13px;color:var(--dim)">Secure Browser &#xB7; NexOS Edition</div>
+      <div style="font-size:13px;color:var(--dim)">Secure Browser · NexOS Edition</div>
       <input class="br-srch" placeholder="Search the web or enter a URL">
     </div>
   </div>`;
@@ -664,7 +754,7 @@ function edHTML(){
     `<div>}</div>`,
     `<div></div>`,
     `<div><span style="color:#cba6f7">function</span> <span style="color:#89b4fa">init_desktop</span>() {</div>`,
-    `<div>&nbsp;&nbsp;<span style="color:#89b4fa">log</span> <span style="color:#a6e3a1">"Starting NexShell..."</span></div>`,
+    `<div>&nbsp;&nbsp;<span style="color:#89b4fa">log</span> <span style="color:#a6e3a1">"Starting NexShell ${NEXOS_VERSION}..."</span></div>`,
     `<div>&nbsp;&nbsp;<span style="color:#89b4fa">systemctl</span> start nexshell.service</div>`,
     `<div>&nbsp;&nbsp;<span style="color:#89b4fa">pacman</span> <span style="color:#fab387">-Syu --noconfirm</span></div>`,
     `<div>&nbsp;&nbsp;<span style="color:#89b4fa">log</span> <span style="color:#a6e3a1">"Desktop ready."</span></div>`,
@@ -693,7 +783,7 @@ function npHTML(){
       <span class="np-mi">Edit</span>
       <span class="np-mi">View</span>
     </div>
-    <textarea class="np-area" id="np-area">Welcome to NexOS Notepad.\n\nNexOS blends Manjaro Linux with Windows 11:\n  - pacman package manager\n  - Fluent Design UI with Manjaro green\n  - Wayland display server\n  - KDE compositing\n  - bash + zsh shell support\n\nTry the Terminal: type 'neofetch' or 'help'.\n</textarea>
+    <textarea class="np-area" id="np-area">Welcome to NexOS Notepad.\n\nNexOS blends Manjaro Linux with Windows 11:\n  • pacman package manager\n  • Fluent Design UI with Manjaro green\n  • Wayland display server\n  • KDE compositing\n  • bash + zsh shell support\n\nTry the Terminal — type 'neofetch' or 'help'.\n</textarea>
   </div>`;
 }
 function tmHTML(){
@@ -716,7 +806,7 @@ function tmHTML(){
       <td>${n}</td>
       <td style="color:${parseFloat(c)>10?'#f87171':'var(--dim)'}">${c}%</td>
       <td style="color:var(--dim)">${m}</td>
-      <td><span style="color:${s==='R'?'var(--accent)':'var(--muted)'}">&#x25CF; ${s}</span></td>
+      <td><span style="color:${s==='R'?'var(--accent)':'var(--muted)'}">● ${s}</span></td>
     </tr>`).join('');
   return`<div class="tm-app">
     <div class="tm-stats">
@@ -764,7 +854,7 @@ function pacHTML(){
     <div style="margin-top:8px;color:#60a5fa">:: Retrieving packages...</div>
     <div style="padding-left:12px;color:#4ade80"> linux66 [#############----------] 58%</div>
     <div style="margin-top:12px;padding:10px 12px;background:rgba(22,193,129,.10);border:1px solid rgba(22,193,129,.22);border-radius:6px;color:#16c181">
-      &#x2713; System up-to-date &#x2014; all packages current
+      ✓ System up-to-date — all packages current
     </div>
     <div style="margin-top:14px;color:#464e66;font-size:11px">
       Open Terminal and run: pacman -S &lt;package&gt; to install packages interactively
@@ -772,15 +862,16 @@ function pacHTML(){
   </div>`;
 }
 
+/* ══ App Registry ══ */
 const APPS={
-  terminal:{title:'&#x1F4BB;  Terminal &#x2014; bash', w:700,h:440,fn:termHTML},
-  files:   {title:'&#x1F4C1;  Files &#x2014; /home/nexus',w:760,h:500,fn:filesHTML},
-  settings:{title:'&#x2699;&#xFE0F;  Settings',         w:720,h:520,fn:settHTML},
-  browser: {title:'&#x1F310;  NexFox',                  w:800,h:560,fn:brHTML},
-  editor:  {title:'&#x1F4DD;  VS Code &#x2014; main.sh',w:760,h:520,fn:edHTML},
-  notepad: {title:'&#x1F5D2;&#xFE0F;  Notepad',         w:580,h:440,fn:npHTML},
-  taskman: {title:'&#x1F4CA;  Task Manager',            w:560,h:440,fn:tmHTML},
-  pacman:  {title:'&#x1F4E6;  Pacman &#x2014; System Update',w:640,h:420,fn:pacHTML},
+  terminal:{title:'💻  Terminal — bash',        w:700, h:440, fn:termHTML},
+  files:   {title:'📁  Files — /home/nexus',     w:760, h:500, fn:filesHTML},
+  settings:{title:'⚙️  Settings',                w:720, h:520, fn:settHTML},
+  browser: {title:'🌐  NexFox',                  w:800, h:560, fn:brHTML},
+  editor:  {title:'📝  VS Code — main.sh',       w:760, h:520, fn:edHTML},
+  notepad: {title:'🗒️  Notepad',                 w:580, h:440, fn:npHTML},
+  taskman: {title:'📊  Task Manager',            w:560, h:440, fn:tmHTML},
+  pacman:  {title:'📦  Pacman — System Update',  w:640, h:420, fn:pacHTML},
 };
 
 function openApp(id){
@@ -793,6 +884,7 @@ function openApp(id){
   }
 }
 
+/* ══ Terminal ══ */
 let tHist=[],tHidx=-1,tCwd='/home/nexus';
 const FSTREE={
   '/home/nexus':['Desktop/','Documents/','Downloads/','Music/','Pictures/','Videos/','.bashrc','.config/'],
@@ -807,7 +899,7 @@ const FSTREE={
   '/etc':['fstab','hostname','hosts','pacman.conf','passwd','shadow','sudoers','X11/'],
 };
 const FCAT={
-  '.bashrc':'# NexOS bash configuration\nexport PS1="[32m\\u@nexos[0m:[34m\\w[0m\\$ "\nexport PATH="$HOME/.local/bin:$PATH"\nalias ls="ls --color=auto"\nalias ll="ls -la"\nalias update="sudo pacman -Syu"',
+  '.bashrc':'# NexOS bash configuration\nexport PS1="\\[\\033[32m\\]\\u@nexos\\[\\033[0m\\]:\\[\\033[34m\\]\\w\\[\\033[0m\\]\\$ "\nexport PATH="$HOME/.local/bin:$PATH"\nalias ls="ls --color=auto"\nalias ll="ls -la"\nalias update="sudo pacman -Syu"',
   'manifesto.txt':'The world was never yours to keep.\n\n— Director, Nexus Dominion · MMXXV',
   'README.txt':'Welcome to NexOS Desktop.\nDouble-click icons to open apps.\nRight-click for context menu.\n\nTry the Terminal: type \'neofetch\'',
   'todo.md':'# TODO\n- [ ] World domination\n- [ ] Upgrade kernel to 6.7\n- [x] Install NexOS\n- [x] Configure pacman',
@@ -853,13 +945,32 @@ function runCmd(raw){
     case'help':
       tPrint('<span class="tps1">NexOS bash 5.2.21</span>','');
       tPrint('──────────────────────────────','tout');
-      [['ls [path]','list directory contents'],['pwd','print working directory'],['cd [path]','change directory'],['cat [file]','display file contents'],['echo [text]','print text to stdout'],['neofetch','system information'],['pacman -Syu','update all packages'],['pacman -S [pkg]','install a package'],['pacman -R [pkg]','remove a package'],['pacman -Ss [q]','search packages'],['pacman -Q','list installed packages'],['uname [-a]','kernel information'],['whoami','current user name'],['date','current date and time'],['ps','list running processes'],['clear','clear terminal screen'],['exit','close the terminal']].forEach(([c,d])=>tPrint(`  <span class="tps1">${esc(c)}</span><span class="tout" style="padding-left:1ch"> — ${d}</span>`,''));
+      [
+        ['ls [path]',       'list directory contents'],
+        ['pwd',             'print working directory'],
+        ['cd [path]',       'change directory'],
+        ['cat [file]',      'display file contents'],
+        ['echo [text]',     'print text to stdout'],
+        ['neofetch',        'system information'],
+        ['pacman -Syu',     'update all packages'],
+        ['pacman -S [pkg]', 'install a package'],
+        ['pacman -R [pkg]', 'remove a package'],
+        ['pacman -Ss [q]',  'search packages'],
+        ['pacman -Q',       'list installed packages'],
+        ['uname [-a]',      'kernel information'],
+        ['whoami',          'current user name'],
+        ['date',            'current date and time'],
+        ['ps',              'list running processes'],
+        ['clear',           'clear terminal screen'],
+        ['exit',            'close the terminal'],
+      ].forEach(([c,d])=>tPrint(`  <span class="tps1">${esc(c)}</span><span class="tout" style="padding-left:1ch"> — ${d}</span>`,''));
       return;
     case'ls':{
       const dir=a[0]?(a[0].startsWith('/')?a[0]:tCwd+'/'+a[0]):tCwd;
       const norm=dir.replace(/\/+$/,'');
-      if(!FSTREE[norm]){tPrint(`ls: cannot access '${esc(a[0])}': No such file or directory`,'terr');return}
-      const f=FSTREE[norm];
+      const files=FSTREE[norm]||FSTREE[norm+'/'[0]]||null;
+      if(!FSTREE[norm]&&!FSTREE[norm+'/']){tPrint(`ls: cannot access '${esc(a[0])}': No such file or directory`,'terr');return}
+      const f=FSTREE[norm]||[];
       if(!f.length){tPrint('(empty)');return}
       tPrint(f.map(n=>n.endsWith('/')?`<span style="color:#89b4fa">${esc(n)}</span>`:`<span class="tcmd">${esc(n)}</span>`).join('  '));
       return;
@@ -889,7 +1000,9 @@ function runCmd(raw){
       return;
     case'ps':
       tPrint('<span class="tout">  PID TTY          TIME CMD</span>');
-      [['    1','?     ','00:00:01','systemd'],['  421','?     ','00:00:00','nexshell'],['  842','pts/0 ','00:00:00','bash'],[' 1337','pts/0 ','00:00:00','ps']].forEach(([pid,tty,t,c])=>tPrint(`${pid} ${tty}   ${t} ${c}`));
+      [['    1','?     ','00:00:01','systemd'],['  421','?     ','00:00:00','nexshell'],
+       ['  842','pts/0 ','00:00:00','bash'],   [' 1337','pts/0 ','00:00:00','ps']
+      ].forEach(([pid,tty,t,c])=>tPrint(`${pid} ${tty}   ${t} ${c}`));
       return;
     case'pacman':{
       if(a[0]==='-Syu'||a[0]==='-Syuu'){
@@ -915,7 +1028,7 @@ function runCmd(raw){
       }else if(a[0]==='-Q'){
         ['linux66 6.6.10-2','mesa 24.0.1','firefox 123.0','nexshell 1.0.1','bash 5.2.21','git 2.43.0'].forEach(l=>tPrint('local/'+l));
       }else{
-        tPrint('usage: pacman -S [pkg] | -Syu | -R [pkg] | -Ss [q] | -Q','terr');
+        tPrint(`usage: pacman -S [pkg] | -Syu | -R [pkg] | -Ss [q] | -Q`,'terr');
       }
       return;
     }
@@ -923,8 +1036,27 @@ function runCmd(raw){
       const o=document.getElementById('tout');if(!o)return;
       const d=document.createElement('div');
       d.className='tl';d.style.margin='8px 0';
-      const swatch=['#1e1e2e','#f38ba8','#a6e3a1','#f9e2af','#89b4fa','#f5c2e7','#94e2d5','#cdd6f4'].map(c=>`<span style="background:${c};width:18px;height:13px;display:inline-block;border-radius:2px"></span>`).join('');
-      d.innerHTML=`<div class="nf-wrap"><pre class="nf-art">${NF_ART}</pre><div class="nf-info"><div><span class="nfk">nexus</span><span style="color:var(--muted)">@</span><span class="nfk">nexos</span></div><div class="nfv" style="margin:2px 0">──────────────────────────</div><div><span class="nfk">OS:       </span><span class="nfv">NexOS 1.0 (Manjaro x Win11)</span></div><div><span class="nfk">Kernel:   </span><span class="nfv">6.6.10-1-MANJARO x86_64</span></div><div><span class="nfk">Uptime:   </span><span class="nfv">3 hours, 21 mins</span></div><div><span class="nfk">Packages: </span><span class="nfv">1,847 (pacman)</span></div><div><span class="nfk">Shell:    </span><span class="nfv">bash 5.2.21</span></div><div><span class="nfk">DE:       </span><span class="nfv">NexShell 1.0</span></div><div><span class="nfk">WM:       </span><span class="nfv">kwin_wayland</span></div><div><span class="nfk">Terminal: </span><span class="nfv">NexTerm 1.0</span></div><div><span class="nfk">CPU:      </span><span class="nfv">Intel Core i9-13900K (24) @ 5.8GHz</span></div><div><span class="nfk">GPU:      </span><span class="nfv">NVIDIA GeForce RTX 4090</span></div><div><span class="nfk">Memory:   </span><span class="nfv">6.2 GiB / 16.0 GiB</span></div><div style="margin-top:5px">${swatch}</div></div></div>`;
+      const swatch=['#1e1e2e','#f38ba8','#a6e3a1','#f9e2af','#89b4fa','#f5c2e7','#94e2d5','#cdd6f4']
+        .map(c=>`<span style="background:${c};width:18px;height:13px;display:inline-block;border-radius:2px"></span>`).join('');
+      d.innerHTML=`<div class="nf-wrap">
+        <pre class="nf-art">${NF_ART}</pre>
+        <div class="nf-info">
+          <div><span class="nfk">nexus</span><span style="color:var(--muted)">@</span><span class="nfk">nexos</span></div>
+          <div class="nfv" style="margin:2px 0">──────────────────────────</div>
+          <div><span class="nfk">OS:       </span><span class="nfv">NexOS 1.0 (Manjaro x Win11)</span></div>
+          <div><span class="nfk">Kernel:   </span><span class="nfv">6.6.10-1-MANJARO x86_64</span></div>
+          <div><span class="nfk">Uptime:   </span><span class="nfv">3 hours, 21 mins</span></div>
+          <div><span class="nfk">Packages: </span><span class="nfv">1,847 (pacman)</span></div>
+          <div><span class="nfk">Shell:    </span><span class="nfv">bash 5.2.21</span></div>
+          <div><span class="nfk">DE:       </span><span class="nfv">NexShell 1.0</span></div>
+          <div><span class="nfk">WM:       </span><span class="nfv">kwin_wayland</span></div>
+          <div><span class="nfk">Terminal: </span><span class="nfv">NexTerm 1.0</span></div>
+          <div><span class="nfk">CPU:      </span><span class="nfv">Intel Core i9-13900K (24) @ 5.8GHz</span></div>
+          <div><span class="nfk">GPU:      </span><span class="nfv">NVIDIA GeForce RTX 4090</span></div>
+          <div><span class="nfk">Memory:   </span><span class="nfv">6.2 GiB / 16.0 GiB</span></div>
+          <div style="margin-top:5px">${swatch}</div>
+        </div>
+      </div>`;
       o.appendChild(d);o.scrollTop=o.scrollHeight;
       return;
     }
@@ -943,7 +1075,7 @@ function runCmd(raw){
 function initTerm(){
   setTimeout(()=>{
     const inp=document.getElementById('tin');if(!inp)return;
-    tPrint(`<span class="tok">NexOS 1.0</span> — Manjaro \xD7 Windows 11`,'');
+    tPrint(`<span class="tok">NexOS 1.0</span> — Manjaro × Windows 11`,'');
     tPrint(`Kernel 6.6.10-1-MANJARO | bash 5.2.21`,'tinf');
     tPrint(`Type <span class="tps1">'help'</span> for commands or <span class="tps1">'neofetch'</span> for system info.`,'');
     tPrint('','');
@@ -967,17 +1099,32 @@ function initTerm(){
   },60);
 }
 
+/* ══ File Manager ══ */
 const FSDIRS={
-  home:{path:'/home/nexus',files:[{n:'Desktop',icon:'&#x1F4C1;',t:'dir'},{n:'Documents',icon:'&#x1F4C4;',t:'dir'},{n:'Downloads',icon:'&#x2B07;&#xFE0F;',t:'dir'},{n:'Music',icon:'&#x1F3B5;',t:'dir'},{n:'Pictures',icon:'&#x1F5BC;&#xFE0F;',t:'dir'},{n:'Videos',icon:'&#x1F3AC;',t:'dir'},{n:'.bashrc',icon:'&#x1F4C3;',t:'file'},{n:'.config',icon:'&#x1F4C1;',t:'dir'}]},
-  desktop:{path:'/home/nexus/Desktop',files:[{n:'README.txt',icon:'&#x1F4C4;',t:'file'},{n:'nexos.lnk',icon:'&#x1F517;',t:'file'}]},
-  documents:{path:'/home/nexus/Documents',files:[{n:'reports',icon:'&#x1F4C1;',t:'dir'},{n:'manifesto.txt',icon:'&#x1F4C4;',t:'file'},{n:'todo.md',icon:'&#x1F4DD;',t:'file'}]},
-  downloads:{path:'/home/nexus/Downloads',files:[{n:'manjaro-24.0-x86_64.iso',icon:'&#x1F4BF;',t:'file'},{n:'chrome-setup.exe',icon:'&#x2699;&#xFE0F;',t:'file'},{n:'pkg.tar.gz',icon:'&#x1F4E6;',t:'file'}]},
-  pictures:{path:'/home/nexus/Pictures',files:[{n:'wallpapers',icon:'&#x1F4C1;',t:'dir'},{n:'screenshots',icon:'&#x1F4C1;',t:'dir'}]},
-  music:{path:'/home/nexus/Music',files:[{n:'playlist.m3u',icon:'&#x1F3B5;',t:'file'}]},
-  videos:{path:'/home/nexus/Videos',files:[]},
-  root:{path:'/',files:[{n:'boot',icon:'&#x1F4C1;',t:'dir'},{n:'dev',icon:'&#x1F4C1;',t:'dir'},{n:'etc',icon:'&#x1F4C1;',t:'dir'},{n:'home',icon:'&#x1F4C1;',t:'dir'},{n:'lib',icon:'&#x1F4C1;',t:'dir'},{n:'opt',icon:'&#x1F4C1;',t:'dir'},{n:'proc',icon:'&#x1F4C1;',t:'dir'},{n:'root',icon:'&#x1F4C1;',t:'dir'},{n:'sys',icon:'&#x1F4C1;',t:'dir'},{n:'usr',icon:'&#x1F4C1;',t:'dir'},{n:'var',icon:'&#x1F4C1;',t:'dir'}]},
-  usr:{path:'/usr',files:[{n:'bin',icon:'&#x1F4C1;',t:'dir'},{n:'include',icon:'&#x1F4C1;',t:'dir'},{n:'lib',icon:'&#x1F4C1;',t:'dir'},{n:'local',icon:'&#x1F4C1;',t:'dir'},{n:'share',icon:'&#x1F4C1;',t:'dir'}]},
-  etc:{path:'/etc',files:[{n:'fstab',icon:'&#x1F4C4;',t:'file'},{n:'hostname',icon:'&#x1F4C4;',t:'file'},{n:'hosts',icon:'&#x1F4C4;',t:'file'},{n:'pacman.conf',icon:'&#x2699;&#xFE0F;',t:'file'},{n:'passwd',icon:'&#x1F512;',t:'file'},{n:'shadow',icon:'&#x1F512;',t:'file'},{n:'sudoers',icon:'&#x1F512;',t:'file'},{n:'X11',icon:'&#x1F4C1;',t:'dir'}]},
+  home:     {path:'/home/nexus',  files:[
+    {n:'Desktop',icon:'📁',t:'dir'},{n:'Documents',icon:'📄',t:'dir'},
+    {n:'Downloads',icon:'⬇️',t:'dir'},{n:'Music',icon:'🎵',t:'dir'},
+    {n:'Pictures',icon:'🖼️',t:'dir'},{n:'Videos',icon:'🎬',t:'dir'},
+    {n:'.bashrc',icon:'📃',t:'file'},{n:'.config',icon:'📁',t:'dir'},
+  ]},
+  desktop:  {path:'/home/nexus/Desktop',  files:[{n:'README.txt',icon:'📄',t:'file'},{n:'nexos.lnk',icon:'🔗',t:'file'}]},
+  documents:{path:'/home/nexus/Documents',files:[{n:'reports',icon:'📁',t:'dir'},{n:'manifesto.txt',icon:'📄',t:'file'},{n:'todo.md',icon:'📝',t:'file'}]},
+  downloads:{path:'/home/nexus/Downloads',files:[{n:'manjaro-24.0-x86_64.iso',icon:'💿',t:'file'},{n:'chrome-setup.exe',icon:'⚙️',t:'file'},{n:'pkg.tar.gz',icon:'📦',t:'file'}]},
+  pictures: {path:'/home/nexus/Pictures', files:[{n:'wallpapers',icon:'📁',t:'dir'},{n:'screenshots',icon:'📁',t:'dir'}]},
+  music:    {path:'/home/nexus/Music',    files:[{n:'playlist.m3u',icon:'🎵',t:'file'}]},
+  videos:   {path:'/home/nexus/Videos',   files:[]},
+  root:     {path:'/',                    files:[
+    {n:'boot',icon:'📁',t:'dir'},{n:'dev',icon:'📁',t:'dir'},{n:'etc',icon:'📁',t:'dir'},
+    {n:'home',icon:'📁',t:'dir'},{n:'lib',icon:'📁',t:'dir'},{n:'opt',icon:'📁',t:'dir'},
+    {n:'proc',icon:'📁',t:'dir'},{n:'root',icon:'📁',t:'dir'},{n:'sys',icon:'📁',t:'dir'},
+    {n:'usr',icon:'📁',t:'dir'},{n:'var',icon:'📁',t:'dir'},
+  ]},
+  usr:      {path:'/usr',files:[{n:'bin',icon:'📁',t:'dir'},{n:'include',icon:'📁',t:'dir'},{n:'lib',icon:'📁',t:'dir'},{n:'local',icon:'📁',t:'dir'},{n:'share',icon:'📁',t:'dir'}]},
+  etc:      {path:'/etc',files:[
+    {n:'fstab',icon:'📄',t:'file'},{n:'hostname',icon:'📄',t:'file'},{n:'hosts',icon:'📄',t:'file'},
+    {n:'pacman.conf',icon:'⚙️',t:'file'},{n:'passwd',icon:'🔒',t:'file'},{n:'shadow',icon:'🔒',t:'file'},
+    {n:'sudoers',icon:'🔒',t:'file'},{n:'X11',icon:'📁',t:'dir'},
+  ]},
 };
 function fsNav(el,key){
   document.querySelectorAll('.fsi').forEach(e=>e.classList.remove('act'));
@@ -992,7 +1139,7 @@ function fsLoad(key){
   pe.textContent=d.path;
   ge.innerHTML=d.files.length===0
     ?'<div style="color:var(--muted);font-size:12px;padding:16px">Empty folder</div>'
-    :d.files.map(f=>`<div class="fitem" ondblclick="fsOpen('${f.n}','${f.t}','${key}')">
+    :d.files.map(f=>`<div class="fitem" onclick="fsOpen('${f.n}','${f.t}','${key}')">
       <div class="fitem-ico">${f.icon}</div>
       <div class="fitem-name">${esc(f.n)}</div>
     </div>`).join('');
@@ -1002,6 +1149,8 @@ function fsOpen(name,type,parentKey){
     const k=Object.keys(FSDIRS).find(k=>FSDIRS[k].path.split('/').pop()===name);
     if(k){
       document.querySelectorAll('.fsi').forEach(e=>e.classList.remove('act'));
+      const sideItem=Array.from(document.querySelectorAll('.fsi')).find(e=>e.textContent.trim().includes(name));
+      if(sideItem)sideItem.classList.add('act');
       fsLoad(k);
     }
   }else{
@@ -1014,6 +1163,7 @@ function fsOpen(name,type,parentKey){
   }
 }
 
+/* ══ Start Menu ══ */
 let smOpen=false;
 function smToggle(){
   const m=document.getElementById('start-menu');
@@ -1033,6 +1183,7 @@ function smClose(){
   smOpen=false;
 }
 
+/* ══ Context Menu ══ */
 const ctxEl=document.getElementById('ctx');
 document.getElementById('desktop').addEventListener('contextmenu',e=>{
   e.preventDefault();
@@ -1043,7 +1194,8 @@ document.getElementById('desktop').addEventListener('contextmenu',e=>{
 });
 document.addEventListener('click',e=>{
   if(!ctxEl.contains(e.target))ctxEl.style.display='none';
-  if(smOpen&&!document.getElementById('start-menu').contains(e.target)&&!document.getElementById('tb-start').contains(e.target))smClose();
+  if(smOpen&&!document.getElementById('start-menu').contains(e.target)
+     &&!document.getElementById('tb-start').contains(e.target))smClose();
 });
 function ctxDo(a){
   ctxEl.style.display='none';
@@ -1056,6 +1208,7 @@ function ctxDo(a){
   }
 }
 
+/* ══ Boot ══ */
 window.addEventListener('load',()=>{setTimeout(()=>openApp('terminal'),500)});
 </script>
 </body>
