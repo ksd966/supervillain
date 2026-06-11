@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>NexOS — Manjaro × Windows 11</title>
 <style>
 :root {
@@ -330,35 +330,89 @@ html,body{width:100%;height:100%;overflow:hidden;
 .about-box span{color:var(--accent)}
 
 /* ── Mobile / Touch ── */
+#m-statusbar,#m-nav,#m-home,#m-recents{display:none}
+
 @media (max-width:768px){
   html,body{font-size:13px}
-  #desk-icons{top:14px;left:10px;gap:4px}
-  .dicon{width:68px;padding:8px 4px}
-  .dicon-img{width:42px;height:42px;font-size:23px}
-  #taskbar{height:52px}
-  #tb-center{gap:1px;max-width:calc(100vw - 88px);overflow-x:auto;-webkit-overflow-scrolling:touch}
-  #tb-center::-webkit-scrollbar{display:none}
-  .tbtn{width:38px;height:38px;font-size:17px}
-  .tb-start{width:38px;height:38px}
-  .tb-sep{display:none}
-  #tb-right{gap:3px}
-  .tray{width:28px;height:28px;font-size:13px}
-  #clock{font-size:10px}
-  #start-menu{
-    left:8px;right:8px;width:auto;
-    bottom:60px;
-    transform:translateY(14px)
+  #desk-icons{display:none}
+  #taskbar{display:none}
+  #start-menu{display:none!important}
+  #ctx{display:none!important}
+
+  /* ─ Status bar ─ */
+  #m-statusbar{
+    display:flex;position:fixed;top:0;left:0;right:0;height:32px;z-index:10002;
+    align-items:center;justify-content:space-between;
+    padding:0 16px;
+    background:rgba(8,11,20,.88);
+    backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+    border-bottom:1px solid var(--border);
+    font-size:12.5px;color:var(--text);font-weight:600;
   }
-  #start-menu.vis{transform:translateY(0)}
-  .sm-grid{grid-template-columns:repeat(4,1fr)}
+  .m-sb-r{display:flex;gap:7px;align-items:center;font-weight:400;font-size:12px}
+
+  /* ─ Home screen ─ */
+  #m-home{
+    display:flex;position:fixed;top:32px;bottom:56px;left:0;right:0;z-index:1;
+    flex-direction:column;padding:30px 20px 16px;overflow-y:auto;
+  }
+  .mh-time{font-size:46px;font-weight:200;text-align:center;line-height:1.1}
+  .mh-date{font-size:13px;color:var(--dim);text-align:center;margin-bottom:34px}
+  .mh-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px 6px}
+  .mh-app{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer}
+  .mh-app:active{opacity:.55}
+  .mh-ico{width:56px;height:56px;border-radius:15px;display:flex;
+    align-items:center;justify-content:center;font-size:28px;
+    border:1px solid var(--border);box-shadow:0 4px 14px rgba(0,0,0,.35)}
+  .mh-name{font-size:11px;color:var(--text);text-shadow:0 1px 4px rgba(0,0,0,.8)}
+
+  /* ─ Bottom navigation ─ */
+  #m-nav{
+    display:flex;position:fixed;bottom:0;left:0;right:0;height:56px;z-index:10003;
+    padding-bottom:env(safe-area-inset-bottom);
+    background:rgba(8,11,20,.92);
+    backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+    border-top:1px solid var(--border);
+    align-items:center;justify-content:space-around;
+  }
+  .m-navbtn{width:70px;height:44px;display:flex;align-items:center;
+    justify-content:center;font-size:21px;color:var(--dim);
+    border-radius:10px;cursor:pointer;transition:background .12s}
+  .m-navbtn:active{background:rgba(255,255,255,.1);color:var(--text)}
+
+  /* ─ Recents / app switcher ─ */
+  #m-recents{
+    position:fixed;inset:0;z-index:10001;
+    background:rgba(5,7,14,.84);
+    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    padding:56px 22px 76px;
+    flex-direction:column;gap:12px;overflow-y:auto;
+  }
+  #m-recents.vis{display:flex}
+  .m-rec-card{display:flex;align-items:center;gap:13px;
+    background:var(--surf2);border:1px solid var(--borderl);
+    border-radius:14px;padding:15px 16px;cursor:pointer}
+  .m-rec-card:active{background:rgba(255,255,255,.08)}
+  .m-rec-ico{font-size:25px}
+  .m-rec-title{flex:1;font-size:14px;color:var(--text)}
+  .m-rec-x{width:36px;height:36px;display:flex;align-items:center;
+    justify-content:center;border-radius:50%;font-size:15px;flex-shrink:0;
+    background:rgba(255,255,255,.07);color:var(--dim)}
+  .m-rec-empty{text-align:center;color:var(--dim);font-size:13px;margin-top:38vh}
+
+  /* ─ Windows: fullscreen between bars ─ */
   .window{
-    left:0!important;top:0!important;
-    width:100vw!important;
-    height:calc(100vh - 52px)!important;
-    border-radius:0!important
+    left:0!important;width:100vw!important;
+    top:32px!important;
+    height:calc(100vh - 88px)!important;
+    height:calc(100dvh - 88px)!important;
+    border-radius:0!important;
+    min-width:unset;min-height:unset;
   }
-  .wtbar{height:44px;min-height:44px}
-  .wbtn{width:18px;height:18px}
+  .wtbar{height:46px;min-height:46px}
+  .wbtn{width:20px;height:20px}
+  .wctls{gap:11px}
+  .wbtn.mx{display:none}
   .files-app{flex-direction:column}
   .fside{
     width:100%!important;min-width:unset!important;
@@ -392,10 +446,10 @@ html,body{width:100%;height:100%;overflow:hidden;
   .srow{padding:9px 12px}
 }
 @media (max-width:480px){
-  .sm-grid{grid-template-columns:repeat(3,1fr)}
+  .mh-time{font-size:40px}
+  .mh-ico{width:52px;height:52px;font-size:26px}
   .smain{padding:10px}
   .fmain{padding:8px}
-  #tb-center{max-width:calc(100vw - 70px)}
 }
 </style>
 </head>
@@ -532,6 +586,59 @@ html,body{width:100%;height:100%;overflow:hidden;
   </div>
 </div>
 
+<!-- ─ Mobile UI ─ -->
+<div id="m-statusbar">
+  <span id="m-sb-clock"></span>
+  <span class="m-sb-r"><span>📶</span><span>🔊</span><span>🔋</span></span>
+</div>
+
+<div id="m-home">
+  <div class="mh-time" id="mh-time"></div>
+  <div class="mh-date" id="mh-date"></div>
+  <div class="mh-grid">
+    <div class="mh-app" onclick="openApp('terminal')">
+      <div class="mh-ico" style="background:rgba(22,193,129,.16)">💻</div>
+      <span class="mh-name">Terminal</span>
+    </div>
+    <div class="mh-app" onclick="openApp('files')">
+      <div class="mh-ico" style="background:rgba(255,200,60,.14)">📁</div>
+      <span class="mh-name">Files</span>
+    </div>
+    <div class="mh-app" onclick="openApp('browser')">
+      <div class="mh-ico" style="background:rgba(255,110,40,.14)">🌐</div>
+      <span class="mh-name">NexFox</span>
+    </div>
+    <div class="mh-app" onclick="openApp('editor')">
+      <div class="mh-ico" style="background:rgba(0,122,204,.16)">📝</div>
+      <span class="mh-name">VS Code</span>
+    </div>
+    <div class="mh-app" onclick="openApp('settings')">
+      <div class="mh-ico" style="background:rgba(100,110,255,.14)">⚙️</div>
+      <span class="mh-name">Settings</span>
+    </div>
+    <div class="mh-app" onclick="openApp('pacman')">
+      <div class="mh-ico" style="background:rgba(22,193,129,.13)">📦</div>
+      <span class="mh-name">Pacman</span>
+    </div>
+    <div class="mh-app" onclick="openApp('taskman')">
+      <div class="mh-ico" style="background:rgba(255,70,70,.14)">📊</div>
+      <span class="mh-name">Task Mgr</span>
+    </div>
+    <div class="mh-app" onclick="openApp('notepad')">
+      <div class="mh-ico" style="background:rgba(255,255,255,.08)">🗒️</div>
+      <span class="mh-name">Notepad</span>
+    </div>
+  </div>
+</div>
+
+<div id="m-nav">
+  <div class="m-navbtn" onclick="mBack()" title="Back">◁</div>
+  <div class="m-navbtn" onclick="mHome()" title="Home">⭘</div>
+  <div class="m-navbtn" onclick="mRecents()" title="Recents">▢</div>
+</div>
+
+<div id="m-recents"></div>
+
 <script>
 /* ══ Clock ══ */
 function tickClock(){
@@ -539,6 +646,10 @@ function tickClock(){
   const t=n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
   const d=n.toLocaleDateString('en-US',{month:'short',day:'numeric'});
   document.getElementById('clock').innerHTML=`<div>${t}</div><div style="font-size:10.5px">${d}</div>`;
+  document.getElementById('m-sb-clock').textContent=t;
+  document.getElementById('mh-time').textContent=t;
+  document.getElementById('mh-date').textContent=
+    n.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
 }
 tickClock(); setInterval(tickClock,1000);
 
@@ -876,6 +987,7 @@ const APPS={
 
 function openApp(id){
   const a=APPS[id];if(!a)return;
+  document.getElementById('m-recents').classList.remove('vis');
   const fresh=!wins[id];
   createWin(id,a.title,a.w,a.h,a.fn());
   if(fresh){
@@ -1183,6 +1295,61 @@ function smClose(){
   smOpen=false;
 }
 
+/* ══ Mobile Navigation ══ */
+function topWin(){
+  let best=null,bz=-1;
+  for(const id in wins){
+    if(wins[id].min)continue;
+    const z=parseInt(wins[id].el.style.zIndex)||0;
+    if(z>bz){bz=z;best=id}
+  }
+  return best;
+}
+function mBack(){
+  const r=document.getElementById('m-recents');
+  if(r.classList.contains('vis')){r.classList.remove('vis');return}
+  const id=topWin();
+  if(id)minWin(id);
+}
+function mHome(){
+  document.getElementById('m-recents').classList.remove('vis');
+  for(const id in wins)if(!wins[id].min)minWin(id);
+}
+function mRecents(){
+  const r=document.getElementById('m-recents');
+  if(r.classList.contains('vis')){r.classList.remove('vis');return}
+  mRecRender();
+  r.classList.add('vis');
+}
+function mRecRender(){
+  const r=document.getElementById('m-recents');
+  const ids=Object.keys(wins);
+  if(!ids.length){
+    r.innerHTML='<div class="m-rec-empty">No open apps</div>';
+    return;
+  }
+  r.innerHTML=ids.map(id=>{
+    const t=APPS[id]?APPS[id].title:id;
+    const ico=t.split(' ')[0];
+    const name=t.replace(/^\S+\s+/,'');
+    return`<div class="m-rec-card" onclick="mRecOpen('${id}')">
+      <span class="m-rec-ico">${ico}</span>
+      <span class="m-rec-title">${name}</span>
+      <span class="m-rec-x" onclick="event.stopPropagation();mRecClose('${id}')">✕</span>
+    </div>`;
+  }).join('');
+}
+function mRecOpen(id){
+  document.getElementById('m-recents').classList.remove('vis');
+  if(!wins[id])return;
+  if(wins[id].min){wins[id].el.style.display='flex';wins[id].min=false}
+  bringFront(wins[id].el);tbState(id,'active');
+}
+function mRecClose(id){
+  closeWin(id);
+  mRecRender();
+}
+
 /* ══ Context Menu ══ */
 const ctxEl=document.getElementById('ctx');
 document.getElementById('desktop').addEventListener('contextmenu',e=>{
@@ -1209,7 +1376,9 @@ function ctxDo(a){
 }
 
 /* ══ Boot ══ */
-window.addEventListener('load',()=>{setTimeout(()=>openApp('terminal'),500)});
+window.addEventListener('load',()=>{
+  if(!isMobile())setTimeout(()=>openApp('terminal'),500);
+});
 </script>
 </body>
 </html>
