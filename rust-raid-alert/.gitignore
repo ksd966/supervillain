@@ -1,0 +1,5 @@
+node_modules/
+.env
+# Sadrzi FCM kredencijale i tvoj Steam token — NIKAD ne commituj!
+rustplus.config.json
+*.log

@@ -1,0 +1,21 @@
+{
+  "name": "rust-raid-alert",
+  "version": "1.0.0",
+  "description": "Hvata Rust+ Smart Alarm notifikacije i prosleđuje ih u n8n koji šalje Telegram alert kada ti rejduju bazu.",
+  "type": "commonjs",
+  "main": "listener.js",
+  "scripts": {
+    "start": "node listener.js",
+    "register": "npx @liamcottle/rustplus.js fcm-register",
+    "test-webhook": "node test-webhook.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@liamcottle/push-receiver": "^3.0.0",
+    "@liamcottle/rustplus.js": "^3.0.0",
+    "dotenv": "^16.4.5"
+  },
+  "license": "MIT"
+}
