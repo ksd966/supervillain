@@ -3,7 +3,7 @@
  */
 
 /** Path segments that are Instagram features, not handles. */
-const RESERVED_PATHS = new Set([
+export const RESERVED_PATHS = new Set([
     'p', 'reel', 'reels', 'explore', 'stories', 'tv', 'accounts',
     'direct', 'about', 'developer', 'legal', 'privacy', 'terms',
 ]);

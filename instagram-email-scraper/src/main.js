@@ -4,6 +4,7 @@ import { log } from 'crawlee';
 import { extractEmailsFromText } from './emails.js';
 import { createMxChecker, keepSendable, verifyEmails } from './emailVerify.js';
 import { explainFailure, fetchProfile, mapProfile } from './instagram.js';
+import { handlesFromText } from './paste.js';
 import { resolveTargets } from './targets.js';
 import { scrapeWebsiteForEmails } from './website.js';
 
@@ -12,6 +13,7 @@ await Actor.init();
 const input = (await Actor.getInput()) ?? {};
 
 const {
+    list = '',
     usernames = [],
     directUrls = [],
     sessionCookie = '',
@@ -30,10 +32,15 @@ const {
     requestTimeoutSecs = 30,
 } = input;
 
-const targets = resolveTargets({ usernames, directUrls });
+const pasted = handlesFromText(list);
+const targets = resolveTargets({ usernames: [...pasted, ...usernames], directUrls });
 
 if (!targets.length) {
-    throw new Error('No profiles to scrape — fill in "usernames" or "directUrls".');
+    throw new Error('No profiles to scrape — paste a list into "list", or fill in "usernames" / "directUrls".');
+}
+
+if (pasted.length) {
+    log.info(`Pasted list: ${pasted.length} handle(s); ${targets.length} to scrape after de-duplication.`);
 }
 
 const wantsProxy = Boolean(proxyInput?.useApifyProxy || proxyInput?.proxyUrls?.length);

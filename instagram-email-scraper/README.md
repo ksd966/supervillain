@@ -58,7 +58,7 @@ isti modul kao u `../apify-actor`.
 
 ```bash
 npm install
-npm test          # 57 testova, ne dira mrežu osim lokalnog fixture servera
+npm test          # 95 testova, ne dira mrežu osim lokalnog fixture servera
 
 mkdir -p storage/key_value_stores/default
 ```
@@ -67,13 +67,29 @@ mkdir -p storage/key_value_stores/default
 
 ```json
 {
-  "usernames": ["pekara_mika", "@kafic_luna", "https://www.instagram.com/salon_nina/"],
+  "list": "https://www.instagram.com/salon_nina/\nhttps://www.instagram.com/reel/Dbd5W7ECR1q/,Instagram · pekara_mika\n@kafic_luna",
   "sessionCookie": "",
   "requestDelaySecs": 20,
   "enrichFromWebsite": true,
   "onlyWithEmail": true
 }
 ```
+
+### `list` guta šta god mu daš
+
+Jedno polje, i u panelu je jedino koje se vidi bez otvaranja „Ostala
+podešavanja". U njega ide **ceo CSV iz tvoje ekstenzije**, lista URL-ova, lista
+handle-ova, ili sve pomešano. Prepoznaje separator sam (`,` `;` tab `|`),
+podnosi navodnike, BOM i CRLF.
+
+Ono zbog čega postoji: **izvoz sa pretrage nije lista profila.** Pun je i
+post/reel linkova — `instagram.com/reel/Dbd5W7ECR1q/` ne imenuje nikoga, pa
+svaki alat koji gleda samo URL te redove tiho baci. Handle je tu, u koloni
+pored, u naslovu rezultata (`Instagram · karolinakowalkiewicz`).
+
+Na pravom izvozu od 39 redova to je razlika između **25 i 37** profila. Radi i
+kad je fajl otvoren sa pogrešnim code page-om, pa naslov izgleda kao
+`Instagram聽路聽karolinakowalkiewicz` — handle je ASCII i preživi.
 
 ```bash
 npm start
@@ -93,6 +109,7 @@ Uloguj se na throwaway nalog u browseru → DevTools → Application → Cookies
 
 | Polje | Default | Opis |
 | --- | --- | --- |
+| `list` | `""` | **jedino koje ti stvarno treba** — nalepi CSV, URL-ove ili handle-ove |
 | `usernames` | `[]` | handle-ovi, sa ili bez `@`, ili pune URL adrese |
 | `directUrls` | `[]` | profilni URL-ovi, spajaju se sa gornjim i dedupluju |
 | `sessionCookie` | `""` | vrednost `sessionid` cookie-ja |
@@ -177,9 +194,12 @@ Isti kod, isti input. Tek tada počinje da košta.
 src/
   main.js         orkestracija, pacing, agregacija
   instagram.js    endpoint, headeri, mapiranje odgovora
+  paste.js        nalepljeni blob → handle-ovi (naslov kad URL je post/reel)
+  parse.js        CSV/TSV/JSON čitač (kopija iz ../lead-normalizer)
+  targets.js      handle-ovi/URL-ovi → jedinstvena lista
   website.js      obilazak bio linkova i kontakt strana
   emails.js       detekcija/de-obfuskacija/filtriranje (kopija iz ../apify-actor)
-test/             57 testova
+test/             95 testova
 ```
 
 `emails.js` je namerno identična kopija iz `../apify-actor` — Apify actor-i se

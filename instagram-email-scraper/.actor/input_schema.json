@@ -3,18 +3,26 @@
     "type": "object",
     "schemaVersion": 1,
     "properties": {
+        "list": {
+            "title": "Paste your list here",
+            "type": "string",
+            "description": "The only field you need. Paste anything and it sorts itself out:\n\n- a CSV or TSV export straight from a scraper extension, headers and all\n- a list of profile URLs, one per line\n- a list of handles, with or without `@`\n\nPost and reel URLs (`/p/…`, `/reel/…`) are kept, not dropped: the handle is read out of the result title next to them. Repeats are removed.",
+            "editor": "textarea",
+            "default": ""
+        },
         "usernames": {
             "title": "Usernames",
             "type": "array",
-            "description": "Handles to scrape, with or without the leading `@`. Full profile URLs are accepted too.",
+            "description": "Handles to scrape, with or without the leading `@`. Full profile URLs are accepted too. Merged with whatever the box above yields.",
             "editor": "stringList",
-            "prefill": ["natgeo"],
-            "default": []
+            "default": [],
+            "sectionCaption": "Other ways to give the list",
+            "sectionDescription": "Only useful when calling the actor from a script — pasting into the box above does the same thing."
         },
         "directUrls": {
             "title": "Profile URLs",
             "type": "array",
-            "description": "Instagram profile URLs — merged with the list above and de-duplicated.",
+            "description": "Instagram profile URLs — merged with the lists above and de-duplicated.",
             "editor": "requestListSources",
             "default": []
         },

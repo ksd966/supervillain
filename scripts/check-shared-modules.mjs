@@ -52,6 +52,14 @@ const SHARED_FILES = [
         'instagram-email-scraper/src/website.js',
     ],
     [
+        'lead-normalizer/src/parse.js',
+        'instagram-email-scraper/src/parse.js',
+    ],
+    [
+        'lead-normalizer/test/parse.test.js',
+        'instagram-email-scraper/test/parse.test.js',
+    ],
+    [
         'google-leads-scraper/src/emailVerify.js',
         'instagram-email-scraper/src/emailVerify.js',
         'lead-normalizer/src/emailVerify.js',
