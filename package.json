@@ -8,6 +8,6 @@
         "sync:shared": "node scripts/check-shared-modules.mjs --fix",
         "install:all": "npm --prefix apify-actor install && npm --prefix instagram-email-scraper install && npm --prefix google-leads-scraper install && npm --prefix lead-normalizer install && npm --prefix instagram-keyword-scraper install",
         "test": "npm run check:shared && npm --prefix apify-actor test && npm --prefix instagram-email-scraper test && npm --prefix google-leads-scraper test && npm --prefix lead-normalizer test && npm --prefix instagram-keyword-scraper test && npm run build:demo",
-        "build:demo": "node scripts/build-demo.mjs"
+        "build:demo": "node scripts/build-demo.mjs && node scripts/build-ig-demo.mjs"
     }
 }
