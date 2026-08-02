@@ -17,19 +17,9 @@ if errorlevel 1 (
     exit /b 1
 )
 
-rem First run: pull dependencies for every actor. Skipped afterwards, so the
-rem usual start is instant.
-if not exist "google-leads-scraper\node_modules" (
-    echo.
-    echo   Prvo pokretanje - instaliram zavisnosti. Ovo traje par minuta.
-    echo.
-    call npm --prefix google-leads-scraper install || goto :failed
-    call npm --prefix instagram-email-scraper install || goto :failed
-    call npm --prefix apify-actor install || goto :failed
-    echo.
-    echo   Gotovo.
-    echo.
-)
+rem Discovers every actor folder and installs only what is missing, so adding
+rem an actor later cannot leave it uninstalled. Instant when nothing is missing.
+node scripts\ensure-deps.mjs || goto :failed
 
 rem Give the server a moment to bind before the browser asks for the page.
 start "" /b cmd /c "timeout /t 3 >nul & start http://localhost:8377/"

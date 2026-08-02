@@ -14,6 +14,8 @@ if errorlevel 1 (
     exit /b 1
 )
 
+node scripts\ensure-deps.mjs || (echo.& echo   Instalacija nije uspela.& pause& exit /b 1)
+
 rem First IPv4 address Windows reports, which on a normal home setup is the
 rem Wi-Fi one. If it is wrong, `ipconfig` shows the rest.
 set "LANIP="

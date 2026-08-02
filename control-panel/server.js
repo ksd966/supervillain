@@ -120,18 +120,6 @@ function startRun(actorId, input) {
     mkdirSync(join(storageDir, 'key_value_stores', 'default'), { recursive: true });
     writeFileSync(join(storageDir, 'key_value_stores', 'default', 'INPUT.json'), JSON.stringify(input, null, 2));
 
-    const child = spawn(process.execPath, ['src/main.js'], {
-        cwd: join(repoRoot, actorId),
-        env: {
-            ...process.env,
-            // Both are set because the Apify SDK and Crawlee read different
-            // ones depending on version.
-            CRAWLEE_STORAGE_DIR: storageDir,
-            APIFY_LOCAL_STORAGE_DIR: storageDir,
-            FORCE_COLOR: '0',
-        },
-    });
-
     const run = {
         id,
         actorId,
@@ -142,7 +130,7 @@ function startRun(actorId, input) {
         finishedAt: null,
         exitCode: null,
         log: [],
-        child,
+        child: null,
     };
 
     const append = (chunk) => {
@@ -153,23 +141,75 @@ function startRun(actorId, input) {
         if (run.log.length > MAX_LOG_LINES) run.log.splice(0, run.log.length - MAX_LOG_LINES);
     };
 
-    child.stdout.on('data', append);
-    child.stderr.on('data', append);
+    /**
+     * @param {import('node:child_process').ChildProcess} child
+     */
+    function attach(child) {
+        run.child = child;
+        child.stdout.on('data', append);
+        child.stderr.on('data', append);
+        child.on('error', (error) => {
+            run.status = 'failed';
+            run.log.push(`Nije moglo da se pokrene: ${error.message}`);
+            run.finishedAt = new Date().toISOString();
+            run.child = null;
+        });
+    }
 
-    child.on('error', (error) => {
-        run.status = 'failed';
-        run.log.push(`Failed to start: ${error.message}`);
-        run.finishedAt = new Date().toISOString();
-    });
-
-    child.on('close', (code, signal) => {
+    /** @param {number|null} code */
+    function finish(code, signal) {
         run.exitCode = code;
         run.finishedAt = new Date().toISOString();
         if (run.status === 'stopping') run.status = 'stopped';
         else run.status = code === 0 ? 'finished' : 'failed';
-        if (signal) run.log.push(`Process ended with signal ${signal}.`);
+        if (signal) run.log.push(`Proces prekinut signalom ${signal}.`);
         run.child = null;
-    });
+    }
+
+    function runActor() {
+        const child = spawn(process.execPath, ['src/main.js'], {
+            cwd: join(repoRoot, actorId),
+            env: {
+                ...process.env,
+                // Both are set because the Apify SDK and Crawlee read different
+                // ones depending on version.
+                CRAWLEE_STORAGE_DIR: storageDir,
+                APIFY_LOCAL_STORAGE_DIR: storageDir,
+                FORCE_COLOR: '0',
+            },
+        });
+        attach(child);
+        child.on('close', finish);
+    }
+
+    // An actor whose dependencies were never installed used to crash with a raw
+    // ERR_MODULE_NOT_FOUND, which says nothing to anyone who did not write it.
+    // Installing on demand turns that into a slower first run.
+    if (existsSync(join(repoRoot, actorId, 'package.json'))
+        && !existsSync(join(repoRoot, actorId, 'node_modules'))) {
+        run.log.push(`Zavisnosti za "${actorId}" nisu instalirane — instaliram ih sada.`);
+        run.log.push('Prvi put traje par minuta; sledeći put se preskače.');
+
+        const install = spawn('npm', ['install', '--no-audit', '--no-fund'], {
+            cwd: join(repoRoot, actorId),
+            env: { ...process.env, FORCE_COLOR: '0' },
+            // npm is a .cmd on Windows and needs a shell to be found on PATH.
+            shell: process.platform === 'win32',
+        });
+        attach(install);
+
+        install.on('close', (code) => {
+            if (code !== 0) {
+                run.log.push('Instalacija nije uspela. Proveri internet vezu, pa pokreni ponovo.');
+                finish(code);
+                return;
+            }
+            run.log.push('Zavisnosti instalirane. Pokrećem actor.');
+            runActor();
+        });
+    } else {
+        runActor();
+    }
 
     runs.set(id, run);
 

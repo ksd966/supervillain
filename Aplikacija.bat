@@ -24,18 +24,9 @@ if errorlevel 1 (
     exit /b 1
 )
 
-if not exist "google-leads-scraper\node_modules" (
-    echo.
-    echo   Prvo pokretanje - instaliram zavisnosti. Traje par minuta.
-    echo.
-    call npm --prefix google-leads-scraper install || goto :failed
-    call npm --prefix instagram-email-scraper install || goto :failed
-    call npm --prefix lead-normalizer install || goto :failed
-    call npm --prefix apify-actor install || goto :failed
-    echo.
-    echo   Gotovo.
-    echo.
-)
+rem Discovers every actor folder and installs only what is missing, so adding
+rem an actor later cannot leave it uninstalled. Instant when nothing is missing.
+node scripts\ensure-deps.mjs || goto :failed
 
 echo.
 echo  ================================================================
