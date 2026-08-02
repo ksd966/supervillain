@@ -66,6 +66,8 @@ koji pretražuje. Cena je što pretrage kucaš sam. Actor je za obim koji se ne
 kuca ručno i za OSM, koji nikad ne blokira.
 
 Svaki ima svoj README sa detaljima, ograničenjima i pravnim napomenama.
+[`ZAPISNIK.md`](ZAPISNIK.md) je zapis odluka: zašto je šta rešeno tako, koji su
+zidovi stvarni, koji bugovi su nađeni i šta nije testirano protiv pravog sveta.
 
 ## Pokretanje
 
