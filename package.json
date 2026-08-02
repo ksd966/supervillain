@@ -2,7 +2,7 @@
     "name": "supervillain-scrapers",
     "private": true,
     "type": "module",
-    "description": "Apify actors for lead scraping — a generic crawler, an Instagram e-mail scraper, and a Google Maps / OpenStreetMap lead finder.",
+    "description": "Local, free lead-generation toolkit: five Apify actors, a browser extension, and a control panel.",
     "scripts": {
         "check:shared": "node scripts/check-shared-modules.mjs",
         "sync:shared": "node scripts/check-shared-modules.mjs --fix",
