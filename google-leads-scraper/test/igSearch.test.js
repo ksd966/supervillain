@@ -4,6 +4,8 @@ import { describe, it } from 'node:test';
 import { extractEmailsFromText } from '../src/emails.js';
 import {
     COMMON_EMAIL_DOMAINS,
+    COMMON_ROLE_PREFIXES,
+    DEFAULT_PROBES,
     buildSearchQueries,
     explodeByEmail,
     igLeadFromResult,
@@ -14,51 +16,99 @@ import { instagramHandleFromUrl } from '../src/social.js';
 const helpers = { instagramHandleFromUrl, extractEmailsFromText };
 
 describe('buildSearchQueries', () => {
-    it('builds one query per keyword and domain', () => {
+    it('builds one query per keyword and probe', () => {
         const queries = buildSearchQueries({
             keywords: ['marketing', 'beauty'],
+            probes: ['freeMail'],
             emailDomains: ['@gmail.com', '@yahoo.com'],
         });
 
         assert.equal(queries.length, 4);
         assert.equal(queries[0].query, 'site:instagram.com "marketing" "@gmail.com"');
         assert.equal(queries[0].keyword, 'marketing');
-        assert.equal(queries[0].emailDomain, '@gmail.com');
+        assert.equal(queries[0].probe, 'freeMail');
+        assert.equal(queries[0].token, '@gmail.com');
+    });
+
+    it('searches role local parts too, which is what finds custom domains', () => {
+        const queries = buildSearchQueries({ keywords: ['med spa'], probes: ['rolePrefix'] });
+
+        assert.equal(queries.length, COMMON_ROLE_PREFIXES.length);
+        assert.ok(queries.some((entry) => entry.query.includes('"info@"')));
+        assert.ok(queries.some((entry) => entry.query.includes('"hello@"')));
+        assert.ok(queries.every((entry) => entry.probe === 'rolePrefix'));
+    });
+
+    it('covers both probe families by default', () => {
+        const queries = buildSearchQueries({ keywords: ['med spa'] });
+
+        assert.deepEqual(DEFAULT_PROBES, ['freeMail', 'rolePrefix']);
+        assert.equal(queries.length, COMMON_EMAIL_DOMAINS.length + COMMON_ROLE_PREFIXES.length);
+    });
+
+    it('can search the keyword with no address token at all', () => {
+        const queries = buildSearchQueries({ keywords: ['med spa'], location: 'Austin', probes: ['plain'] });
+
+        assert.equal(queries.length, 1);
+        assert.equal(queries[0].query, 'site:instagram.com "med spa" "Austin"');
+        assert.equal(queries[0].token, null);
+    });
+
+    it('combines every probe family when asked', () => {
+        const queries = buildSearchQueries({ keywords: ['med spa'], probes: ['freeMail', 'rolePrefix', 'plain'] });
+
+        assert.equal(queries.length, COMMON_EMAIL_DOMAINS.length + COMMON_ROLE_PREFIXES.length + 1);
+    });
+
+    it('falls back to a plain search rather than returning nothing', () => {
+        const queries = buildSearchQueries({ keywords: ['med spa'], probes: ['nonsense'] });
+
+        assert.equal(queries.length, 1);
+        assert.equal(queries[0].probe, 'plain');
     });
 
     it('adds the location between keyword and domain', () => {
         const [first] = buildSearchQueries({
             keywords: ['med spa'],
             location: 'Austin TX',
+            probes: ['freeMail'],
             emailDomains: ['@gmail.com'],
         });
 
         assert.equal(first.query, 'site:instagram.com "med spa" "Austin TX" "@gmail.com"');
     });
 
-    it('falls back to the common free-mail domains', () => {
-        const queries = buildSearchQueries({ keywords: ['realtor'] });
+    it('uses the built-in free-mail list when none is given', () => {
+        const queries = buildSearchQueries({ keywords: ['realtor'], probes: ['freeMail'] });
 
         assert.equal(queries.length, COMMON_EMAIL_DOMAINS.length);
         assert.ok(queries.every((entry) => entry.query.includes('site:instagram.com "realtor"')));
     });
 
-    it('drops the domain clause entirely when given an empty list explicitly', () => {
-        const queries = buildSearchQueries({ keywords: ['realtor'], emailDomains: ['   '] });
+    it('de-duplicates identical queries', () => {
+        const queries = buildSearchQueries({
+            keywords: ['realtor', 'realtor'],
+            probes: ['freeMail'],
+            emailDomains: ['@gmail.com'],
+        });
 
         assert.equal(queries.length, 1);
-        assert.equal(queries[0].query, 'site:instagram.com "realtor"');
-        assert.equal(queries[0].emailDomain, null);
     });
 
     it('strips quotes that would break the query', () => {
-        const [first] = buildSearchQueries({ keywords: ['a "quoted" term'], emailDomains: ['@gmail.com'] });
+        const [first] = buildSearchQueries({
+            keywords: ['a "quoted" term'],
+            probes: ['freeMail'],
+            emailDomains: ['@gmail.com'],
+        });
 
         assert.equal(first.query, 'site:instagram.com "a quoted term" "@gmail.com"');
     });
 
     it('can target another site', () => {
-        const [first] = buildSearchQueries({ keywords: ['founder'], emailDomains: ['@gmail.com'], site: 'tiktok.com' });
+        const [first] = buildSearchQueries({
+            keywords: ['founder'], probes: ['freeMail'], emailDomains: ['@gmail.com'], site: 'tiktok.com',
+        });
 
         assert.ok(first.query.startsWith('site:tiktok.com'));
     });
@@ -124,17 +174,27 @@ describe('igLeadFromResult', () => {
         assert.deepEqual(lead.emails, ['infotanvir.it@gmail.com', 'primepixelit@gmail.com']);
     });
 
-    it('filters to the requested domains', () => {
+    it('keeps custom-domain addresses, which are the best leads here', () => {
+        const lead = igLeadFromResult({
+            ...result,
+            snippet: 'bookings hello@austinmedspa.com or personal@gmail.com',
+        }, helpers);
+
+        assert.deepEqual(lead.emails, ['hello@austinmedspa.com', 'personal@gmail.com'],
+            'finding a profile via a gmail query must not discard its business address');
+    });
+
+    it('narrows to specific domains only when explicitly asked', () => {
         const lead = igLeadFromResult({
             ...result,
             snippet: 'work@agency.io and personal@gmail.com',
-        }, helpers, { emailDomains: ['@gmail.com'] });
+        }, helpers, { keepOnlyDomains: ['@gmail.com'] });
 
         assert.deepEqual(lead.emails, ['personal@gmail.com']);
     });
 
     it('accepts a bare domain in the filter too', () => {
-        const lead = igLeadFromResult(result, helpers, { emailDomains: ['gmail.com'] });
+        const lead = igLeadFromResult(result, helpers, { keepOnlyDomains: ['gmail.com'] });
 
         assert.equal(lead.email, 'primepixelit@gmail.com');
     });

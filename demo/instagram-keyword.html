@@ -57,8 +57,19 @@ button:hover:not(.run) { border-color:var(--signal); }
 .controls { display:flex; gap:9px; flex-wrap:wrap; margin-top:14px; }
 
 ol.queries { list-style:none; margin:0; padding:0; display:grid; gap:1px; background:var(--line); }
+ol.queries { max-height:420px; overflow-y:auto; }
 ol.queries li { background:var(--plate); padding:11px 16px; display:flex; gap:12px;
-                align-items:center; justify-content:space-between; flex-wrap:wrap; }
+                align-items:center; flex-wrap:wrap; }
+.q { flex:1 1 320px; }
+.probe { flex:0 0 auto; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;
+         padding:3px 8px; border-radius:4px; font-weight:700; }
+.probe.freeMail { background:var(--signal-bg); color:var(--signal); }
+.probe.rolePrefix { background:var(--ok-bg); color:var(--ok); }
+.probe.plain { background:var(--warn-bg); color:var(--warn); }
+.probes { display:flex; flex-direction:column; gap:6px; padding-top:2px; }
+label.cb { display:flex; align-items:center; gap:7px; font-size:13px; cursor:pointer; }
+label.cb input { width:15px; height:15px; accent-color:var(--signal); margin:0; }
+label.cb em { color:var(--muted); font-style:normal; font-size:11.5px; }
 .q { font-size:12.5px; word-break:break-all; }
 a.open { flex:0 0 auto; font-size:12px; text-decoration:none; padding:5px 11px; border-radius:5px;
          background:var(--signal-bg); color:var(--signal); font-weight:600; white-space:nowrap; }
@@ -110,14 +121,21 @@ footer a { color:var(--signal); }
     <div class="fields">
       <label><span class="lbl">Niša</span><input id="kw" value="med spa" placeholder="med spa, realtor"></label>
       <label><span class="lbl">Grad</span><input id="loc" value="Austin TX" placeholder="Austin TX"></label>
-      <label><span class="lbl">Domeni</span><input id="dom" value="@gmail.com" placeholder="prazno = svih 6"></label>
+      <label><span class="lbl">Kako tražiti</span>
+        <span class="probes">
+          <label class="cb"><input type="checkbox" id="p-free" checked> free-mail <em>(6)</em></label>
+          <label class="cb"><input type="checkbox" id="p-role" checked> poslovne <em>(14)</em></label>
+          <label class="cb"><input type="checkbox" id="p-plain"> bez tokena <em>(1)</em></label>
+        </span>
+      </label>
     </div>
     <div class="controls"><button class="run" id="build">Napravi upite</button></div>
   </div>
 </section>
 
 <section>
-  <h2>2 — Upiti <span style="text-transform:none;letter-spacing:0;font-weight:400">(klikni „otvori" da vidiš prave rezultate)</span></h2>
+  <h2>2 — Upiti <span id="qcount" style="color:var(--signal)"></span>
+    <span style="text-transform:none;letter-spacing:0;font-weight:400">— klikni „otvori" da vidiš prave rezultate</span></h2>
   <div class="panel"><ol class="queries" id="queries"></ol></div>
 </section>
 
@@ -162,7 +180,9 @@ footer a { color:var(--signal); }
 <section>
   <h2>Šta se ovde dogodilo</h2>
   <div class="steps">
-    <div class="step"><b>·</b><span>Domeni se traže <strong>jedan po jedan</strong>. Uzak upit pretraživač mnogo bolje rangira, i svaki dobija svoju stranu rezultata — šest domena znači šest puta više rezultata, ne jednu prepunu stranu.</span></div>
+    <div class="step"><b>·</b><span><strong>Poslovne adrese</strong> (<code>"info@"</code>, <code>"hello@"</code>, <code>"bookings@"</code>…) su jedini način da se nađe firma na <strong>sopstvenom domenu</strong> — <code>hello@njihovsajt.com</code> nijedan free-mail upit nikad ne pogodi. Za US biznise to je i bolja polovina liste.</span></div>
+    <div class="step"><b>·</b><span>Zadržava se <strong>svaka</strong> adresa iz snippeta, bez obzira kojim upitom je profil pronađen. Ranije je filter bacao baš te poslovne adrese.</span></div>
+    <div class="step"><b>·</b><span>Svaki token je <strong>zaseban upit</strong>. Uzak upit pretraživač mnogo bolje rangira, i svaki dobija svoju stranu rezultata — 20 tokena znači 20 strana, ne jednu prepunu.</span></div>
     <div class="step"><b>·</b><span>Naslov <code>Ime (@handle)</code> se cepa na ime i handle; handle iz naslova ima prednost nad onim iz URL-a.</span></div>
     <div class="step"><b>·</b><span>Link na objavu (<code>/p/…</code>) nije profil i ne postaje lead.</span></div>
     <div class="step"><b>·</b><span>Adrese se filtriraju na domene koje si tražio, pa <code>hello@salon.com</code> ne prolazi kad tražiš samo gmail.</span></div>
@@ -566,14 +586,42 @@ function instagramHandlesFromHtml(html) {
  */
 
 /**
- * Free-mail domains worth searching for one at a time. A bio that publishes a
- * contact address overwhelmingly uses one of these, and naming the domain in
- * the query is what makes the search return profiles that have an address at
- * all rather than profiles that merely match the keyword.
+ * Free-mail domains, searched one at a time.
+ *
+ * Naming a domain in the query is what makes the search return profiles that
+ * publish an address at all rather than profiles that merely match the
+ * keyword — but on its own it only ever finds addresses on these six.
  */
 const COMMON_EMAIL_DOMAINS = [
     '@gmail.com', '@yahoo.com', '@hotmail.com', '@outlook.com', '@icloud.com', '@aol.com',
 ];
+
+/**
+ * The other half of the coverage, and for business outreach the better half.
+ *
+ * A company with its own domain writes `hello@theirsite.com`, which no
+ * free-mail probe will ever match. Searching the *local part* — `"info@"` —
+ * finds it without having to know the domain, because the engine indexes the
+ * `@` as part of the word. These are the local parts businesses actually use.
+ */
+const COMMON_ROLE_PREFIXES = [
+    'info@', 'hello@', 'contact@', 'bookings@', 'booking@',
+    'sales@', 'office@', 'hi@', 'team@', 'support@',
+    'inquiries@', 'admin@', 'press@', 'help@',
+];
+
+/**
+ * How queries are built. Several can be combined; the results are merged.
+ *
+ * - `freeMail`   — one query per free-mail domain
+ * - `rolePrefix` — one query per business local part, catching custom domains
+ * - `plain`      — no address token at all: every profile matching the keyword,
+ *                  and whatever address happens to be in its snippet
+ */
+const PROBE_KINDS = ['freeMail', 'rolePrefix', 'plain'];
+
+/** Both address probes. Left out of the default is `plain`, which is far noisier. */
+const DEFAULT_PROBES = ['freeMail', 'rolePrefix'];
 
 /**
  * @param {string} value
@@ -584,23 +632,27 @@ function phrase(value) {
 }
 
 /**
- * Builds one query per keyword × domain pair.
+ * Builds one query per keyword × probe.
  *
- * Splitting by domain rather than OR-ing them matters: engines rank a narrow
- * query far better, and each query gets its own result page, so six domains
- * means six times the results rather than one crowded page.
+ * Splitting by probe rather than OR-ing them matters: engines rank a narrow
+ * query far better, and each query gets its own result page, so twenty probes
+ * means twenty pages of results rather than one crowded page.
  *
  * @param {object} params
  * @param {string[]} params.keywords
  * @param {string} [params.location]
- * @param {string[]} [params.emailDomains] defaults to the common free-mail set
+ * @param {string[]} [params.probes] any of PROBE_KINDS; defaults to DEFAULT_PROBES
+ * @param {string[]} [params.emailDomains] overrides the free-mail probe list
+ * @param {string[]} [params.rolePrefixes] overrides the local-part probe list
  * @param {string} [params.site] the profile host to restrict to
- * @returns {Array<{query: string, keyword: string, emailDomain: string|null}>}
+ * @returns {Array<{query: string, keyword: string, probe: string, token: string|null}>}
  */
 function buildSearchQueries({
     keywords = [],
     location = '',
+    probes = DEFAULT_PROBES,
     emailDomains,
+    rolePrefixes,
     site = 'instagram.com',
 } = {}) {
     const cleanKeywords = keywords
@@ -608,22 +660,38 @@ function buildSearchQueries({
         .filter(Boolean);
     if (!cleanKeywords.length) return [];
 
-    const domains = (emailDomains?.length ? emailDomains : COMMON_EMAIL_DOMAINS)
-        .map((domain) => String(domain ?? '').trim())
-        .filter(Boolean);
+    const clean = (list) => list.map((item) => String(item ?? '').trim()).filter(Boolean);
+    const wanted = new Set(clean(probes).filter((probe) => PROBE_KINDS.includes(probe)));
+
+    const domains = emailDomains?.length ? clean(emailDomains) : COMMON_EMAIL_DOMAINS;
+    const prefixes = rolePrefixes?.length ? clean(rolePrefixes) : COMMON_ROLE_PREFIXES;
+
+    /** @type {Array<{probe: string, token: string|null}>} */
+    const tokens = [
+        ...(wanted.has('freeMail') ? domains.map((token) => ({ probe: 'freeMail', token })) : []),
+        ...(wanted.has('rolePrefix') ? prefixes.map((token) => ({ probe: 'rolePrefix', token })) : []),
+        ...(wanted.has('plain') ? [{ probe: 'plain', token: null }] : []),
+    ];
+
+    // No usable probe selected still means "search the keyword", rather than
+    // silently returning nothing.
+    const effective = tokens.length ? tokens : [{ probe: 'plain', token: null }];
 
     const place = String(location ?? '').trim();
     const queries = [];
+    const seen = new Set();
 
     for (const keyword of cleanKeywords) {
-        // An empty domain list means "any profile matching the keyword", which
-        // is a legitimate ask even though the yield of addresses is lower.
-        for (const emailDomain of (domains.length ? domains : [null])) {
+        for (const { probe, token } of effective) {
             const parts = [`site:${site}`, phrase(keyword)];
             if (place) parts.push(phrase(place));
-            if (emailDomain) parts.push(phrase(emailDomain));
+            if (token) parts.push(phrase(token));
 
-            queries.push({ query: parts.join(' '), keyword, emailDomain });
+            const query = parts.join(' ');
+            if (seen.has(query)) continue;
+            seen.add(query);
+
+            queries.push({ query, keyword, probe, token: token ?? null });
         }
     }
 
@@ -664,12 +732,12 @@ function parseProfileTitle(title) {
  * @param {(url: string) => string|null} helpers.instagramHandleFromUrl
  * @param {(text: string) => string[]} helpers.extractEmailsFromText
  * @param {object} [options]
- * @param {string[]} [options.emailDomains] keep only addresses on these domains
+ * @param {string[]} [options.keepOnlyDomains] narrow the output to these domains
  * @returns {object|null} null when the result is not a profile page
  */
 function igLeadFromResult(result, helpers, options = {}) {
     const { instagramHandleFromUrl, extractEmailsFromText } = helpers;
-    const { emailDomains = [] } = options;
+    const { keepOnlyDomains = [] } = options;
 
     const handle = instagramHandleFromUrl(result?.url ?? '');
     if (!handle) return null;
@@ -677,10 +745,14 @@ function igLeadFromResult(result, helpers, options = {}) {
     const { name, handleFromTitle } = parseProfileTitle(result.title);
     const snippet = String(result.snippet ?? '').replace(/\s+/g, ' ').trim();
 
+    // Every address in the snippet is kept by default. Which domain was used to
+    // *find* the profile says nothing about which addresses are worth having —
+    // filtering by it threw away exactly the custom-domain business addresses
+    // that are the best leads here.
     let emails = extractEmailsFromText(`${snippet} ${result.title ?? ''}`);
 
-    if (emailDomains.length) {
-        const wanted = emailDomains.map((domain) => String(domain).replace(/^@/, '').toLowerCase());
+    if (keepOnlyDomains.length) {
+        const wanted = keepOnlyDomains.map((domain) => String(domain).replace(/^@/, '').toLowerCase());
         emails = emails.filter((email) => wanted.some((domain) => email.endsWith(`@${domain}`)));
     }
 
@@ -711,7 +783,7 @@ function explodeByEmail(leads) {
 
 // ─── demo UI ──────────────────────────────────────────────────────────────
 const $ = (id) => document.getElementById(id);
-const SAMPLE = "<div id=\"search\">\n  <div data-hveid=\"1\"><a href=\"https://www.instagram.com/austinmedspa/\"><h3>Austin Med Spa (@austinmedspa) &bull; Instagram photos and videos</h3></a>\n    <div>4,182 Followers &middot; Med spa in Austin TX &middot; Botox, fillers &amp; facials &middot; Bookings: info.austin@gmail.com</div></div>\n  <div data-hveid=\"2\"><a href=\"https://www.instagram.com/glow.aesthetics.atx/\"><h3>Glow Aesthetics ATX (@glow.aesthetics.atx) on Instagram</h3></a>\n    <div>Austin&rsquo;s med spa &middot; Lip filler specialists &middot; glowaesthetics@gmail.com &middot; DM to book</div></div>\n  <div data-hveid=\"3\"><a href=\"/url?q=https://www.instagram.com/radiantskin.atx/&amp;sa=U\"><h3>Radiant Skin Studio (@radiantskin.atx)</h3></a>\n    <div>Skincare studio &middot; Austin TX &middot; hello.radiant@gmail.com &middot; logo@2x.png</div></div>\n  <div data-hveid=\"4\"><a href=\"https://www.instagram.com/p/C8xYzAbCdEf/\"><h3>Austin Med Spa on Instagram: &quot;New year specials&quot;</h3></a>\n    <div>This is a post, not a profile &mdash; it must not become a lead.</div></div>\n  <div data-hveid=\"5\"><a href=\"https://www.instagram.com/thequietstudio/\"><h3>The Quiet Studio (@thequietstudio)</h3></a>\n    <div>Med spa &middot; Austin &middot; no contact details published</div></div>\n</div>";
+const SAMPLE = "<div id=\"search\">\n  <div data-hveid=\"1\"><a href=\"https://www.instagram.com/austinmedspa/\"><h3>Austin Med Spa (@austinmedspa) &bull; Instagram photos and videos</h3></a>\n    <div>4,182 Followers &middot; Med spa in Austin TX &middot; Botox, fillers &amp; facials &middot; Bookings: info@austinmedspa.com</div></div>\n  <div data-hveid=\"2\"><a href=\"https://www.instagram.com/glow.aesthetics.atx/\"><h3>Glow Aesthetics ATX (@glow.aesthetics.atx) on Instagram</h3></a>\n    <div>Austin&rsquo;s med spa &middot; Lip filler specialists &middot; hello@glowaesthetics.co &middot; DM to book</div></div>\n  <div data-hveid=\"3\"><a href=\"/url?q=https://www.instagram.com/radiantskin.atx/&amp;sa=U\"><h3>Radiant Skin Studio (@radiantskin.atx)</h3></a>\n    <div>Skincare studio &middot; Austin TX &middot; hello.radiant@gmail.com &middot; logo@2x.png</div></div>\n  <div data-hveid=\"4\"><a href=\"https://www.instagram.com/p/C8xYzAbCdEf/\"><h3>Austin Med Spa on Instagram: &quot;New year specials&quot;</h3></a>\n    <div>This is a post, not a profile &mdash; it must not become a lead.</div></div>\n  <div data-hveid=\"5\"><a href=\"https://www.instagram.com/thequietstudio/\"><h3>The Quiet Studio (@thequietstudio)</h3></a>\n    <div>Med spa &middot; Austin &middot; no contact details published</div></div>\n</div>";
 const helpers = { instagramHandleFromUrl, extractEmailsFromText };
 const COLUMNS = ['keyword', 'username', 'name', 'email', 'url'];
 
@@ -726,13 +798,22 @@ function buildQueries() {
   queries = buildSearchQueries({
     keywords: splitList($('kw').value),
     location: $('loc').value.trim(),
-    emailDomains: splitList($('dom').value),
+    probes: [
+      $('p-free').checked && 'freeMail',
+      $('p-role').checked && 'rolePrefix',
+      $('p-plain').checked && 'plain',
+    ].filter(Boolean),
   });
+
+  $('qcount').textContent = queries.length
+    ? queries.length + (queries.length === 1 ? ' upit' : ' upita')
+    : '';
 
   $('queries').innerHTML = queries.length
     ? queries.map((entry) => {
         const href = 'https://www.google.com/search?num=20&q=' + encodeURIComponent(entry.query);
         return '<li><span class="q">' + escapeHtml(entry.query) + '</span>'
+          + '<span class="probe ' + entry.probe + '">' + entry.probe + '</span>'
           + '<a class="open" href="' + href + '" target="_blank" rel="noopener">otvori ↗</a></li>';
       }).join('')
     : '<li><span class="note">Upiši bar jednu nišu.</span></li>';
@@ -771,13 +852,13 @@ function readResults(html) {
 
 function parsePasted() {
   const results = readResults($('html').value);
-  const domains = splitList($('dom').value);
   const keyword = splitList($('kw').value)[0] ?? null;
 
   const leads = [];
   const seen = new Set();
   for (const result of results) {
-    const lead = igLeadFromResult({ ...result, keyword }, helpers, { emailDomains: domains });
+    // No output filter: every address in the snippet is kept.
+    const lead = igLeadFromResult({ ...result, keyword }, helpers);
     if (!lead || seen.has(lead.username)) continue;
     seen.add(lead.username);
     leads.push(lead);
@@ -826,9 +907,11 @@ $('dl').onclick = () => {
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 };
 
-for (const id of ['kw', 'loc', 'dom']) {
+for (const id of ['kw', 'loc']) {
   $(id).addEventListener('keydown', (event) => { if (event.key === 'Enter') buildQueries(); });
 }
+
+for (const id of ['p-free', 'p-role', 'p-plain']) $(id).addEventListener('change', buildQueries);
 
 buildQueries();
 $('html').value = SAMPLE;

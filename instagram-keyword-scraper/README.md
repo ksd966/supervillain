@@ -10,7 +10,8 @@ bio je indeksiran u Google-u, zajedno sa e-mail adresom.** Pa umesto da se ide
 na Instagram, pretražuje se:
 
 ```
-site:instagram.com "med spa" "Austin TX" "@gmail.com"
+site:instagram.com "med spa" "Austin TX" "@gmail.com"    ← free-mail
+site:instagram.com "med spa" "Austin TX" "info@"         ← poslovne adrese
 ```
 
 Adresa je već u **snippetu** rezultata. Instagram se nikad ne kontaktira, pa
@@ -21,6 +22,24 @@ Pogledaš li izlaz Apify-jevog actor-a (`keyword`, `title`, `description`,
 `url`, `email`) i njegov `engine: "Uses GOOGLE_SERP proxy"` — to su polja
 rezultata pretrage. I oni rade isto. Razlika je što oni plaćaju GOOGLE_SERP
 proxy, a ti ne moraš.
+
+### Dve familije upita, i druga je važnija
+
+**Free-mail** (`"@gmail.com"`, `"@yahoo.com"`…) nađe samo adrese na tih šest
+domena. Firma sa sopstvenim domenom — `hello@njihovsajt.com` — nijednim od njih
+se ne može pogoditi.
+
+**Poslovne adrese** traže *lokalni deo*: `"info@"`, `"hello@"`, `"bookings@"`,
+`"sales@"`… Pretraživač indeksira `@` kao deo reči, pa `"info@"` nalazi
+`info@bilokoji-domen.com` bez da unapred znaš domen. Za US biznise to je bolja
+polovina liste.
+
+Obe su podrazumevano uključene — 20 upita po ključnoj reči. `plain` (bez ijednog
+tokena) je treća opcija: svi profili na ključnu reč, pa šta se zatekne u
+snippetu.
+
+**Zadržava se svaka nađena adresa**, bez obzira kojim upitom je profil pronađen.
+`keepOnlyDomains` postoji ako baš hoćeš da suziš izlaz, ali je prazno po defaultu.
 
 **Cena tog pristupa:** dobijaš ono što je pretraživač indeksirao. Samo bio
 tekst — nema broja pratilaca, nema privatnih polja — i samo profile koje je
@@ -69,7 +88,10 @@ npm start
 | --- | --- | --- |
 | `keywords` | — | **obavezno**, svaka se pretražuje zasebno |
 | `location` | — | dodaje se u svaki upit kao fraza |
-| `emailDomains` | 6 free-mail domena | traži se jedan po jedan; rezultati se filtriraju na njih |
+| `probes` | `freeMail`, `rolePrefix` | koje familije upita da pusti |
+| `emailDomains` | 6 free-mail domena | pregazi listu free-mail tokena |
+| `rolePrefixes` | 14 poslovnih | pregazi listu `info@`, `hello@`… |
+| `keepOnlyDomains` | `[]` | suzi **izlaz**; prazno = zadrži sve nađeno |
 | `site` | `instagram.com` | radi i `tiktok.com`, `twitter.com` |
 | `engine` | `duckduckgo` | ili `google` (traži proxi) |
 | `pagesPerQuery` | `2` | strana rezultata po upitu |
@@ -78,9 +100,9 @@ npm start
 | `oneRowPerEmail` | `true` | profil sa dve adrese → dva reda |
 | `verifyEmailDomains` | `true` | MX + klasifikacija |
 
-**Zašto se domeni traže jedan po jedan:** narrow upit pretraživač mnogo bolje
-rangira, i svaki upit dobija svoju stranu rezultata. Šest domena znači šest
-puta više rezultata, ne jednu prepunu stranu.
+**Zašto se tokeni traže jedan po jedan:** uzak upit pretraživač mnogo bolje
+rangira, i svaki upit dobija svoju stranu rezultata. Dvadeset tokena znači
+dvadeset strana, ne jednu prepunu.
 
 ## Output
 

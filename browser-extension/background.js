@@ -12,7 +12,7 @@
  */
 
 import { extractEmailsFromText } from './emails.js';
-import { buildSearchQueries, igLeadFromResult } from './igSearch.js';
+import { DEFAULT_PROBES, buildSearchQueries, igLeadFromResult } from './igSearch.js';
 import { instagramHandleFromUrl, instagramHandlesFromHtml } from './social.js';
 
 const STORE_KEY = 'leads';
@@ -275,21 +275,21 @@ async function sweepUrl(url, settleMs) {
  * @param {object} params
  * @param {string[]} params.keywords
  * @param {string} [params.location]
- * @param {string[]} [params.emailDomains]
+ * @param {string[]} [params.probes] which query families to run
  * @param {number} [params.pages] result pages per query
  * @param {(done: number, total: number, label: string) => void} [params.onProgress]
  * @returns {Promise<{queries: number, found: number}>}
  */
-async function runIgSearch({ keywords, location, emailDomains, pages = 2, onProgress = () => {} }) {
+async function runIgSearch({ keywords, location, probes = DEFAULT_PROBES, pages = 2, onProgress = () => {} }) {
     const settings = await readSettings();
-    const queries = buildSearchQueries({ keywords, location, emailDomains });
+    const queries = buildSearchQueries({ keywords, location, probes });
 
     const before = Object.keys(await readIgLeads()).length;
     let done = 0;
     const total = queries.length * pages;
 
     for (const entry of queries) {
-        activeSearch = { keyword: entry.keyword, emailDomain: entry.emailDomain, emailDomains };
+        activeSearch = { keyword: entry.keyword, probe: entry.probe, token: entry.token };
 
         for (let page = 0; page < pages; page++) {
             // num=20 asks for a fuller page; engines honour it inconsistently,
@@ -356,7 +356,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
                         const lead = igLeadFromResult(
                             { ...result, keyword: activeSearch?.keyword ?? null },
                             { instagramHandleFromUrl, extractEmailsFromText },
-                            { emailDomains: activeSearch?.emailDomains ?? [] },
+                            // No output filter: which token found the profile
+                            // says nothing about which of its addresses are
+                            // worth having.
                         );
                         if (!lead) continue;
 
@@ -397,7 +399,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
                 const result = await runIgSearch({
                     keywords: message.keywords ?? [],
                     location: message.location ?? '',
-                    emailDomains: message.emailDomains ?? [],
+                    probes: message.probes ?? DEFAULT_PROBES,
                     pages: message.pages ?? 2,
                     onProgress: (done, total, label) => {
                         chrome.runtime.sendMessage({ type: 'ig-progress', done, total, label }).catch(() => {});

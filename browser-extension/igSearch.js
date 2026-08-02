@@ -24,14 +24,42 @@
  */
 
 /**
- * Free-mail domains worth searching for one at a time. A bio that publishes a
- * contact address overwhelmingly uses one of these, and naming the domain in
- * the query is what makes the search return profiles that have an address at
- * all rather than profiles that merely match the keyword.
+ * Free-mail domains, searched one at a time.
+ *
+ * Naming a domain in the query is what makes the search return profiles that
+ * publish an address at all rather than profiles that merely match the
+ * keyword — but on its own it only ever finds addresses on these six.
  */
 export const COMMON_EMAIL_DOMAINS = [
     '@gmail.com', '@yahoo.com', '@hotmail.com', '@outlook.com', '@icloud.com', '@aol.com',
 ];
+
+/**
+ * The other half of the coverage, and for business outreach the better half.
+ *
+ * A company with its own domain writes `hello@theirsite.com`, which no
+ * free-mail probe will ever match. Searching the *local part* — `"info@"` —
+ * finds it without having to know the domain, because the engine indexes the
+ * `@` as part of the word. These are the local parts businesses actually use.
+ */
+export const COMMON_ROLE_PREFIXES = [
+    'info@', 'hello@', 'contact@', 'bookings@', 'booking@',
+    'sales@', 'office@', 'hi@', 'team@', 'support@',
+    'inquiries@', 'admin@', 'press@', 'help@',
+];
+
+/**
+ * How queries are built. Several can be combined; the results are merged.
+ *
+ * - `freeMail`   — one query per free-mail domain
+ * - `rolePrefix` — one query per business local part, catching custom domains
+ * - `plain`      — no address token at all: every profile matching the keyword,
+ *                  and whatever address happens to be in its snippet
+ */
+export const PROBE_KINDS = ['freeMail', 'rolePrefix', 'plain'];
+
+/** Both address probes. Left out of the default is `plain`, which is far noisier. */
+export const DEFAULT_PROBES = ['freeMail', 'rolePrefix'];
 
 /**
  * @param {string} value
@@ -42,23 +70,27 @@ function phrase(value) {
 }
 
 /**
- * Builds one query per keyword × domain pair.
+ * Builds one query per keyword × probe.
  *
- * Splitting by domain rather than OR-ing them matters: engines rank a narrow
- * query far better, and each query gets its own result page, so six domains
- * means six times the results rather than one crowded page.
+ * Splitting by probe rather than OR-ing them matters: engines rank a narrow
+ * query far better, and each query gets its own result page, so twenty probes
+ * means twenty pages of results rather than one crowded page.
  *
  * @param {object} params
  * @param {string[]} params.keywords
  * @param {string} [params.location]
- * @param {string[]} [params.emailDomains] defaults to the common free-mail set
+ * @param {string[]} [params.probes] any of PROBE_KINDS; defaults to DEFAULT_PROBES
+ * @param {string[]} [params.emailDomains] overrides the free-mail probe list
+ * @param {string[]} [params.rolePrefixes] overrides the local-part probe list
  * @param {string} [params.site] the profile host to restrict to
- * @returns {Array<{query: string, keyword: string, emailDomain: string|null}>}
+ * @returns {Array<{query: string, keyword: string, probe: string, token: string|null}>}
  */
 export function buildSearchQueries({
     keywords = [],
     location = '',
+    probes = DEFAULT_PROBES,
     emailDomains,
+    rolePrefixes,
     site = 'instagram.com',
 } = {}) {
     const cleanKeywords = keywords
@@ -66,22 +98,38 @@ export function buildSearchQueries({
         .filter(Boolean);
     if (!cleanKeywords.length) return [];
 
-    const domains = (emailDomains?.length ? emailDomains : COMMON_EMAIL_DOMAINS)
-        .map((domain) => String(domain ?? '').trim())
-        .filter(Boolean);
+    const clean = (list) => list.map((item) => String(item ?? '').trim()).filter(Boolean);
+    const wanted = new Set(clean(probes).filter((probe) => PROBE_KINDS.includes(probe)));
+
+    const domains = emailDomains?.length ? clean(emailDomains) : COMMON_EMAIL_DOMAINS;
+    const prefixes = rolePrefixes?.length ? clean(rolePrefixes) : COMMON_ROLE_PREFIXES;
+
+    /** @type {Array<{probe: string, token: string|null}>} */
+    const tokens = [
+        ...(wanted.has('freeMail') ? domains.map((token) => ({ probe: 'freeMail', token })) : []),
+        ...(wanted.has('rolePrefix') ? prefixes.map((token) => ({ probe: 'rolePrefix', token })) : []),
+        ...(wanted.has('plain') ? [{ probe: 'plain', token: null }] : []),
+    ];
+
+    // No usable probe selected still means "search the keyword", rather than
+    // silently returning nothing.
+    const effective = tokens.length ? tokens : [{ probe: 'plain', token: null }];
 
     const place = String(location ?? '').trim();
     const queries = [];
+    const seen = new Set();
 
     for (const keyword of cleanKeywords) {
-        // An empty domain list means "any profile matching the keyword", which
-        // is a legitimate ask even though the yield of addresses is lower.
-        for (const emailDomain of (domains.length ? domains : [null])) {
+        for (const { probe, token } of effective) {
             const parts = [`site:${site}`, phrase(keyword)];
             if (place) parts.push(phrase(place));
-            if (emailDomain) parts.push(phrase(emailDomain));
+            if (token) parts.push(phrase(token));
 
-            queries.push({ query: parts.join(' '), keyword, emailDomain });
+            const query = parts.join(' ');
+            if (seen.has(query)) continue;
+            seen.add(query);
+
+            queries.push({ query, keyword, probe, token: token ?? null });
         }
     }
 
@@ -122,12 +170,12 @@ export function parseProfileTitle(title) {
  * @param {(url: string) => string|null} helpers.instagramHandleFromUrl
  * @param {(text: string) => string[]} helpers.extractEmailsFromText
  * @param {object} [options]
- * @param {string[]} [options.emailDomains] keep only addresses on these domains
+ * @param {string[]} [options.keepOnlyDomains] narrow the output to these domains
  * @returns {object|null} null when the result is not a profile page
  */
 export function igLeadFromResult(result, helpers, options = {}) {
     const { instagramHandleFromUrl, extractEmailsFromText } = helpers;
-    const { emailDomains = [] } = options;
+    const { keepOnlyDomains = [] } = options;
 
     const handle = instagramHandleFromUrl(result?.url ?? '');
     if (!handle) return null;
@@ -135,10 +183,14 @@ export function igLeadFromResult(result, helpers, options = {}) {
     const { name, handleFromTitle } = parseProfileTitle(result.title);
     const snippet = String(result.snippet ?? '').replace(/\s+/g, ' ').trim();
 
+    // Every address in the snippet is kept by default. Which domain was used to
+    // *find* the profile says nothing about which addresses are worth having —
+    // filtering by it threw away exactly the custom-domain business addresses
+    // that are the best leads here.
     let emails = extractEmailsFromText(`${snippet} ${result.title ?? ''}`);
 
-    if (emailDomains.length) {
-        const wanted = emailDomains.map((domain) => String(domain).replace(/^@/, '').toLowerCase());
+    if (keepOnlyDomains.length) {
+        const wanted = keepOnlyDomains.map((domain) => String(domain).replace(/^@/, '').toLowerCase());
         emails = emails.filter((email) => wanted.some((domain) => email.endsWith(`@${domain}`)));
     }
 

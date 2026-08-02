@@ -3,7 +3,7 @@ import { log } from 'crawlee';
 
 import { extractEmailsFromText } from './emails.js';
 import { createMxChecker, keepSendable, verifyEmails } from './emailVerify.js';
-import { buildSearchQueries, explodeByEmail, igLeadFromResult } from './igSearch.js';
+import { DEFAULT_PROBES, buildSearchQueries, explodeByEmail, igLeadFromResult } from './igSearch.js';
 import { explainSearchFailure, search } from './serp.js';
 import { instagramHandleFromUrl } from './social.js';
 
@@ -14,7 +14,10 @@ const input = (await Actor.getInput()) ?? {};
 const {
     keywords = [],
     location = '',
+    probes = DEFAULT_PROBES,
     emailDomains = [],
+    rolePrefixes = [],
+    keepOnlyDomains = [],
     site = 'instagram.com',
     engine = 'duckduckgo',
     pagesPerQuery = 2,
@@ -28,7 +31,7 @@ const {
     dropUndeliverable = false,
 } = input;
 
-const queries = buildSearchQueries({ keywords, location, emailDomains, site });
+const queries = buildSearchQueries({ keywords, location, probes, emailDomains, rolePrefixes, site });
 if (!queries.length) {
     throw new Error('Nothing to search for — fill in "keywords".');
 }
@@ -44,7 +47,20 @@ if (engine === 'google' && !wantsProxy) {
     );
 }
 
-log.info(`${queries.length} quer${queries.length === 1 ? 'y' : 'ies'} × ${pagesPerQuery} page(s) via ${engine}.`);
+const probeCounts = queries.reduce((counts, entry) => {
+    counts[entry.probe] = (counts[entry.probe] ?? 0) + 1;
+    return counts;
+}, {});
+log.info(
+    `${queries.length} quer${queries.length === 1 ? 'y' : 'ies'} × ${pagesPerQuery} page(s) via ${engine}.`,
+    probeCounts,
+);
+if (!probes.includes('rolePrefix')) {
+    log.warning(
+        'The rolePrefix probe is off, so only free-mail addresses will be found. Businesses on their own '
+        + 'domain (hello@theirsite.com) are invisible without it.',
+    );
+}
 
 const sleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
 const helpers = { instagramHandleFromUrl, extractEmailsFromText };
@@ -80,7 +96,7 @@ for (const entry of queries) {
             const lead = igLeadFromResult(
                 { ...result, keyword: entry.keyword },
                 helpers,
-                { emailDomains },
+                { keepOnlyDomains },
             );
             if (!lead) continue;
 

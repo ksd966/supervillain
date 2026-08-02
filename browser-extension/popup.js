@@ -232,12 +232,18 @@ $('#ig-run').onclick = async () => {
     const keywords = splitList($('#ig-keywords').value);
     if (!keywords.length) { igBusy(true, 'Upiši bar jednu ključnu reč.'); setTimeout(() => igBusy(false), 1800); return; }
 
+    const probes = [
+        $('#ig-freemail').checked && 'freeMail',
+        $('#ig-role').checked && 'rolePrefix',
+        $('#ig-plain').checked && 'plain',
+    ].filter(Boolean);
+
     igBusy(true, 'Pokrećem pretragu…');
     const result = await send({
         type: 'ig-search',
         keywords,
         location: $('#ig-location').value.trim(),
-        emailDomains: splitList($('#ig-domains').value),
+        probes,
         pages: Number($('#ig-pages').value) || 2,
     });
     igBusy(false);

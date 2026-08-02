@@ -105,20 +105,29 @@
 <div class="pane" id="pane-ig" hidden>
   <div class="search">
     <p class="hint">
-      Pretražuje <code>site:instagram.com "ključna reč" "grad" "@gmail.com"</code> i vadi
+      Pretražuje <code>site:instagram.com "ključna reč" "grad"</code> uz token adrese i vadi
       adrese iz <strong>snippeta</strong> — bio teksta koji Google već ima indeksiran.
       Instagram se uopšte ne dira, pa nema ni njegovog rate limita.
     </p>
     <input type="text" id="ig-keywords" placeholder="ključne reči, zarezom: med spa, realtor">
     <input type="text" id="ig-location" placeholder="grad (opciono): Austin TX">
-    <input type="text" id="ig-domains" placeholder="domeni (opciono): @gmail.com, @yahoo.com">
+    <label class="inline"><input type="checkbox" id="ig-freemail" checked>
+      <span style="margin:0">Free-mail domeni <span style="color:var(--muted)">(@gmail.com, @yahoo.com… — 6 upita)</span></span></label>
+    <label class="inline"><input type="checkbox" id="ig-role" checked>
+      <span style="margin:0">Poslovne adrese <span style="color:var(--muted)">(info@, hello@, bookings@… — 14 upita)</span></span></label>
+    <label class="inline"><input type="checkbox" id="ig-plain">
+      <span style="margin:0">Bez tokena <span style="color:var(--muted)">(sve profile na ključnu reč — 1 upit)</span></span></label>
     <div class="row2">
       <button class="go" id="ig-run">Pretraži</button>
       <input type="number" id="ig-pages" value="2" min="1" max="10" title="strana rezultata po upitu">
     </div>
     <p class="hint">
+      <strong>Poslovne adrese</strong> su jedini način da se nađe firma na sopstvenom domenu
+      (<code>hello@njihovsajt.com</code>) bez da unapred znaš taj domen — free-mail upiti je nikad
+      ne pogode. Zadržava se <strong>svaka</strong> nađena adresa, bez obzira kojim upitom je profil pronađen.
+      <br><br>
       Otvara upite u pozadinskim tabovima i sam ih zatvara. Ne diraj browser dok radi.
-      Za svaki domen ide zaseban upit — 2 ključne reči × 6 domena × 2 strane = 24 pretrage.
+      Jedna ključna reč × 20 upita × 2 strane = 40 pretraga.
     </p>
   </div>
   <div class="bar">

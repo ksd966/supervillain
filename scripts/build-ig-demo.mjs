@@ -58,9 +58,9 @@ const bundled = MODULES
 /** A realistic results page so the parser can be tried without leaving the tab. */
 const SAMPLE = `<div id="search">
   <div data-hveid="1"><a href="https://www.instagram.com/austinmedspa/"><h3>Austin Med Spa (@austinmedspa) &bull; Instagram photos and videos</h3></a>
-    <div>4,182 Followers &middot; Med spa in Austin TX &middot; Botox, fillers &amp; facials &middot; Bookings: info.austin@gmail.com</div></div>
+    <div>4,182 Followers &middot; Med spa in Austin TX &middot; Botox, fillers &amp; facials &middot; Bookings: info@austinmedspa.com</div></div>
   <div data-hveid="2"><a href="https://www.instagram.com/glow.aesthetics.atx/"><h3>Glow Aesthetics ATX (@glow.aesthetics.atx) on Instagram</h3></a>
-    <div>Austin&rsquo;s med spa &middot; Lip filler specialists &middot; glowaesthetics@gmail.com &middot; DM to book</div></div>
+    <div>Austin&rsquo;s med spa &middot; Lip filler specialists &middot; hello@glowaesthetics.co &middot; DM to book</div></div>
   <div data-hveid="3"><a href="/url?q=https://www.instagram.com/radiantskin.atx/&amp;sa=U"><h3>Radiant Skin Studio (@radiantskin.atx)</h3></a>
     <div>Skincare studio &middot; Austin TX &middot; hello.radiant@gmail.com &middot; logo@2x.png</div></div>
   <div data-hveid="4"><a href="https://www.instagram.com/p/C8xYzAbCdEf/"><h3>Austin Med Spa on Instagram: &quot;New year specials&quot;</h3></a>
@@ -128,8 +128,19 @@ button:hover:not(.run) { border-color:var(--signal); }
 .controls { display:flex; gap:9px; flex-wrap:wrap; margin-top:14px; }
 
 ol.queries { list-style:none; margin:0; padding:0; display:grid; gap:1px; background:var(--line); }
+ol.queries { max-height:420px; overflow-y:auto; }
 ol.queries li { background:var(--plate); padding:11px 16px; display:flex; gap:12px;
-                align-items:center; justify-content:space-between; flex-wrap:wrap; }
+                align-items:center; flex-wrap:wrap; }
+.q { flex:1 1 320px; }
+.probe { flex:0 0 auto; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;
+         padding:3px 8px; border-radius:4px; font-weight:700; }
+.probe.freeMail { background:var(--signal-bg); color:var(--signal); }
+.probe.rolePrefix { background:var(--ok-bg); color:var(--ok); }
+.probe.plain { background:var(--warn-bg); color:var(--warn); }
+.probes { display:flex; flex-direction:column; gap:6px; padding-top:2px; }
+label.cb { display:flex; align-items:center; gap:7px; font-size:13px; cursor:pointer; }
+label.cb input { width:15px; height:15px; accent-color:var(--signal); margin:0; }
+label.cb em { color:var(--muted); font-style:normal; font-size:11.5px; }
 .q { font-size:12.5px; word-break:break-all; }
 a.open { flex:0 0 auto; font-size:12px; text-decoration:none; padding:5px 11px; border-radius:5px;
          background:var(--signal-bg); color:var(--signal); font-weight:600; white-space:nowrap; }
@@ -181,14 +192,21 @@ footer a { color:var(--signal); }
     <div class="fields">
       <label><span class="lbl">Niša</span><input id="kw" value="med spa" placeholder="med spa, realtor"></label>
       <label><span class="lbl">Grad</span><input id="loc" value="Austin TX" placeholder="Austin TX"></label>
-      <label><span class="lbl">Domeni</span><input id="dom" value="@gmail.com" placeholder="prazno = svih 6"></label>
+      <label><span class="lbl">Kako tražiti</span>
+        <span class="probes">
+          <label class="cb"><input type="checkbox" id="p-free" checked> free-mail <em>(6)</em></label>
+          <label class="cb"><input type="checkbox" id="p-role" checked> poslovne <em>(14)</em></label>
+          <label class="cb"><input type="checkbox" id="p-plain"> bez tokena <em>(1)</em></label>
+        </span>
+      </label>
     </div>
     <div class="controls"><button class="run" id="build">Napravi upite</button></div>
   </div>
 </section>
 
 <section>
-  <h2>2 — Upiti <span style="text-transform:none;letter-spacing:0;font-weight:400">(klikni „otvori" da vidiš prave rezultate)</span></h2>
+  <h2>2 — Upiti <span id="qcount" style="color:var(--signal)"></span>
+    <span style="text-transform:none;letter-spacing:0;font-weight:400">— klikni „otvori" da vidiš prave rezultate</span></h2>
   <div class="panel"><ol class="queries" id="queries"></ol></div>
 </section>
 
@@ -233,7 +251,9 @@ footer a { color:var(--signal); }
 <section>
   <h2>Šta se ovde dogodilo</h2>
   <div class="steps">
-    <div class="step"><b>·</b><span>Domeni se traže <strong>jedan po jedan</strong>. Uzak upit pretraživač mnogo bolje rangira, i svaki dobija svoju stranu rezultata — šest domena znači šest puta više rezultata, ne jednu prepunu stranu.</span></div>
+    <div class="step"><b>·</b><span><strong>Poslovne adrese</strong> (<code>"info@"</code>, <code>"hello@"</code>, <code>"bookings@"</code>…) su jedini način da se nađe firma na <strong>sopstvenom domenu</strong> — <code>hello@njihovsajt.com</code> nijedan free-mail upit nikad ne pogodi. Za US biznise to je i bolja polovina liste.</span></div>
+    <div class="step"><b>·</b><span>Zadržava se <strong>svaka</strong> adresa iz snippeta, bez obzira kojim upitom je profil pronađen. Ranije je filter bacao baš te poslovne adrese.</span></div>
+    <div class="step"><b>·</b><span>Svaki token je <strong>zaseban upit</strong>. Uzak upit pretraživač mnogo bolje rangira, i svaki dobija svoju stranu rezultata — 20 tokena znači 20 strana, ne jednu prepunu.</span></div>
     <div class="step"><b>·</b><span>Naslov <code>Ime (@handle)</code> se cepa na ime i handle; handle iz naslova ima prednost nad onim iz URL-a.</span></div>
     <div class="step"><b>·</b><span>Link na objavu (<code>/p/…</code>) nije profil i ne postaje lead.</span></div>
     <div class="step"><b>·</b><span>Adrese se filtriraju na domene koje si tražio, pa <code>hello@salon.com</code> ne prolazi kad tražiš samo gmail.</span></div>
@@ -273,13 +293,22 @@ function buildQueries() {
   queries = buildSearchQueries({
     keywords: splitList($('kw').value),
     location: $('loc').value.trim(),
-    emailDomains: splitList($('dom').value),
+    probes: [
+      $('p-free').checked && 'freeMail',
+      $('p-role').checked && 'rolePrefix',
+      $('p-plain').checked && 'plain',
+    ].filter(Boolean),
   });
+
+  $('qcount').textContent = queries.length
+    ? queries.length + (queries.length === 1 ? ' upit' : ' upita')
+    : '';
 
   $('queries').innerHTML = queries.length
     ? queries.map((entry) => {
         const href = 'https://www.google.com/search?num=20&q=' + encodeURIComponent(entry.query);
         return '<li><span class="q">' + escapeHtml(entry.query) + '</span>'
+          + '<span class="probe ' + entry.probe + '">' + entry.probe + '</span>'
           + '<a class="open" href="' + href + '" target="_blank" rel="noopener">otvori ↗</a></li>';
       }).join('')
     : '<li><span class="note">Upiši bar jednu nišu.</span></li>';
@@ -318,13 +347,13 @@ function readResults(html) {
 
 function parsePasted() {
   const results = readResults($('html').value);
-  const domains = splitList($('dom').value);
   const keyword = splitList($('kw').value)[0] ?? null;
 
   const leads = [];
   const seen = new Set();
   for (const result of results) {
-    const lead = igLeadFromResult({ ...result, keyword }, helpers, { emailDomains: domains });
+    // No output filter: every address in the snippet is kept.
+    const lead = igLeadFromResult({ ...result, keyword }, helpers);
     if (!lead || seen.has(lead.username)) continue;
     seen.add(lead.username);
     leads.push(lead);
@@ -373,9 +402,11 @@ $('dl').onclick = () => {
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 };
 
-for (const id of ['kw', 'loc', 'dom']) {
+for (const id of ['kw', 'loc']) {
   $(id).addEventListener('keydown', (event) => { if (event.key === 'Enter') buildQueries(); });
 }
+
+for (const id of ['p-free', 'p-role', 'p-plain']) $(id).addEventListener('change', buildQueries);
 
 buildQueries();
 $('html').value = SAMPLE;
