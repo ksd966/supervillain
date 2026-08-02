@@ -2,19 +2,9 @@ import { Actor } from 'apify';
 import { gotScraping, log } from 'crawlee';
 
 import { createMxChecker, keepSendable, verifyEmails } from './emailVerify.js';
-import { MINEABLE_FIELDS, mapHeaders } from './headers.js';
-import {
-    cleanText,
-    normalizeEmails,
-    normalizeFollowers,
-    normalizeInstagram,
-    normalizePhone,
-    normalizeState,
-    normalizeWebsite,
-    splitName,
-} from './normalize.js';
+import { mapHeaders } from './headers.js';
 import { parseAny } from './parse.js';
-import { instagramHandlesFromHtml } from './social.js';
+import { buildRow, dedupeKey, mergeRow } from './rows.js';
 
 await Actor.init();
 
@@ -66,101 +56,13 @@ if (unmapped.length) {
 
 // --- normalise ---------------------------------------------------------------
 
-/**
- * Everything a source column can contribute, keyed by canonical field. Several
- * source columns may map to the same field (`Email` and `Email 2`), so values
- * accumulate rather than overwrite.
- *
- * @param {object} record
- * @returns {Record<string, unknown[]>}
- */
-function gather(record) {
-    const byField = {};
-    for (const [header, field] of Object.entries(mapping)) {
-        const value = record[header];
-        if (value == null || value === '') continue;
-        (byField[field] ??= []).push(value);
-    }
-    return byField;
-}
-
-const rows = [];
-
-for (const record of parsed.records) {
-    const byField = gather(record);
-    const first = (field) => byField[field]?.[0] ?? null;
-
-    const emails = new Set(normalizeEmails(byField.email?.join(' ')));
-    const instagram = new Set();
-
-    const igCandidate = normalizeInstagram(first('instagram'));
-    if (igCandidate) instagram.add(igCandidate);
-
-    // Free-text columns routinely carry the only address in the export — a bio
-    // reading "bookings: hello@studio.com" or a notes column with a profile
-    // link. Unmapped columns are mined too, then dropped.
-    if (mineFreeText) {
-        const minedFrom = [
-            ...Object.entries(byField)
-                .filter(([field]) => MINEABLE_FIELDS.has(field))
-                .flatMap(([, values]) => values),
-            ...unmapped.map((header) => record[header]).filter(Boolean),
-        ].map(String);
-
-        for (const blob of minedFrom) {
-            normalizeEmails(blob).forEach((email) => emails.add(email));
-            instagramHandlesFromHtml(blob).forEach((handle) => instagram.add(handle));
-        }
-    }
-
-    const rawName = cleanText(first('name'));
-    const contactName = cleanText(first('contactName'));
-    const explicitFirst = cleanText(first('firstName'));
-    const explicitLast = cleanText(first('lastName'));
-
-    // Explicit first/last columns win; then a dedicated contact-person column;
-    // only then fall back to splitting whatever is in the name column, which
-    // for a business listing is usually the company and should not be split.
-    const split = explicitFirst || explicitLast
-        ? { firstName: explicitFirst || null, lastName: explicitLast || null, isPerson: true }
-        : splitName(contactName || rawName);
-
-    const state = normalizeState(first('state'));
-
-    const row = {
-        name: rawName || contactName || [explicitFirst, explicitLast].filter(Boolean).join(' ') || null,
-        contactName: contactName || null,
-        firstName: split.firstName,
-        lastName: split.lastName,
-        isPerson: split.isPerson,
-        email: [...emails][0] ?? null,
-        emails: [...emails],
-        instagram: [...instagram][0] ?? null,
-        instagramAll: [...instagram],
-        phone: normalizePhone(first('phone'), phoneRegion),
-        website: normalizeWebsite(first('website')),
-        jobTitle: cleanText(first('jobTitle')) || null,
-        address: cleanText(first('address')) || null,
-        // Exports routinely put "Austin, TX" in the city column while also
-        // carrying a state column. Keeping both leaves the state duplicated
-        // inside the city, which shows up in every mail merge that uses it.
-        city: cleanText(first('city')).replace(/,\s*[A-Za-z .]{2,20}$/, '').trim() || null,
-        state: state || normalizeState((cleanText(first('city')).match(/,\s*([A-Za-z .]{2,20})$/) ?? [])[1]),
-        postalCode: cleanText(first('postalCode')) || null,
-        country: cleanText(first('country')) || null,
-        category: cleanText(first('category')) || null,
-        followers: normalizeFollowers(first('followers')),
-        bio: cleanText(first('bio')) || null,
-    };
-
-    if (keepUnmappedColumns) {
-        for (const header of unmapped) {
-            if (record[header]) row[header] = record[header];
-        }
-    }
-
-    rows.push(row);
-}
+const rows = parsed.records.map((record) => buildRow(record, {
+    mapping,
+    unmapped,
+    mineFreeText,
+    phoneRegion,
+    keepUnmappedColumns,
+}));
 
 // --- explode, filter, dedupe -------------------------------------------------
 
@@ -179,39 +81,13 @@ if (requireEmail) {
     log.info(`Dropped ${before - output.length} row(s) without an e-mail.`);
 }
 
-/**
- * @param {object} row
- * @returns {string}
- */
-function dedupeKey(row) {
-    if (dedupeBy === 'website' && row.website) {
-        try {
-            const { host, pathname } = new URL(row.website);
-            return `site:${host.replace(/^www\./i, '').toLowerCase()}${pathname.replace(/\/+$/, '').toLowerCase()}`;
-        } catch { /* fall through */ }
-    }
-    if (dedupeBy === 'instagram' && row.instagram) return `ig:${row.instagram}`;
-    if (dedupeBy === 'name+city') return `name:${(row.name ?? '').toLowerCase()}|${(row.city ?? '').toLowerCase()}`;
-    if (row.email) return `email:${row.email}`;
-
-    // Rows with nothing to key on must not all collapse into one another.
-    return `row:${row.name ?? ''}|${row.website ?? ''}|${row.phone ?? ''}|${rows.indexOf(row)}`;
-}
-
 const deduped = new Map();
-for (const row of output) {
-    const key = dedupeKey(row);
+for (const [index, row] of output.entries()) {
+    const key = dedupeKey(row, dedupeBy, index);
     const existing = deduped.get(key);
 
-    if (!existing) { deduped.set(key, row); continue; }
-
-    // Merge rather than discard: the duplicate often carries the field the
-    // first copy was missing.
-    for (const [field, value] of Object.entries(row)) {
-        if (existing[field] == null && value != null) existing[field] = value;
-    }
-    existing.emails = [...new Set([...existing.emails, ...row.emails])];
-    existing.instagramAll = [...new Set([...existing.instagramAll, ...row.instagramAll])];
+    if (existing) mergeRow(existing, row);
+    else deduped.set(key, row);
 }
 
 output = [...deduped.values()];

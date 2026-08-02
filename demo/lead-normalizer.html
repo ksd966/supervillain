@@ -1,0 +1,1409 @@
+<title>Lead Normalizer — kako radi</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --ground: #eef1f6;
+  --plate: #ffffff;
+  --plate-2: #f7f9fc;
+  --ink: #141c28;
+  --muted: #5b6b80;
+  --line: #d2dae5;
+  --ok: #0f6e5a;
+  --ok-bg: #daeee7;
+  --warn: #9e4f27;
+  --warn-bg: #f6e6db;
+  --signal: #2a55c4;
+  --signal-bg: #e2e9fa;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground: #0e131a; --plate: #161d27; --plate-2: #1b232f;
+    --ink: #e4eaf2; --muted: #8a99ad; --line: #242e3c;
+    --ok: #48be9e; --ok-bg: #12312a;
+    --warn: #d4885b; --warn-bg: #33231a;
+    --signal: #7098ff; --signal-bg: #1a2440;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0e131a; --plate: #161d27; --plate-2: #1b232f;
+  --ink: #e4eaf2; --muted: #8a99ad; --line: #242e3c;
+  --ok: #48be9e; --ok-bg: #12312a;
+  --warn: #d4885b; --warn-bg: #33231a;
+  --signal: #7098ff; --signal-bg: #1a2440;
+}
+:root[data-theme="light"] {
+  --ground: #eef1f6; --plate: #ffffff; --plate-2: #f7f9fc;
+  --ink: #141c28; --muted: #5b6b80; --line: #d2dae5;
+  --ok: #0f6e5a; --ok-bg: #daeee7;
+  --warn: #9e4f27; --warn-bg: #f6e6db;
+  --signal: #2a55c4; --signal-bg: #e2e9fa;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* The subject's material is columns and code, so the monospace face carries
+   the headings and labels, and the sans is reserved for running prose. */
+.mono, h1, h2, .eyebrow, .field, .col, th, td, textarea, pre, .stat b {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px 80px; }
+
+header.top { border-bottom: 1px solid var(--line); background: var(--plate); }
+header.top .wrap { padding-block: 40px 34px; }
+.eyebrow {
+  font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--muted); margin: 0 0 14px;
+}
+h1 { font-size: clamp(26px, 4.4vw, 38px); line-height: 1.15; margin: 0 0 14px; font-weight: 600; letter-spacing: -.02em; text-wrap: balance; }
+header.top p { margin: 0; max-width: 62ch; color: var(--muted); font-size: 16px; }
+
+section { margin-top: 40px; }
+h2 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 14px; font-weight: 600; }
+
+.panel { background: var(--plate); border: 1px solid var(--line); border-radius: 8px; }
+.panel-pad { padding: 18px; }
+
+textarea {
+  width: 100%; min-height: 190px; resize: vertical; padding: 14px;
+  border: 1px solid var(--line); border-radius: 6px;
+  background: var(--plate-2); color: var(--ink); font-size: 12.5px; line-height: 1.65;
+  white-space: pre; overflow-x: auto;
+}
+textarea:focus-visible, button:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+
+.controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
+button {
+  font: inherit; font-size: 14px; cursor: pointer; padding: 10px 16px;
+  border-radius: 6px; border: 1px solid var(--line); background: var(--plate-2); color: var(--ink);
+}
+button.run { background: var(--signal); border-color: var(--signal); color: #fff; font-weight: 600; }
+button:hover:not(.run) { border-color: var(--signal); }
+
+.stats { display: flex; gap: 26px; flex-wrap: wrap; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+.stat b { display: block; font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.stat span { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+
+/* Column mapping reads as wiring: source header on the left, the field it
+   feeds on the right, a dashed run between them. */
+.wires { display: grid; gap: 2px; }
+.wire { display: flex; align-items: baseline; gap: 10px; padding: 7px 0; font-size: 13px; }
+.wire .col { color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45%; }
+.wire .run-line { flex: 1; border-bottom: 1px dashed var(--line); transform: translateY(-4px); min-width: 20px; }
+.wire .field { white-space: nowrap; font-size: 12px; padding: 2px 8px; border-radius: 4px; background: var(--ok-bg); color: var(--ok); }
+.wire.dropped .field { background: var(--warn-bg); color: var(--warn); }
+.wire.dropped .col { color: var(--muted); }
+
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+tbody tr:last-child td { border-bottom: 0; }
+td.mail { color: var(--ok); }
+td.dim { color: var(--muted); }
+td.num { font-variant-numeric: tabular-nums; }
+
+pre.csv {
+  margin: 0; padding: 16px; overflow-x: auto; font-size: 12px; line-height: 1.7;
+  background: var(--plate-2); border-radius: 0 0 8px 8px; color: var(--ink);
+}
+
+ul.notes { margin: 0; padding: 0; list-style: none; display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+ul.notes li { background: var(--plate); padding: 13px 16px; font-size: 14px; display: flex; gap: 12px; align-items: baseline; }
+ul.notes li code { font-size: 12.5px; background: var(--plate-2); padding: 1px 6px; border-radius: 4px; }
+ul.notes .tag { flex: 0 0 auto; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--signal); min-width: 92px; }
+
+table.compare td, table.compare th { white-space: normal; vertical-align: top; }
+table.compare td:first-child { font-weight: 600; }
+.yes { color: var(--ok); }
+.no { color: var(--warn); }
+
+footer { margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+footer a { color: var(--signal); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <p class="eyebrow">lead-normalizer · živi demo</p>
+    <h1>Nalepiš tuđi export. Dobiješ svoj CSV.</h1>
+    <p>
+      Ovo je stvarni kod actor-a, sklopljen iz istih fajlova koji se pokreću lokalno —
+      ne prikaz nego sam alat. Menjaj tekst ispod kako hoćeš; sve se računa u tvom browseru,
+      ništa se nigde ne šalje.
+    </p>
+  </div>
+</header>
+
+<div class="wrap">
+
+<section>
+  <h2>1 — Ulaz</h2>
+  <div class="panel panel-pad">
+    <textarea id="in" spellcheck="false" aria-label="Export za sređivanje">Business Name;Owner;E-Mail Address;IG Handle;Mobile Phone;Primary Business Website;City;State;Notes;Lead Score
+Bright Smile Dental;"Carter, James";INFO@BrightSmile.com;@brightsmiledental;(310) 555-1234;brightsmile.com;Los Angeles;California;Best time to call: mornings;87
+Elite Fitness LLC;Sarah Chen;sarah@elitefit.io; https://www.instagram.com/elitefit.la/ ;310-555-9876 ext. 22;https://elitefit.io/;Los Angeles;CA;Owner also at coach@elitefit.io;92
+Bright Smile Dental;James Carter;info@brightsmile.com;;;brightsmile.com;Los Angeles;CA;duplicate row;87
+Vista Med Spa;;;;;vistamedspa.com;"Austin, TX";Texas;"Reach them at hello@vistamedspa.com or IG instagram.com/vista.medspa";71
+Summit Roofing Co;Mike Alvarez;mike@summitroof.com;;(512) 555-0142;summitroof.com;Austin;TX;left voicemail 3/12;55
+No Contact Landscaping;;;;;;Dallas;TX;nothing useful here;40</textarea>
+    <div class="controls">
+      <button class="run" id="run">Sredi</button>
+      <button id="reset">Vrati primer</button>
+      <button id="messy">Zameni format u JSON</button>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>2 — Šta je prepoznao</h2>
+  <div class="panel">
+    <div class="stats" id="stats"></div>
+    <div class="panel-pad"><div class="wires" id="wires"></div></div>
+  </div>
+</section>
+
+<section>
+  <h2>3 — Sređeni lead-ovi</h2>
+  <div class="panel"><div class="tablewrap"><table id="out"></table></div></div>
+</section>
+
+<section>
+  <h2>4 — CSV</h2>
+  <div class="panel">
+    <div class="panel-pad" style="border-bottom:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap">
+      <button id="copy">Kopiraj</button>
+      <button id="dl">Preuzmi .csv</button>
+    </div>
+    <pre class="csv" id="csv"></pre>
+  </div>
+</section>
+
+<section>
+  <h2>Šta se ovde dogodilo</h2>
+  <ul class="notes">
+    <li><span class="tag">format</span><span>Tačka-zarez, ne zarez. Delimiter se broji <strong>van navodnika</strong>, pa <code>"Austin, TX"</code> ne pomeri detekciju.</span></li>
+    <li><span class="tag">kolone</span><span><code>E-Mail Address</code> → <code>email</code> po imenu. Kolona bez upotrebljivog imena prepoznaje se po <strong>sadržaju</strong> — većinsko slaganje, pa jedan zalutali e-mail u <code>Notes</code> ne preimenuje kolonu.</span></li>
+    <li><span class="tag">firma ≠ čovek</span><span><code>Elite Fitness LLC</code> se ne cepa na ime i prezime; <code>Owner</code> ide u zasebno polje. <code>"Carter, James"</code> se okreće u James Carter.</span></li>
+    <li><span class="tag">slobodan tekst</span><span>Vista Med Spa nema nijednu kontakt kolonu popunjenu — adresa i Instagram su iskopani iz <code>Notes</code>.</span></li>
+    <li><span class="tag">duplikat</span><span>Bright Smile Dental se pojavljuje dvaput. Redovi se <strong>spajaju</strong>, ne bacaju — drugi često nosi polje koje prvom fali.</span></li>
+    <li><span class="tag">telefon</span><span><code>310-555-9876 ext. 22</code> → <code>+13105559876</code>. Ekstenzija se skida jer ruši dialer.</span></li>
+    <li><span class="tag">država</span><span><code>California</code> → <code>CA</code>, a <code>"Austin, TX"</code> u koloni grada se razdvaja na grad i državu.</span></li>
+    <li><span class="tag">šum</span><span><code>Lead Score</code> nema gde da ide: prvo se pretraži za kontaktima, pa se odbaci.</span></li>
+  </ul>
+  <p style="color:var(--muted);font-size:13.5px;margin-top:14px">
+    Jedno ovde ne radi: <strong>MX provera</strong>. Ona traži DNS upit, a browser ga nema.
+    Lokalno se pokreće i dodaje <code>emailDeliverable</code> i <code>emailIsRole</code> uz svaki red.
+  </p>
+</section>
+
+<section>
+  <h2>Gde se ovo uklapa</h2>
+  <div class="panel"><div class="tablewrap"><table class="compare">
+    <thead><tr><th>Alat</th><th>Šta radi</th><th>Blokira li se</th></tr></thead>
+    <tbody>
+      <tr><td>lead-normalizer</td><td>bilo čiji export → čist, dedupliran, verifikovan CSV</td><td class="yes">ne dira mrežu</td></tr>
+      <tr><td>browser-extension</td><td>pretražuješ Google → kupi rezultate → e-mail/ime/IG</td><td class="yes">ne — radi u tvom browseru</td></tr>
+      <tr><td>google-leads-scraper</td><td>niša + grad → biznisi, telefoni, sajtovi</td><td class="no">Google da, OpenStreetMap ne</td></tr>
+      <tr><td>instagram-email-scraper</td><td>IG profili → kontakt e-mailovi</td><td class="no">~20 profila / 30 min po IP</td></tr>
+    </tbody>
+  </table></div></div>
+</section>
+
+<footer>
+  Sve radi lokalno sa tvog računara — bez naloga i bez troška.
+  Panel se pokreće duplim klikom na <code>Panel.bat</code>, ili sa <code>node control-panel/server.js</code>.
+</footer>
+
+</div>
+
+<script type="module">
+// ─── emails.js ───────────────────────────────────────────────────
+/**
+ * E-mail harvesting.
+ *
+ * Everything here is pure and DOM-library agnostic (it takes a Cheerio instance
+ * plus the raw HTML), so it can be unit tested without spinning up a crawler.
+ *
+ * SHARED MODULE — byte-identical across every actor in this repo. Apify actors
+ * deploy as self-contained Docker build contexts, so each carries its own copy
+ * instead of reaching outside its directory. Edit one, then run
+ * `node scripts/check-shared-modules.mjs --fix` from the repo root to
+ * propagate; `npm test` at the root fails if the copies drift apart.
+ */
+
+/**
+ * Deliberately permissive — validation happens in `isPlausibleEmail`, not here.
+ *
+ * The local-part class is narrower than RFC 5322 allows on purpose: characters
+ * like `/` and `:` are legal in theory but in practice only ever show up when
+ * the regex is chewing through a URL, so excluding them costs nothing real and
+ * removes a whole class of false positives.
+ */
+const EMAIL_RE = /[A-Za-z0-9._%+'-]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+/g;
+
+/**
+ * `logo@2x.png`, `sprite@3x.webp` and friends match the e-mail shape perfectly.
+ * Anything whose last label is a file extension is an asset, not an address.
+ */
+const ASSET_EXTENSIONS = new Set([
+    'png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'svg', 'ico', 'bmp', 'tiff',
+    'css', 'js', 'mjs', 'cjs', 'json', 'xml', 'map', 'txt', 'md',
+    'woff', 'woff2', 'ttf', 'eot', 'otf',
+    'mp3', 'mp4', 'webm', 'ogg', 'wav', 'mov', 'avi',
+    'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'zip', 'gz', 'rar',
+    'php', 'html', 'htm', 'aspx', 'jsp',
+]);
+
+/** Tracking, error-reporting and CDN hosts that leak fake addresses into markup. */
+const BLOCKED_DOMAIN_PATTERNS = [
+    /(^|\.)sentry\.io$/i,
+    /(^|\.)ingest\.sentry\.io$/i,
+    /(^|\.)sentry-cdn\.com$/i,
+    /(^|\.)wixpress\.com$/i,
+    /(^|\.)wix\.com$/i,
+    /(^|\.)squarespace\.com$/i,
+    /(^|\.)godaddy\.com$/i,
+    /(^|\.)sentry\.wixpress\.com$/i,
+    /(^|\.)cloudflare\.com$/i,
+    /(^|\.)w3\.org$/i,
+    /(^|\.)schema\.org$/i,
+];
+
+/** Addresses that ship with themes, tutorials and lorem-ipsum blocks. */
+const PLACEHOLDER_LOCAL_PARTS = new Set([
+    'email', 'youremail', 'your-email', 'your_email', 'yourname',
+    'someone', 'somebody', 'username', 'user', 'name', 'firstname',
+    'lastname', 'test', 'example', 'sample', 'demo', 'placeholder',
+    'noreply', 'no-reply', 'donotreply', 'do-not-reply',
+]);
+
+const PLACEHOLDER_DOMAINS = new Set([
+    'example.com', 'example.org', 'example.net', 'example.edu',
+    'domain.com', 'yourdomain.com', 'your-domain.com', 'mydomain.com',
+    'email.com', 'address.com', 'website.com', 'yoursite.com',
+    'test.com', 'sample.com', 'company.com', 'yourcompany.com',
+    'sentry.io', 'localhost', 'gmail.co', 'mail.com',
+]);
+
+/** 32-hex-char local parts are Sentry public keys, not people. */
+const HEX_KEY_RE = /^[0-9a-f]{32,}$/i;
+
+const HTML_ENTITIES = {
+    '&#64;': '@', '&#064;': '@', '&#x40;': '@', '&commat;': '@', '&at;': '@',
+    '&#46;': '.', '&#046;': '.', '&#x2e;': '.', '&period;': '.', '&dot;': '.',
+    '&#45;': '-', '&#95;': '_', '&amp;': '&',
+};
+
+/**
+ * Cloudflare's e-mail protection stores the address XOR-encoded in hex, with the
+ * first byte acting as the key. Decoding it turns "[email&nbsp;protected]" back
+ * into a real address.
+ *
+ * @param {string} hex
+ * @returns {string|null}
+ */
+function decodeCloudflareEmail(hex) {
+    if (typeof hex !== 'string' || hex.length < 4 || hex.length % 2 !== 0) return null;
+    if (!/^[0-9a-fA-F]+$/.test(hex)) return null;
+
+    const key = parseInt(hex.slice(0, 2), 16);
+    let decoded = '';
+    for (let i = 2; i < hex.length; i += 2) {
+        decoded += String.fromCharCode(parseInt(hex.slice(i, i + 2), 16) ^ key);
+    }
+    return decoded;
+}
+
+/**
+ * Reverses the common "human readable, bot hostile" spellings of an address.
+ *
+ * @param {string} input
+ * @returns {string}
+ */
+function deobfuscate(input) {
+    let out = input;
+
+    for (const [entity, char] of Object.entries(HTML_ENTITIES)) {
+        out = out.split(entity).join(char);
+    }
+
+    // "name [at] example [dot] com", "name (at) example (dot) com", "name {AT} …"
+    out = out.replace(/\s*[[({<]\s*(?:at|@|apnasty)\s*[\])}>]\s*/gi, '@');
+    out = out.replace(/\s*[[({<]\s*(?:dot|punkt|tacka|točka)\s*[\])}>]\s*/gi, '.');
+
+    // Bare "name at example dot com" — only rewritten when the whole phrase
+    // matches, so ordinary prose containing "at" is left alone.
+    out = out.replace(
+        /\b([A-Za-z0-9._%+-]+)\s+(?:at|AT)\s+([A-Za-z0-9-]+(?:\s+(?:dot|DOT|punkt)\s+[A-Za-z0-9-]+)*)\s+(?:dot|DOT|punkt)\s+([A-Za-z]{2,24})\b/g,
+        (_match, local, domain, tld) => `${local}@${domain.replace(/\s+(?:dot|DOT|punkt)\s+/g, '.')}.${tld}`,
+    );
+
+    return out;
+}
+
+/**
+ * @param {string} email lower-cased candidate
+ * @param {Set<string>} extraBlockedDomains
+ * @returns {boolean}
+ */
+function isPlausibleEmail(email, extraBlockedDomains = new Set()) {
+    if (!email || email.length > 254) return false;
+
+    const atIndex = email.lastIndexOf('@');
+    if (atIndex < 1) return false;
+
+    const local = email.slice(0, atIndex);
+    const domain = email.slice(atIndex + 1);
+
+    if (!local || local.length > 64) return false;
+    if (local.startsWith('.') || local.endsWith('.') || local.includes('..')) return false;
+    if (HEX_KEY_RE.test(local)) return false;
+    if (PLACEHOLDER_LOCAL_PARTS.has(local)) return false;
+
+    const labels = domain.split('.');
+    if (labels.length < 2) return false;
+    if (labels.some((label) => !label || label.length > 63 || label.startsWith('-') || label.endsWith('-'))) return false;
+
+    const tld = labels[labels.length - 1];
+    if (!/^[a-z]{2,24}$/.test(tld)) return false;
+    if (ASSET_EXTENSIONS.has(tld)) return false;
+
+    if (PLACEHOLDER_DOMAINS.has(domain)) return false;
+    if (extraBlockedDomains.has(domain)) return false;
+    if (BLOCKED_DOMAIN_PATTERNS.some((pattern) => pattern.test(domain))) return false;
+
+    // A user-supplied entry blocks its subdomains too: "example.com" kills "mail.example.com".
+    for (const blocked of extraBlockedDomains) {
+        if (domain.endsWith(`.${blocked}`)) return false;
+    }
+
+    return true;
+}
+
+/**
+ * Pulls every candidate out of a blob of text and normalises it.
+ *
+ * @param {string} text
+ * @param {Set<string>} blockedDomains
+ * @returns {string[]}
+ */
+function matchEmails(text, blockedDomains) {
+    if (!text) return [];
+
+    const found = [];
+    for (const raw of text.match(EMAIL_RE) ?? []) {
+        // Trim leading separators the greedy local-part class may have swallowed.
+        const email = raw.replace(/^[.\-_+'%]+/, '').toLowerCase();
+        if (isPlausibleEmail(email, blockedDomains)) found.push(email);
+    }
+    return found;
+}
+
+/**
+ * Pulls addresses out of a plain string — a bio, a caption, a PDF's text layer.
+ *
+ * @param {string} text
+ * @param {object} [options]
+ * @param {boolean} [options.deobfuscate]
+ * @param {string[]} [options.blockedDomains]
+ * @returns {string[]} unique, sorted, lower-cased addresses
+ */
+function extractEmailsFromText(text, options = {}) {
+    const { deobfuscate: shouldDeobfuscate = true, blockedDomains = [] } = options;
+
+    const blocked = new Set(blockedDomains.map((d) => d.trim().toLowerCase()).filter(Boolean));
+    const prepared = shouldDeobfuscate ? deobfuscate(text ?? '') : (text ?? '');
+
+    return [...new Set(matchEmails(prepared, blocked))].sort();
+}
+
+/**
+ * Collects addresses from a loaded page.
+ *
+ * Sources, in descending order of confidence:
+ *   1. `mailto:` hrefs                     — an author's explicit declaration
+ *   2. Cloudflare-protected nodes          — deliberately hidden, always real
+ *   3. Visible text                        — very low noise
+ *   4. Raw HTML (opt-in)                   — JSON-LD, data attributes, inline JS
+ *
+ * @param {object} params
+ * @param {import('cheerio').CheerioAPI} params.$
+ * @param {string} params.html
+ * @param {object} [params.options]
+ * @param {boolean} [params.options.scanRawHtml]
+ * @param {boolean} [params.options.deobfuscate]
+ * @param {string[]} [params.options.blockedDomains]
+ * @returns {string[]} unique, sorted, lower-cased addresses
+ */
+function extractEmailsFromPage({ $, html, options = {} }) {
+    const {
+        scanRawHtml = true,
+        deobfuscate: shouldDeobfuscate = true,
+        blockedDomains = [],
+    } = options;
+
+    const blocked = new Set(blockedDomains.map((d) => d.trim().toLowerCase()).filter(Boolean));
+    const emails = new Set();
+    const add = (candidates) => candidates.forEach((email) => emails.add(email));
+
+    // 1. mailto: links — strip the ?subject=… tail and percent-decode.
+    $('a[href^="mailto:" i]').each((_i, el) => {
+        const href = $(el).attr('href') ?? '';
+        let address = href.replace(/^mailto:/i, '').split('?')[0].trim();
+        try {
+            address = decodeURIComponent(address);
+        } catch {
+            // Malformed percent-escapes: keep the raw value.
+        }
+        // A single mailto: may carry several comma-separated recipients.
+        for (const part of address.split(/[,;]/)) {
+            add(matchEmails(part, blocked));
+        }
+    });
+
+    // 2. Cloudflare e-mail protection.
+    if (shouldDeobfuscate) {
+        $('[data-cfemail]').each((_i, el) => {
+            const decoded = decodeCloudflareEmail($(el).attr('data-cfemail'));
+            if (decoded) add(matchEmails(decoded, blocked));
+        });
+        $('a[href*="/cdn-cgi/l/email-protection#"]').each((_i, el) => {
+            const hex = ($(el).attr('href') ?? '').split('#')[1];
+            const decoded = decodeCloudflareEmail(hex);
+            if (decoded) add(matchEmails(decoded, blocked));
+        });
+    }
+
+    // 3. Visible text.
+    const $body = $('body').clone();
+    $body.find('script, style, noscript, template').remove();
+    // Cheerio's .text() concatenates adjacent elements with nothing between
+    // them, so `<h1>Firma</h1><p>office@firma.rs</p>` reads as one run and
+    // yields "firmaoffice@firma.rs". Separating elements first keeps the
+    // rendered word boundaries intact.
+    $body.find('*').after(' ');
+    add(extractEmailsFromText($body.text(), { deobfuscate: shouldDeobfuscate, blockedDomains: [...blocked] }));
+
+    // 4. Raw HTML.
+    if (scanRawHtml && html) {
+        add(matchEmails(shouldDeobfuscate ? deobfuscate(html) : html, blocked));
+    }
+
+    return [...emails].sort();
+}
+
+// ─── social.js ───────────────────────────────────────────────────
+/**
+ * Social profile links.
+ *
+ * Pure and dependency-free on purpose: this module is imported by the actors
+ * *and* by the browser extension's service worker, where nothing from npm is
+ * available and there is no DOM to parse with.
+ *
+ * SHARED MODULE — byte-identical across every actor in this repo. Apify actors
+ * deploy as self-contained Docker build contexts, so each carries its own copy
+ * instead of reaching outside its directory. Edit one, then run
+ * `node scripts/check-shared-modules.mjs --fix` from the repo root to
+ * propagate; `npm test` at the root fails if the copies drift apart.
+ */
+
+/** Instagram paths that are features rather than handles. */
+const IG_RESERVED = new Set([
+    'p', 'reel', 'reels', 'explore', 'stories', 'tv', 'accounts', 'direct',
+    'about', 'legal', 'privacy', 'terms', 'developer', 'api', 'challenge',
+    'emails', 'session', 'oauth', 'web',
+]);
+
+/**
+ * Matches an Instagram profile URL anywhere in a blob of text or markup.
+ *
+ * The scheme is optional because free-text fields — a bio, a notes column —
+ * carry bare `instagram.com/handle` far more often than a full URL. The
+ * lookbehind is what keeps that from matching `notinstagram.com/handle`.
+ */
+const IG_URL_RE = /(?<![\w.-])(?:https?:\/\/)?(?:[a-z0-9-]+\.)*instagram\.com\/([A-Za-z0-9._]{1,30})(?:[/?#]|\b)/gi;
+
+/**
+ * @param {string} value a URL, absolute or protocol-relative
+ * @returns {string|null} lower-cased handle, or null when it is not a profile
+ */
+function instagramHandleFromUrl(value) {
+    if (!value) return null;
+
+    try {
+        const raw = String(value).trim();
+        const { hostname, pathname } = new URL(raw.startsWith('//') ? `https:${raw}` : raw);
+        if (!/(^|\.)instagram\.com$/i.test(hostname)) return null;
+
+        const [handle] = pathname.split('/').filter(Boolean);
+        if (!handle) return null;
+
+        const normalized = handle.toLowerCase();
+        if (IG_RESERVED.has(normalized)) return null;
+        // A handle is 1-30 of letters, digits, dot and underscore. Anything else
+        // is a path segment that happens to sit at the root.
+        if (!/^[a-z0-9._]{1,30}$/.test(normalized)) return null;
+        // All-dots or a leading dot is never a real handle.
+        if (/^\.+$/.test(normalized) || normalized.startsWith('.')) return null;
+
+        return normalized;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Pulls every Instagram handle out of raw markup.
+ *
+ * Regex rather than DOM traversal because the extension's service worker has no
+ * DOMParser, and because handles also appear outside `href` attributes — in
+ * JSON-LD blocks, `data-` attributes and inline scripts.
+ *
+ * @param {string} html
+ * @returns {string[]} unique, sorted handles
+ */
+function instagramHandlesFromHtml(html) {
+    if (!html) return [];
+
+    const handles = new Set();
+    for (const match of String(html).matchAll(IG_URL_RE)) {
+        const handle = instagramHandleFromUrl(`https://instagram.com/${match[1]}`);
+        if (handle) handles.add(handle);
+    }
+    return [...handles].sort();
+}
+
+// ─── normalize.js ────────────────────────────────────────────────
+/**
+ * Cleaning up the values themselves.
+ *
+ * Defaults are tuned for the US: phone numbers normalise to +1 E.164, states
+ * resolve to two-letter codes. Both are overridable, but a CSV meant for a US
+ * CRM or dialer wants exactly this shape.
+ */
+
+
+
+const US_STATES = {
+    alabama: 'AL', alaska: 'AK', arizona: 'AZ', arkansas: 'AR', california: 'CA',
+    colorado: 'CO', connecticut: 'CT', delaware: 'DE', florida: 'FL', georgia: 'GA',
+    hawaii: 'HI', idaho: 'ID', illinois: 'IL', indiana: 'IN', iowa: 'IA',
+    kansas: 'KS', kentucky: 'KY', louisiana: 'LA', maine: 'ME', maryland: 'MD',
+    massachusetts: 'MA', michigan: 'MI', minnesota: 'MN', mississippi: 'MS',
+    missouri: 'MO', montana: 'MT', nebraska: 'NE', nevada: 'NV',
+    'new hampshire': 'NH', 'new jersey': 'NJ', 'new mexico': 'NM', 'new york': 'NY',
+    'north carolina': 'NC', 'north dakota': 'ND', ohio: 'OH', oklahoma: 'OK',
+    oregon: 'OR', pennsylvania: 'PA', 'rhode island': 'RI', 'south carolina': 'SC',
+    'south dakota': 'SD', tennessee: 'TN', texas: 'TX', utah: 'UT', vermont: 'VT',
+    virginia: 'VA', washington: 'WA', 'west virginia': 'WV', wisconsin: 'WI',
+    wyoming: 'WY', 'district of columbia': 'DC', 'washington dc': 'DC', 'puerto rico': 'PR',
+};
+
+const STATE_CODES = new Set(Object.values(US_STATES));
+
+/** Tokens that mark a name as a company rather than a person. */
+const COMPANY_MARKERS = /\b(inc|llc|l\.l\.c|ltd|corp|corporation|co|company|group|holdings|partners|associates|studio|studios|salon|spa|clinic|dental|medical|law|agency|marketing|solutions|services|systems|realty|properties|construction|plumbing|roofing|hvac|fitness|gym|cafe|coffee|bakery|restaurant|barbershop|barber|boutique|shop|store|center|centre|institute|academy|university|foundation|the)\b|[&@]|\d/i;
+
+/**
+ * @param {string} value
+ * @returns {string}
+ */
+function clean(value) {
+    return String(value ?? '').replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * @param {unknown} value
+ * @returns {string[]}
+ */
+function normalizeEmails(value) {
+    if (value == null) return [];
+
+    const text = Array.isArray(value) ? value.join(' ') : String(value);
+    // A cell may hold several addresses separated by anything at all.
+    return extractEmailsFromText(text.replace(/[;,|]+/g, ' '));
+}
+
+/**
+ * Accepts a handle, an @handle, or a profile URL.
+ *
+ * @param {unknown} value
+ * @returns {string|null}
+ */
+function normalizeInstagram(value) {
+    const text = clean(Array.isArray(value) ? value[0] : value);
+    if (!text) return null;
+
+    if (/instagram\.com/i.test(text)) {
+        const match = text.match(/https?:\/\/[^\s"'<>]+/i);
+        return instagramHandleFromUrl(match ? match[0] : `https://${text.replace(/^\/+/, '')}`);
+    }
+
+    const handle = text.replace(/^@+/, '').toLowerCase();
+    if (!/^[a-z0-9._]{1,30}$/.test(handle) || /^\.+$/.test(handle) || handle.startsWith('.')) return null;
+    // A bare word with no dots could be anything; require it to look like a
+    // handle rather than a first name typed into the wrong column.
+    return handle;
+}
+
+/**
+ * US-first phone normalisation to E.164, which is what CRMs and dialers want.
+ *
+ * @param {unknown} value
+ * @param {string} [region] `US` or a `+NN` country code for everything else
+ * @returns {string|null}
+ */
+function normalizePhone(value, region = 'US') {
+    const text = clean(Array.isArray(value) ? value[0] : value);
+    if (!text) return null;
+
+    // An extension is not part of the number and breaks a dialer if left on.
+    const withoutExtension = text.split(/\b(?:ext|x|extension)\.?\s*\d+/i)[0];
+    const digits = withoutExtension.replace(/[^\d+]/g, '');
+    if (!digits) return null;
+
+    if (digits.startsWith('+')) {
+        const rest = digits.slice(1).replace(/\D/g, '');
+        return rest.length >= 8 && rest.length <= 15 ? `+${rest}` : null;
+    }
+
+    const bare = digits.replace(/\D/g, '');
+
+    if (region === 'US') {
+        if (bare.length === 10) return `+1${bare}`;
+        if (bare.length === 11 && bare.startsWith('1')) return `+${bare}`;
+        return null;
+    }
+
+    const prefix = String(region).startsWith('+') ? region : `+${region}`;
+    const national = bare.replace(/^0+/, '');
+    return national.length >= 6 ? `${prefix}${national}` : null;
+}
+
+/**
+ * @param {unknown} value
+ * @returns {string|null}
+ */
+function normalizeWebsite(value) {
+    const text = clean(Array.isArray(value) ? value[0] : value);
+    if (!text || /^(n\/?a|none|-)$/i.test(text)) return null;
+
+    try {
+        const url = new URL(/^https?:\/\//i.test(text) ? text : `https://${text}`);
+        if (!/\./.test(url.hostname)) return null;
+        return url.href.replace(/\/$/, '');
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * @param {unknown} value
+ * @returns {string|null}
+ */
+function normalizeState(value) {
+    const text = clean(value);
+    if (!text) return null;
+
+    const upper = text.toUpperCase();
+    if (upper.length === 2 && STATE_CODES.has(upper)) return upper;
+
+    return US_STATES[text.toLowerCase()] ?? text;
+}
+
+/**
+ * Splits a person's name, and recognises when it is not one.
+ *
+ * A company name split into "first" and "last" is worse than no split at all —
+ * a mail merge greeting "Hi Salon," reads as a mistake, "Hi Dental," reads as
+ * a bot.
+ *
+ * @param {string} value
+ * @returns {{firstName: string|null, lastName: string|null, isPerson: boolean}}
+ */
+function splitName(value) {
+    const text = clean(value);
+    if (!text) return { firstName: null, lastName: null, isPerson: false };
+
+    if (COMPANY_MARKERS.test(text)) return { firstName: null, lastName: null, isPerson: false };
+
+    // "Smith, John" — the comma form some exports use.
+    if (text.includes(',')) {
+        const [last, first] = text.split(',').map(clean);
+        if (first && last) return { firstName: first.split(' ')[0], lastName: last, isPerson: true };
+    }
+
+    const parts = text.split(' ').filter(Boolean);
+    if (parts.length === 1) return { firstName: parts[0], lastName: null, isPerson: true };
+    if (parts.length > 4) return { firstName: null, lastName: null, isPerson: false };
+
+    return { firstName: parts[0], lastName: parts[parts.length - 1], isPerson: true };
+}
+
+/**
+ * @param {unknown} value
+ * @returns {number|null}
+ */
+function normalizeFollowers(value) {
+    const text = clean(value).toLowerCase();
+    if (!text) return null;
+
+    const match = text.match(/^([\d.,]+)\s*([km])?/);
+    if (!match) return null;
+
+    const base = Number(match[1].replace(/,/g, ''));
+    if (!Number.isFinite(base)) return null;
+
+    if (match[2] === 'k') return Math.round(base * 1000);
+    if (match[2] === 'm') return Math.round(base * 1_000_000);
+    return Math.round(base);
+}
+
+const cleanText = clean;
+
+// ─── parse.js ────────────────────────────────────────────────────
+/**
+ * Reading whatever a third-party scraper spat out.
+ *
+ * Exports from browser extensions and SaaS tools are inconsistent in every way
+ * that matters: comma or semicolon or tab, CRLF or LF, a BOM or not, JSON or
+ * JSONL or an array nested under some wrapper key. Rather than ask the user
+ * which it is, sniff it — getting this wrong is obvious immediately, and being
+ * asked to classify your own file is a poor first impression.
+ */
+
+/**
+ * Strips a UTF-8 BOM. Excel writes one on every CSV it saves, and left in place
+ * it corrupts the first header name, which then fails to match anything.
+ *
+ * @param {string} text
+ * @returns {string}
+ */
+function stripBom(text) {
+    return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
+}
+
+/**
+ * Picks the delimiter by counting candidates outside quoted regions on the
+ * first few lines. Counting inside quotes is what makes naive sniffers choose
+ * a comma for a semicolon-delimited file full of "Smith, John" cells.
+ *
+ * @param {string} text
+ * @returns {string}
+ */
+function sniffDelimiter(text) {
+    const sample = text.split(/\r?\n/).slice(0, 5).join('\n');
+    const counts = { ',': 0, ';': 0, '\t': 0, '|': 0 };
+
+    let inQuotes = false;
+    for (let index = 0; index < sample.length; index++) {
+        const char = sample[index];
+
+        if (char === '"') {
+            if (inQuotes && sample[index + 1] === '"') { index++; continue; }
+            inQuotes = !inQuotes;
+            continue;
+        }
+        if (!inQuotes && char in counts) counts[char] += 1;
+    }
+
+    return Object.entries(counts).sort(([, a], [, b]) => b - a)[0][1] > 0
+        ? Object.entries(counts).sort(([, a], [, b]) => b - a)[0][0]
+        : ',';
+}
+
+/**
+ * A complete RFC 4180 reader: quoted fields, escaped quotes, embedded newlines
+ * and commas. Worth doing properly — a split on `,` mangles exactly the rows
+ * that matter, the ones with an address or a multi-value cell.
+ *
+ * @param {string} text
+ * @param {string} [delimiter] sniffed when omitted
+ * @returns {string[][]}
+ */
+function parseDelimited(text, delimiter) {
+    const source = stripBom(text);
+    const sep = delimiter ?? sniffDelimiter(source);
+
+    const rows = [];
+    let row = [];
+    let field = '';
+    let inQuotes = false;
+
+    for (let index = 0; index < source.length; index++) {
+        const char = source[index];
+
+        if (inQuotes) {
+            if (char === '"') {
+                if (source[index + 1] === '"') { field += '"'; index++; }
+                else inQuotes = false;
+            } else {
+                field += char;
+            }
+            continue;
+        }
+
+        if (char === '"') { inQuotes = true; continue; }
+        if (char === sep) { row.push(field); field = ''; continue; }
+
+        if (char === '\r') {
+            if (source[index + 1] === '\n') index++;
+            row.push(field); field = '';
+            rows.push(row); row = [];
+            continue;
+        }
+        if (char === '\n') {
+            row.push(field); field = '';
+            rows.push(row); row = [];
+            continue;
+        }
+
+        field += char;
+    }
+
+    if (field.length || row.length) { row.push(field); rows.push(row); }
+
+    // Drop trailing blank lines, but keep genuinely empty cells inside a row.
+    return rows.filter((candidate) => candidate.some((cell) => cell.trim() !== ''));
+}
+
+/**
+ * Finds the array of records inside a JSON payload.
+ *
+ * Tools wrap their exports in all sorts of envelopes — `{ data: [...] }`,
+ * `{ results: [...] }`, `{ items: { leads: [...] } }` — so search rather than
+ * assume, preferring the largest array of objects found.
+ *
+ * @param {unknown} payload
+ * @returns {object[]}
+ */
+function findRecords(payload) {
+    if (Array.isArray(payload)) {
+        return payload.filter((item) => item && typeof item === 'object' && !Array.isArray(item));
+    }
+    if (!payload || typeof payload !== 'object') return [];
+
+    let best = [];
+    const visit = (node, depth) => {
+        if (depth > 4 || !node || typeof node !== 'object') return;
+
+        if (Array.isArray(node)) {
+            const objects = node.filter((item) => item && typeof item === 'object' && !Array.isArray(item));
+            if (objects.length > best.length) best = objects;
+            return;
+        }
+        for (const value of Object.values(node)) visit(value, depth + 1);
+    };
+
+    visit(payload, 0);
+
+    // A single record object with no array anywhere is still one lead.
+    if (!best.length && Object.keys(payload).length) return [payload];
+    return best;
+}
+
+/**
+ * Turns a table into records, using the first row as headers.
+ *
+ * @param {string[][]} rows
+ * @returns {{headers: string[], records: object[]}}
+ */
+function tableToRecords(rows) {
+    if (!rows.length) return { headers: [], records: [] };
+
+    const headers = rows[0].map((header, index) => header.trim() || `column_${index + 1}`);
+    const records = rows.slice(1).map((row) => {
+        const record = {};
+        headers.forEach((header, index) => { record[header] = row[index] ?? ''; });
+        return record;
+    });
+
+    return { headers, records };
+}
+
+/**
+ * Front door: text in, records out.
+ *
+ * @param {string} text
+ * @param {object} [options]
+ * @param {'auto'|'csv'|'tsv'|'json'|'jsonl'} [options.format]
+ * @returns {{format: string, headers: string[], records: object[]}}
+ */
+function parseAny(text, { format = 'auto' } = {}) {
+    const source = stripBom(String(text ?? '')).trim();
+    if (!source) return { format: 'empty', headers: [], records: [] };
+
+    const looksJson = source.startsWith('{') || source.startsWith('[');
+    const chosen = format !== 'auto' ? format : (looksJson ? 'json' : 'csv');
+
+    if (chosen === 'json') {
+        try {
+            const records = findRecords(JSON.parse(source));
+            return { format: 'json', headers: [...new Set(records.flatMap(Object.keys))], records };
+        } catch {
+            // A JSONL file's first line parses as JSON but the whole file does
+            // not, so fall through and try line by line.
+        }
+    }
+
+    if (chosen === 'json' || chosen === 'jsonl') {
+        const records = source
+            .split(/\r?\n/)
+            .map((line) => line.trim())
+            .filter(Boolean)
+            .map((line) => { try { return JSON.parse(line); } catch { return null; } })
+            .filter((item) => item && typeof item === 'object');
+
+        if (records.length) {
+            return { format: 'jsonl', headers: [...new Set(records.flatMap(Object.keys))], records };
+        }
+    }
+
+    const delimiter = chosen === 'tsv' ? '\t' : undefined;
+    const { headers, records } = tableToRecords(parseDelimited(source, delimiter));
+    return { format: 'csv', headers, records };
+}
+
+// ─── headers.js ──────────────────────────────────────────────────
+/**
+ * Working out which column is which.
+ *
+ * Every tool names its columns differently — `Email`, `E-Mail Address`,
+ * `contact_email`, `Owner Email`, `emails`. Matching on a fixed list of names
+ * fails on the first export from a tool nobody anticipated, so this does two
+ * passes: names first, then the values themselves. A column whose cells are
+ * mostly `something@something.tld` is an e-mail column no matter what its
+ * header says — and plenty of exports have no header row worth the name.
+ */
+
+/**
+ * Canonical fields, each with the header names that map to it. Order matters:
+ * the first alias that matches wins, so put the specific ones first.
+ */
+const FIELD_ALIASES = {
+    email: [
+        'email', 'emails', 'emailaddress', 'emailaddresses', 'email1', 'primaryemail',
+        'contactemail', 'businessemail', 'workemail', 'publicemail', 'owneremail',
+        'mail', 'mailaddress', 'epost', 'correo',
+    ],
+    firstName: ['firstname', 'fname', 'givenname', 'first'],
+    lastName: ['lastname', 'lname', 'surname', 'familyname', 'last'],
+    // The business itself.
+    name: [
+        'businessname', 'companyname', 'company', 'business', 'organization',
+        'organisation', 'accountname', 'placename', 'listingname',
+        'fullname', 'name', 'title',
+    ],
+    // The human at the business. US lead exports usually carry both, and
+    // conflating them produces a mail merge that greets a company by a
+    // person's first name — or the reverse.
+    contactName: [
+        'contactname', 'contactperson', 'ownername', 'owner', 'contact',
+        'personname', 'person', 'decisionmaker', 'principal', 'agentname',
+    ],
+    instagram: [
+        'instagram', 'instagramhandle', 'instagramusername', 'instagramurl',
+        'instagramprofile', 'ig', 'ighandle', 'igusername', 'username', 'handle',
+        'profileurl', 'socialinstagram',
+    ],
+    phone: [
+        'phone', 'phonenumber', 'phone1', 'primaryphone', 'telephone', 'tel',
+        'mobile', 'mobilephone', 'cell', 'cellphone', 'contactphone', 'businessphone',
+        'whatsapp',
+    ],
+    website: [
+        'website', 'websiteurl', 'weburl', 'web', 'url', 'site', 'homepage',
+        'domain', 'companywebsite', 'link',
+    ],
+    jobTitle: ['jobtitle', 'position', 'role', 'occupation', 'headline', 'designation'],
+    city: ['city', 'town', 'locality', 'addresscity'],
+    state: ['state', 'province', 'region', 'addressstate', 'stateprovince'],
+    country: ['country', 'countryname', 'addresscountry'],
+    postalCode: ['zip', 'zipcode', 'postalcode', 'postcode'],
+    address: ['address', 'address1', 'streetaddress', 'street', 'fulladdress', 'location'],
+    category: ['category', 'industry', 'niche', 'businesstype', 'type', 'vertical', 'sector'],
+    followers: ['followers', 'followerscount', 'followercount', 'subscribers'],
+    bio: ['bio', 'biography', 'description', 'about', 'summary', 'snippet', 'notes', 'note'],
+};
+
+/** Fields whose free text is worth mining for addresses and handles. */
+const MINEABLE_FIELDS = new Set(['bio', 'address', 'name', 'contactName', 'jobTitle', 'category']);
+
+/**
+ * @param {string} header
+ * @returns {string}
+ */
+function normalizeHeader(header) {
+    return String(header ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+/**
+ * @param {string} header
+ * @returns {string|null}
+ */
+function fieldFromHeader(header) {
+    const normalized = normalizeHeader(header);
+    if (!normalized) return null;
+
+    for (const [field, aliases] of Object.entries(FIELD_ALIASES)) {
+        if (aliases.includes(normalized)) return field;
+    }
+
+    // Loose pass: "Owner E-mail Address 2" contains a known alias without
+    // equalling one.
+    //
+    // Scoring rather than first-match, because several fields can match the
+    // same header and declaration order is the wrong tiebreak: "Primary
+    // Business Website" contains both `business` (a `name` alias) and
+    // `website`. In an English column name the last word is the type, so a
+    // match at the end outranks one in the middle, and a longer alias outranks
+    // a shorter one.
+    let best = null;
+
+    for (const [field, aliases] of Object.entries(FIELD_ALIASES)) {
+        for (const alias of aliases) {
+            if (alias.length < 4 || !normalized.includes(alias)) continue;
+
+            const score = alias.length * (normalized.endsWith(alias) ? 2 : 1);
+            if (!best || score > best.score) best = { field, score };
+        }
+    }
+
+    return best?.field ?? null;
+}
+
+const EMAIL_LIKE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
+const IG_LIKE = /(^@[A-Za-z0-9._]{1,30}$)|instagram\.com\//i;
+const URL_LIKE = /^(https?:\/\/|www\.)/i;
+const PHONE_LIKE = /^[+(]?[\d][\d\s().-]{6,20}$/;
+
+/**
+ * Guesses a column's field from its values.
+ *
+ * Only claims a column when a clear majority of its non-empty cells agree,
+ * which keeps a stray e-mail inside a notes column from renaming that column.
+ *
+ * @param {string[]} values
+ * @returns {string|null}
+ */
+function fieldFromValues(values) {
+    const sample = values.map((value) => String(value ?? '').trim()).filter(Boolean).slice(0, 60);
+    if (sample.length < 2) return null;
+
+    const share = (predicate) => sample.filter(predicate).length / sample.length;
+
+    if (share((value) => EMAIL_LIKE.test(value)) >= 0.6) return 'email';
+    if (share((value) => IG_LIKE.test(value)) >= 0.6) return 'instagram';
+    if (share((value) => PHONE_LIKE.test(value) && (value.match(/\d/g) ?? []).length >= 7) >= 0.6) return 'phone';
+    if (share((value) => URL_LIKE.test(value)) >= 0.6) return 'website';
+
+    return null;
+}
+
+/**
+ * Maps every source column onto a canonical field.
+ *
+ * @param {string[]} headers
+ * @param {object[]} records
+ * @returns {{mapping: Record<string, string>, unmapped: string[]}}
+ */
+function mapHeaders(headers, records = []) {
+    const mapping = {};
+    const unmapped = [];
+    const claimed = new Set();
+
+    for (const header of headers) {
+        const byName = fieldFromHeader(header);
+        // First column to claim a field keeps it; a later "Email 2" becomes an
+        // extra source for mining rather than overwriting the primary.
+        if (byName && !claimed.has(byName)) {
+            mapping[header] = byName;
+            claimed.add(byName);
+            continue;
+        }
+
+        const byValue = fieldFromValues(records.map((record) => record[header]));
+        if (byValue && !claimed.has(byValue)) {
+            mapping[header] = byValue;
+            claimed.add(byValue);
+            continue;
+        }
+
+        unmapped.push(header);
+    }
+
+    return { mapping, unmapped };
+}
+
+// ─── rows.js ─────────────────────────────────────────────────────
+/**
+ * Turning one parsed record into one clean lead.
+ *
+ * Kept as a pure function, separate from the actor's I/O, for two reasons: it
+ * is the part most worth testing, and it is the part the browser demo runs — so
+ * what the demo shows is the shipped behaviour rather than a re-implementation
+ * of it that can quietly drift.
+ */
+
+
+
+
+/**
+ * Everything a source column can contribute, keyed by canonical field.
+ *
+ * Several source columns may map to the same field (`Email` and `Email 2`), so
+ * values accumulate rather than overwrite.
+ *
+ * @param {object} record
+ * @param {Record<string, string>} mapping
+ * @returns {Record<string, unknown[]>}
+ */
+function gather(record, mapping) {
+    const byField = {};
+    for (const [header, field] of Object.entries(mapping)) {
+        const value = record[header];
+        if (value == null || value === '') continue;
+        (byField[field] ??= []).push(value);
+    }
+    return byField;
+}
+
+/**
+ * @param {object} record one parsed source row
+ * @param {object} params
+ * @param {Record<string, string>} params.mapping source header → canonical field
+ * @param {string[]} [params.unmapped] headers nobody claimed
+ * @param {boolean} [params.mineFreeText]
+ * @param {string} [params.phoneRegion]
+ * @param {boolean} [params.keepUnmappedColumns]
+ * @returns {object}
+ */
+function buildRow(record, {
+    mapping,
+    unmapped = [],
+    mineFreeText = true,
+    phoneRegion = 'US',
+    keepUnmappedColumns = false,
+} = {}) {
+    const byField = gather(record, mapping);
+    const first = (field) => byField[field]?.[0] ?? null;
+
+    const emails = new Set(normalizeEmails(byField.email?.join(' ')));
+    const instagram = new Set();
+
+    const igCandidate = normalizeInstagram(first('instagram'));
+    if (igCandidate) instagram.add(igCandidate);
+
+    // Free-text columns routinely carry the only address in the export — a bio
+    // reading "bookings: hello@studio.com" or a notes column with a profile
+    // link. Unmapped columns are mined too, then dropped.
+    if (mineFreeText) {
+        const blobs = [
+            ...Object.entries(byField)
+                .filter(([field]) => MINEABLE_FIELDS.has(field))
+                .flatMap(([, values]) => values),
+            ...unmapped.map((header) => record[header]).filter(Boolean),
+        ].map(String);
+
+        for (const blob of blobs) {
+            normalizeEmails(blob).forEach((email) => emails.add(email));
+            instagramHandlesFromHtml(blob).forEach((handle) => instagram.add(handle));
+        }
+    }
+
+    const rawName = cleanText(first('name'));
+    const contactName = cleanText(first('contactName'));
+    const explicitFirst = cleanText(first('firstName'));
+    const explicitLast = cleanText(first('lastName'));
+
+    // Explicit first/last columns win; then a dedicated contact-person column;
+    // only then fall back to splitting whatever is in the name column, which
+    // for a business listing is usually the company and should not be split.
+    const split = explicitFirst || explicitLast
+        ? { firstName: explicitFirst || null, lastName: explicitLast || null, isPerson: true }
+        : splitName(contactName || rawName);
+
+    const rawCity = cleanText(first('city'));
+    const explicitState = normalizeState(first('state'));
+
+    const row = {
+        name: rawName || contactName || [explicitFirst, explicitLast].filter(Boolean).join(' ') || null,
+        contactName: contactName || null,
+        firstName: split.firstName,
+        lastName: split.lastName,
+        isPerson: split.isPerson,
+        email: [...emails][0] ?? null,
+        emails: [...emails],
+        instagram: [...instagram][0] ?? null,
+        instagramAll: [...instagram],
+        phone: normalizePhone(first('phone'), phoneRegion),
+        website: normalizeWebsite(first('website')),
+        jobTitle: cleanText(first('jobTitle')) || null,
+        address: cleanText(first('address')) || null,
+        // Exports routinely put "Austin, TX" in the city column while also
+        // carrying a state column. Keeping both leaves the state duplicated
+        // inside the city, which shows up in every mail merge that uses it.
+        city: rawCity.replace(/,\s*[A-Za-z .]{2,20}$/, '').trim() || null,
+        state: explicitState || normalizeState((rawCity.match(/,\s*([A-Za-z .]{2,20})$/) ?? [])[1]),
+        postalCode: cleanText(first('postalCode')) || null,
+        country: cleanText(first('country')) || null,
+        category: cleanText(first('category')) || null,
+        followers: normalizeFollowers(first('followers')),
+        bio: cleanText(first('bio')) || null,
+    };
+
+    if (keepUnmappedColumns) {
+        for (const header of unmapped) {
+            if (record[header]) row[header] = record[header];
+        }
+    }
+
+    return row;
+}
+
+/**
+ * Identity for de-duplication.
+ *
+ * @param {object} row
+ * @param {string} [dedupeBy] `email` | `website` | `instagram` | `name+city`
+ * @param {number} [index] tiebreaker so rows with nothing to key on stay apart
+ * @returns {string}
+ */
+function dedupeKey(row, dedupeBy = 'email', index = 0) {
+    if (dedupeBy === 'website' && row.website) {
+        try {
+            const { host, pathname } = new URL(row.website);
+            return `site:${host.replace(/^www\./i, '').toLowerCase()}${pathname.replace(/\/+$/, '').toLowerCase()}`;
+        } catch { /* fall through to the e-mail key */ }
+    }
+    if (dedupeBy === 'instagram' && row.instagram) return `ig:${row.instagram}`;
+    if (dedupeBy === 'name+city') return `name:${(row.name ?? '').toLowerCase()}|${(row.city ?? '').toLowerCase()}`;
+    if (row.email) return `email:${row.email}`;
+
+    return `row:${row.name ?? ''}|${row.website ?? ''}|${row.phone ?? ''}|${index}`;
+}
+
+/**
+ * Folds a duplicate into the row already kept.
+ *
+ * Merging rather than discarding, because the second copy often carries the
+ * field the first was missing.
+ *
+ * @param {object} existing mutated
+ * @param {object} incoming
+ * @returns {object} existing
+ */
+function mergeRow(existing, incoming) {
+    for (const [field, value] of Object.entries(incoming)) {
+        if (existing[field] == null && value != null) existing[field] = value;
+    }
+    existing.emails = [...new Set([...(existing.emails ?? []), ...(incoming.emails ?? [])])];
+    existing.instagramAll = [...new Set([...(existing.instagramAll ?? []), ...(incoming.instagramAll ?? [])])];
+    return existing;
+}
+
+// ─── demo UI ──────────────────────────────────────────────────────────────
+const $ = (id) => document.getElementById(id);
+const COLUMNS = ['name', 'firstName', 'lastName', 'email', 'instagram', 'phone', 'website', 'city', 'state'];
+const SAMPLE_CSV = $('in').value;
+
+const SAMPLE_JSON = JSON.stringify({
+  status: 'ok',
+  data: [
+    { company: 'Bright Smile Dental', contact_person: 'Carter, James', 'Email Address': 'INFO@BrightSmile.com', ig: '@brightsmiledental', tel: '(310) 555-1234', site: 'brightsmile.com', city: 'Los Angeles', region: 'California' },
+    { company: 'Vista Med Spa', contact_person: '', 'Email Address': '', ig: '', tel: '', site: 'vistamedspa.com', city: 'Austin, TX', region: 'Texas', notes: 'Reach them at hello@vistamedspa.com or IG instagram.com/vista.medspa' },
+  ],
+}, null, 2);
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function csvCell(value) {
+  const text = Array.isArray(value) ? value.join(' | ') : String(value ?? '');
+  return /[",\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+}
+
+let lastCsv = '';
+
+function run() {
+  const parsed = parseAny($('in').value);
+
+  if (!parsed.records.length) {
+    $('stats').innerHTML = '<div class="stat"><b>0</b><span>redova</span></div>';
+    $('wires').innerHTML = '<p style="color:var(--muted);font-size:14px;margin:0">Ništa se nije parsiralo. Proveri da prvi red sadrži imena kolona.</p>';
+    $('out').innerHTML = '';
+    $('csv').textContent = '';
+    return;
+  }
+
+  const { mapping, unmapped } = mapHeaders(parsed.headers, parsed.records);
+  const rows = parsed.records.map((record) => buildRow(record, { mapping, unmapped }));
+
+  const deduped = new Map();
+  rows.forEach((row, index) => {
+    const key = dedupeKey(row, 'email', index);
+    const existing = deduped.get(key);
+    if (existing) mergeRow(existing, row);
+    else deduped.set(key, row);
+  });
+  const output = [...deduped.values()];
+
+  $('stats').innerHTML = [
+    ['b', parsed.records.length, 'redova ulaz'],
+    ['b', output.length, 'čistih lead-ova'],
+    ['b', output.filter((r) => r.email).length, 'sa e-mailom'],
+    ['b', output.filter((r) => r.instagram).length, 'sa Instagramom'],
+    ['b', output.filter((r) => r.phone).length, 'sa telefonom'],
+    ['b', parsed.format, 'format'],
+  ].map(([, value, label]) => '<div class="stat"><b>' + escapeHtml(value) + '</b><span>' + label + '</span></div>').join('');
+
+  $('wires').innerHTML = [
+    ...parsed.headers.filter((h) => mapping[h]).map((header) =>
+      '<div class="wire"><span class="col">' + escapeHtml(header) + '</span>'
+      + '<span class="run-line"></span><span class="field">' + escapeHtml(mapping[header]) + '</span></div>'),
+    ...unmapped.map((header) =>
+      '<div class="wire dropped"><span class="col">' + escapeHtml(header) + '</span>'
+      + '<span class="run-line"></span><span class="field">pretraženo, pa odbačeno</span></div>'),
+  ].join('');
+
+  $('out').innerHTML =
+    '<thead><tr>' + COLUMNS.map((c) => '<th>' + c + '</th>').join('') + '</tr></thead><tbody>'
+    + output.map((row) => '<tr>' + COLUMNS.map((column) => {
+        const value = row[column];
+        const cls = column === 'email' && value ? ' class="mail"' : (value == null || value === '' ? ' class="dim"' : '');
+        return '<td' + cls + '>' + escapeHtml(value == null || value === '' ? '—' : value) + '</td>';
+      }).join('') + '</tr>').join('')
+    + '</tbody>';
+
+  lastCsv = [COLUMNS.join(','), ...output.map((row) => COLUMNS.map((c) => csvCell(row[c])).join(','))].join('\n') + '\n';
+  $('csv').textContent = lastCsv;
+}
+
+$('run').onclick = run;
+$('reset').onclick = () => { $('in').value = SAMPLE_CSV; run(); };
+$('messy').onclick = () => { $('in').value = SAMPLE_JSON; run(); };
+$('copy').onclick = async () => {
+  await navigator.clipboard.writeText(lastCsv);
+  $('copy').textContent = 'Kopirano';
+  setTimeout(() => { $('copy').textContent = 'Kopiraj'; }, 1500);
+};
+$('dl').onclick = () => {
+  const blob = new Blob(['\ufeff' + lastCsv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'leads.csv';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+};
+
+run();
+</script>
