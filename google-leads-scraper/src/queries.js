@@ -11,10 +11,69 @@
  * Values are `key=value` pairs; a niche can map to several.
  */
 export const OSM_NICHE_TAGS = {
+    // --- US service businesses, the usual outreach targets ---
+    hairdresser: ['shop=hairdresser'],
+    'hair salon': ['shop=hairdresser'],
+    barber: ['shop=hairdresser'],
+    barbershop: ['shop=hairdresser'],
+    'nail salon': ['shop=beauty'],
+    'med spa': ['shop=beauty', 'leisure=spa'],
+    medspa: ['shop=beauty', 'leisure=spa'],
+    'beauty salon': ['shop=beauty'],
+    'tattoo shop': ['shop=tattoo'],
+    'tattoo parlor': ['shop=tattoo'],
+
+    dentist: ['amenity=dentist'],
+    'dental office': ['amenity=dentist'],
+    orthodontist: ['amenity=dentist'],
+    chiropractor: ['amenity=doctors', 'healthcare=chiropractor'],
+    'physical therapy': ['healthcare=physiotherapist'],
+    optometrist: ['shop=optician'],
+    veterinarian: ['amenity=veterinary'],
+    vet: ['amenity=veterinary'],
+
+    plumber: ['craft=plumber'],
+    plumbing: ['craft=plumber'],
+    electrician: ['craft=electrician'],
+    hvac: ['craft=hvac'],
+    roofing: ['craft=roofer'],
+    roofer: ['craft=roofer'],
+    contractor: ['craft=builder'],
+    landscaping: ['craft=gardener'],
+    'auto repair': ['shop=car_repair'],
+    'car wash': ['amenity=car_wash'],
+
+    'law firm': ['office=lawyer'],
+    attorney: ['office=lawyer'],
+    accountant: ['office=accountant'],
+    cpa: ['office=accountant'],
+    'real estate': ['office=estate_agent'],
+    realtor: ['office=estate_agent'],
+    'insurance agency': ['office=insurance'],
+    'marketing agency': ['office=advertising_agency'],
+
+    gym: ['leisure=fitness_centre'],
+    'fitness studio': ['leisure=fitness_centre'],
+    'yoga studio': ['leisure=fitness_centre'],
+    'crossfit gym': ['leisure=fitness_centre'],
+
+    restaurant: ['amenity=restaurant'],
+    'coffee shop': ['amenity=cafe'],
+    bakery: ['shop=bakery'],
+    brewery: ['craft=brewery'],
+    'food truck': ['amenity=fast_food'],
+    caterer: ['craft=caterer'],
+
+    photographer: ['craft=photographer'],
+    florist: ['shop=florist'],
+    'pet grooming': ['shop=pet_grooming'],
+    'dry cleaner': ['shop=laundry'],
+    'moving company': ['office=moving_company'],
+    daycare: ['amenity=childcare'],
+
+    // --- Serbian names kept as aliases ---
     frizer: ['shop=hairdresser'],
     'frizerski salon': ['shop=hairdresser'],
-    hairdresser: ['shop=hairdresser'],
-    barber: ['shop=hairdresser', 'shop=beauty'],
 
     'kozmeticki salon': ['shop=beauty'],
     'kozmetički salon': ['shop=beauty'],

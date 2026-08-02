@@ -19,8 +19,14 @@ const IG_RESERVED = new Set([
     'emails', 'session', 'oauth', 'web',
 ]);
 
-/** Matches an Instagram profile URL anywhere in a blob of markup. */
-const IG_URL_RE = /https?:\/\/(?:[a-z0-9-]+\.)*instagram\.com\/([A-Za-z0-9._]{1,30})(?:[/?#]|\b)/gi;
+/**
+ * Matches an Instagram profile URL anywhere in a blob of text or markup.
+ *
+ * The scheme is optional because free-text fields — a bio, a notes column —
+ * carry bare `instagram.com/handle` far more often than a full URL. The
+ * lookbehind is what keeps that from matching `notinstagram.com/handle`.
+ */
+const IG_URL_RE = /(?<![\w.-])(?:https?:\/\/)?(?:[a-z0-9-]+\.)*instagram\.com\/([A-Za-z0-9._]{1,30})(?:[/?#]|\b)/gi;
 
 /**
  * @param {string} value a URL, absolute or protocol-relative

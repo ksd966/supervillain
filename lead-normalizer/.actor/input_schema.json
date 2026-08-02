@@ -1,0 +1,93 @@
+{
+    "title": "Lead Normalizer",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "rawText": {
+            "title": "Paste the export here",
+            "type": "string",
+            "description": "CSV, TSV, JSON or JSONL — paste it as-is. The format, the delimiter and which column is which are all detected; you do not have to tell it anything.",
+            "editor": "textarea"
+        },
+        "sourceUrl": {
+            "title": "…or a URL to fetch it from",
+            "type": "string",
+            "description": "Used only when the paste box is empty.",
+            "editor": "textfield"
+        },
+        "format": {
+            "title": "Format",
+            "type": "string",
+            "description": "Leave on auto unless detection gets it wrong.",
+            "editor": "select",
+            "default": "auto",
+            "enum": ["auto", "csv", "tsv", "json", "jsonl"],
+            "enumTitles": ["Detect automatically", "CSV", "TSV", "JSON", "JSONL"]
+        },
+        "columns": {
+            "title": "CSV columns, in order",
+            "type": "array",
+            "description": "Which fields end up in the exported CSV, and in what order.\n\nAvailable: `name`, `firstName`, `lastName`, `isPerson`, `email`, `emails`, `instagram`, `instagramAll`, `phone`, `website`, `jobTitle`, `address`, `city`, `state`, `postalCode`, `country`, `category`, `followers`, `bio`, `emailDeliverable`, `emailIsRole`.",
+            "editor": "stringList",
+            "default": ["name", "firstName", "lastName", "email", "instagram", "phone", "website", "city", "state", "category"]
+        },
+        "mineFreeText": {
+            "title": "Dig contacts out of free-text columns",
+            "type": "boolean",
+            "description": "Bios, notes and unrecognised columns often hold the only address in the file — `bookings: hello@studio.com`, or a profile link pasted into a notes field. Same filters as everywhere else, so asset filenames and placeholders do not sneak in.",
+            "default": true,
+            "sectionCaption": "Extraction"
+        },
+        "explodeMultiEmail": {
+            "title": "One row per e-mail address",
+            "type": "boolean",
+            "description": "When a lead has several addresses, emit a row for each. Useful for a mail-merge import; leave off to keep one row per business.",
+            "default": false
+        },
+        "requireEmail": {
+            "title": "Only keep rows that have an e-mail",
+            "type": "boolean",
+            "default": false
+        },
+        "dedupeBy": {
+            "title": "De-duplicate by",
+            "type": "string",
+            "description": "Duplicates are merged, not dropped — the second copy often carries the field the first was missing.",
+            "editor": "select",
+            "default": "email",
+            "enum": ["email", "website", "instagram", "name+city"],
+            "enumTitles": ["E-mail address", "Website", "Instagram handle", "Name + city"]
+        },
+        "phoneRegion": {
+            "title": "Phone region",
+            "type": "string",
+            "description": "`US` normalises 10-digit numbers to +1 E.164. For anywhere else, give the country code, for example `+44`.",
+            "editor": "textfield",
+            "default": "US"
+        },
+        "keepUnmappedColumns": {
+            "title": "Keep unrecognised columns",
+            "type": "boolean",
+            "description": "By default a column nobody recognises is mined for contacts and then dropped. Turn this on to carry it through to the output as-is.",
+            "default": false
+        },
+        "verifyEmailDomains": {
+            "title": "Verify addresses (MX + classification)",
+            "type": "boolean",
+            "description": "One cached DNS query per domain: does the domain accept mail, and is the address a role account (`info@`), a free-mail box or a disposable one.",
+            "default": true,
+            "sectionCaption": "Verification"
+        },
+        "dropUndeliverable": {
+            "title": "Drop addresses whose domain has no mail server",
+            "type": "boolean",
+            "default": false
+        },
+        "dropRoleAccounts": {
+            "title": "Drop role accounts",
+            "type": "boolean",
+            "description": "Off by default: for small businesses `info@` is very often the only published address.",
+            "default": false
+        }
+    }
+}

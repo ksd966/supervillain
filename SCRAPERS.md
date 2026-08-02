@@ -6,25 +6,31 @@ pushovati na Apify bez izmena, ako i kada zatreba.
 ## Kako se uklapaju
 
 ```
-        niša + grad
-             │
+   niša + grad              ti pretražuješ            bilo koji drugi alat
+        │                    Google sam                       │
+        ▼                        │                            │
+ ┌──────────────────┐            ▼                            │
+ │ google-leads-    │   ┌──────────────────┐                  │
+ │ scraper          │   │ browser-extension│                  │
+ └────────┬─────────┘   └────────┬─────────┘                  │
+          │                      │                            │
+          │                      └──────────┐   ┌─────────────┘
+          │                                 ▼   ▼
+          │                        ┌──────────────────┐
+          │                        │ lead-normalizer  │
+          │                        └────────┬─────────┘
+          │                                 │
+          ├─────────────────────────────────┴──► CSV (gotovi lead-ovi)
+          │
+          ▼
+  INSTAGRAM_HANDLES
+          │
+          ▼
+ ┌────────────────────────┐
+ │ instagram-email-scraper│  profil → business e-mail, bio, bio link
+ └───────────┬────────────┘
              ▼
-  ┌──────────────────────┐
-  │ google-leads-scraper │  Google Maps + OpenStreetMap
-  └──────────┬───────────┘  → biznisi, telefoni, sajtovi
-             │
-             ├──────────────► EMAILS_CSV        (gotovi lead-ovi)
-             │
-             ▼
-     INSTAGRAM_HANDLES
-             │
-             ▼
-  ┌────────────────────────┐
-  │ instagram-email-scraper│  profil → business e-mail, bio, bio link
-  └────────────┬───────────┘
-               │
-               ▼
-          EMAILS_CSV
+        EMAILS_CSV
 ```
 
 `apify-actor` je generički crawler — bilo koji sajt, tvoji CSS selektori, plus
@@ -35,10 +41,18 @@ pokrivaju.
 
 | Mapa | Šta radi | Blokira li se |
 | --- | --- | --- |
+| [`lead-normalizer`](lead-normalizer/) | **bilo čiji export → čist CSV** (ime, e-mail, IG…) | ne radi mrežu |
 | [`browser-extension`](browser-extension/) | pretražuješ Google → kupi rezultate → e-mail/ime/IG → CSV | **ne** — radi u tvom browseru |
 | [`google-leads-scraper`](google-leads-scraper/) | niša + grad → biznisi + e-mailovi + IG handle-ovi | Google da, OSM ne |
 | [`instagram-email-scraper`](instagram-email-scraper/) | IG profili → kontakt e-mailovi | da, ~20 profila / 30 min po IP |
 | [`apify-actor`](apify-actor/) | generički crawler sa CSS selektorima | zavisi od mete |
+
+**Ako skrejpuješ drugim alatom**, treba ti samo `lead-normalizer`: nalepiš
+njegov export i dobiješ sređen CSV. Ne mora da zna odakle je fajl — prepoznaje
+i format i koje su kolone.
+
+Podešeno za **US tržište**: telefoni u `+1` E.164, države u dvoslovne kodove,
+Google jezik `en`, niše na engleskom (`med spa`, `roofing`, `law firm`…).
 
 **Ekstenzija je jedini način da se Google skrejpuje bez blokade**, jer se
 zahtevi ne razlikuju od tvog običnog pretraživanja — Google i vidi korisnika

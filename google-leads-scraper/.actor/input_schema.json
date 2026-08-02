@@ -6,16 +6,16 @@
         "niche": {
             "title": "Niche",
             "type": "string",
-            "description": "What the businesses do — `frizerski salon`, `teretana`, `restoran`, `zubar`. For the OpenStreetMap source you can also pass a raw OSM tag such as `shop=hairdresser`.",
+            "description": "What the businesses do — `med spa`, `dentist`, `roofing`, `law firm`, `gym`. For the OpenStreetMap source you can also pass a raw OSM tag such as `shop=hairdresser`.",
             "editor": "textfield",
-            "prefill": "frizerski salon"
+            "prefill": "med spa"
         },
         "city": {
             "title": "City",
             "type": "string",
-            "description": "Where to look. For OpenStreetMap use the local name — `Beograd`, not `Belgrade` — because it matches the administrative boundary by name.",
+            "description": "Where to look — `Austin`, `Scottsdale`, `Tampa`. The OpenStreetMap source matches a city by its administrative boundary name, so use the name the place calls itself.",
             "editor": "textfield",
-            "prefill": "Novi Sad"
+            "prefill": "Austin"
         },
         "queries": {
             "title": "Explicit search phrases",
@@ -51,7 +51,7 @@
             "type": "string",
             "description": "The `hl` parameter. Affects result ranking and the labels the panel renders.",
             "editor": "textfield",
-            "default": "sr"
+            "default": "en"
         },
         "enrichFromWebsite": {
             "title": "Scrape each website for contacts",

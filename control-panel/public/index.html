@@ -189,6 +189,8 @@ function renderField(field) {
     control = `<textarea id="${id}" data-name="${field.name}" data-kind="json">${field.default && Object.keys(field.default).length ? JSON.stringify(field.default, null, 2) : ''}</textarea>`;
   } else if (field.type === 'integer' || field.type === 'number') {
     control = `<input type="number" id="${id}" data-name="${field.name}" data-kind="number" value="${field.default ?? ''}">`;
+  } else if (field.editor === 'textarea') {
+    control = `<textarea id="${id}" data-name="${field.name}" data-kind="scalar" rows="8" placeholder="nalepi ovde">${field.default ?? ''}</textarea>`;
   } else {
     control = `<input type="${field.secret ? 'password' : 'text'}" id="${id}" data-name="${field.name}" data-kind="scalar" value="${field.default ?? ''}">`;
   }

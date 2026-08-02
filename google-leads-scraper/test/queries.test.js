@@ -37,10 +37,17 @@ describe('buildQueries', () => {
 });
 
 describe('osmTagsForNiche', () => {
-    it('maps Serbian and English niche names', () => {
+    it('maps the US niches the actor is aimed at', () => {
+        assert.deepEqual(osmTagsForNiche('dentist'), ['amenity=dentist']);
+        assert.deepEqual(osmTagsForNiche('Roofing'), ['craft=roofer']);
+        assert.deepEqual(osmTagsForNiche('law firm'), ['office=lawyer']);
+        assert.deepEqual(osmTagsForNiche('coffee shop'), ['amenity=cafe']);
+        assert.deepEqual(osmTagsForNiche('gym'), ['leisure=fitness_centre']);
+    });
+
+    it('keeps the Serbian names working as aliases', () => {
         assert.deepEqual(osmTagsForNiche('frizerski salon'), ['shop=hairdresser']);
         assert.deepEqual(osmTagsForNiche('Teretana'), ['leisure=fitness_centre']);
-        assert.deepEqual(osmTagsForNiche('dentist'), ['amenity=dentist']);
     });
 
     it('handles diacritics and plurals', () => {
@@ -58,7 +65,7 @@ describe('osmTagsForNiche', () => {
     });
 
     it('can map one niche to several tags', () => {
-        assert.deepEqual(osmTagsForNiche('barber'), ['shop=hairdresser', 'shop=beauty']);
+        assert.deepEqual(osmTagsForNiche('med spa'), ['shop=beauty', 'leisure=spa']);
     });
 });
 

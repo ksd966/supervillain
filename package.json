@@ -6,7 +6,7 @@
     "scripts": {
         "check:shared": "node scripts/check-shared-modules.mjs",
         "sync:shared": "node scripts/check-shared-modules.mjs --fix",
-        "install:all": "npm --prefix apify-actor install && npm --prefix instagram-email-scraper install && npm --prefix google-leads-scraper install",
-        "test": "npm run check:shared && npm --prefix apify-actor test && npm --prefix instagram-email-scraper test && npm --prefix google-leads-scraper test"
+        "install:all": "npm --prefix apify-actor install && npm --prefix instagram-email-scraper install && npm --prefix google-leads-scraper install && npm --prefix lead-normalizer install",
+        "test": "npm run check:shared && npm --prefix apify-actor test && npm --prefix instagram-email-scraper test && npm --prefix google-leads-scraper test && npm --prefix lead-normalizer test"
     }
 }

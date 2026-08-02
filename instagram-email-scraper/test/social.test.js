@@ -75,6 +75,19 @@ describe('instagramHandlesFromHtml', () => {
         assert.deepEqual(instagramHandlesFromHtml(html), ['salon_ana']);
     });
 
+    it('finds a bare link with no scheme, as free-text fields usually have', () => {
+        assert.deepEqual(
+            instagramHandlesFromHtml('Reach them at hello@spa.com or IG instagram.com/vista.medspa'),
+            ['vista.medspa'],
+        );
+        assert.deepEqual(instagramHandlesFromHtml('www.instagram.com/salon_ana'), ['salon_ana']);
+    });
+
+    it('does not match a lookalike host without a scheme', () => {
+        assert.deepEqual(instagramHandlesFromHtml('notinstagram.com/salon_ana'), []);
+        assert.deepEqual(instagramHandlesFromHtml('my-instagram.com/salon_ana'), []);
+    });
+
     it('returns nothing for markup with no Instagram links', () => {
         assert.deepEqual(instagramHandlesFromHtml('<a href="https://firma.rs">sajt</a>'), []);
         assert.deepEqual(instagramHandlesFromHtml(''), []);

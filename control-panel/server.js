@@ -46,6 +46,11 @@ const ACTORS = [
         blurb: 'Lista profila → kontakt e-mailovi. Prima INSTAGRAM_HANDLES iz prethodnog.',
     },
     {
+        id: 'lead-normalizer',
+        title: 'Sredi export',
+        blurb: 'Nalepi CSV/JSON iz bilo kog alata → čist, dedupliran, verifikovan CSV.',
+    },
+    {
         id: 'apify-actor',
         title: 'Generički crawler',
         blurb: 'Bilo koji sajt, tvoji CSS selektori.',
@@ -432,7 +437,9 @@ const server = http.createServer(async (req, res) => {
             }
 
             if (sub === '/results.csv' && req.method === 'GET') {
-                const csv = readKeyValue(run.id, 'EMAILS_CSV') ?? toCsv(readDataset(run.id));
+                const csv = readKeyValue(run.id, 'CLEAN_CSV')
+                    ?? readKeyValue(run.id, 'EMAILS_CSV')
+                    ?? toCsv(readDataset(run.id));
                 res.writeHead(200, {
                     'content-type': 'text/csv; charset=utf-8',
                     'content-disposition': `attachment; filename="${run.actorId}-${run.id}.csv"`,
