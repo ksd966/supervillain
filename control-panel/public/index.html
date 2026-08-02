@@ -135,7 +135,9 @@ const $ = (sel, root = document) => root.querySelector(sel);
 const params = new URLSearchParams(location.search);
 if (params.get('token')) {
   localStorage.setItem('panelToken', params.get('token'));
-  history.replaceState({}, '', location.pathname);
+  // Keep the hash: it names the tab to open, and dropping it here would undo
+  // every bookmark that points at a specific actor.
+  history.replaceState({}, '', location.pathname + location.hash);
 }
 const TOKEN = localStorage.getItem('panelToken') ?? '';
 
@@ -417,13 +419,28 @@ async function chainToInstagram(runId) {
   const index = actors.findIndex((actor) => actor.id === 'instagram-email-scraper');
   if (index < 0) { toast('Instagram actor nije pronađen.'); return; }
 
-  active = index;
-  renderTabs();
-  renderForm();
-  const field = $('#form-host [data-name="usernames"]');
+  selectActor(index);
+  // The paste box, not `usernames`: that one lives in the collapsed advanced
+  // block, so filling it would look like nothing happened.
+  const field = $('#form-host [data-name="list"]') ?? $('#form-host [data-name="usernames"]');
   if (field) field.value = handles.join('\n');
   window.scrollTo({ top: 0, behavior: 'smooth' });
   toast(`Prebačeno ${handles.length} handle-ova`);
+}
+
+/**
+ * Switching actors, and remembering it. The tab lands in the URL so a run you
+ * do every day can be bookmarked — and opened straight from the launcher —
+ * instead of being two clicks away from whatever tab happens to be first.
+ *
+ * @param {number} index
+ */
+function selectActor(index) {
+  active = index;
+  localStorage.setItem('panelActor', actors[index].id);
+  history.replaceState(null, '', `#${actors[index].id}`);
+  renderTabs();
+  renderForm();
 }
 
 function renderTabs() {
@@ -434,7 +451,7 @@ function renderTabs() {
     tab.textContent = actor.title;
     tab.setAttribute('role', 'tab');
     tab.setAttribute('aria-selected', String(index === active));
-    tab.onclick = () => { active = index; renderTabs(); renderForm(); };
+    tab.onclick = () => selectActor(index);
     $('#tabs').append(tab);
   });
 }
@@ -450,6 +467,10 @@ async function refresh() {
   actors = await api('/api/actors').catch(() => null);
   if (!actors) return;
   if (!actors.length) { $('#form-host').innerHTML = '<p class="empty">Nijedan actor nije pronađen pored panela.</p>'; return; }
+
+  const wanted = decodeURIComponent(location.hash.slice(1)) || localStorage.getItem('panelActor') || '';
+  const remembered = actors.findIndex((actor) => actor.id === wanted);
+  active = remembered >= 0 ? remembered : 0;
 
   renderTabs();
   renderForm();
