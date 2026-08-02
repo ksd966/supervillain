@@ -29,12 +29,23 @@ const SHARED_FILES = [
         'google-leads-scraper/src/emails.js',
         'browser-extension/emails.js',
         'lead-normalizer/src/emails.js',
+        'instagram-keyword-scraper/src/emails.js',
     ],
     [
         'google-leads-scraper/src/social.js',
         'instagram-email-scraper/src/social.js',
         'browser-extension/social.js',
         'lead-normalizer/src/social.js',
+        'instagram-keyword-scraper/src/social.js',
+    ],
+    [
+        'google-leads-scraper/test/igSearch.test.js',
+        'instagram-keyword-scraper/test/igSearch.test.js',
+    ],
+    [
+        'google-leads-scraper/src/igSearch.js',
+        'browser-extension/igSearch.js',
+        'instagram-keyword-scraper/src/igSearch.js',
     ],
     [
         'google-leads-scraper/src/website.js',
@@ -44,22 +55,26 @@ const SHARED_FILES = [
         'google-leads-scraper/src/emailVerify.js',
         'instagram-email-scraper/src/emailVerify.js',
         'lead-normalizer/src/emailVerify.js',
+        'instagram-keyword-scraper/src/emailVerify.js',
     ],
     [
         'google-leads-scraper/test/social.test.js',
         'instagram-email-scraper/test/social.test.js',
         'lead-normalizer/test/social.test.js',
+        'instagram-keyword-scraper/test/social.test.js',
     ],
     [
         'google-leads-scraper/test/emailVerify.test.js',
         'instagram-email-scraper/test/emailVerify.test.js',
         'lead-normalizer/test/emailVerify.test.js',
+        'instagram-keyword-scraper/test/emailVerify.test.js',
     ],
     [
         'apify-actor/test/emails.test.js',
         'instagram-email-scraper/test/emails.test.js',
         'google-leads-scraper/test/emails.test.js',
         'lead-normalizer/test/emails.test.js',
+        'instagram-keyword-scraper/test/emails.test.js',
     ],
 ];
 

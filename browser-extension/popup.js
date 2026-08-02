@@ -177,10 +177,122 @@ $('#s-save').onclick = async () => {
     setTimeout(() => busy(false), 1200);
 };
 
+// --- Instagram keyword search ------------------------------------------------
+
+let igLeads = [];
+
+function renderIg() {
+    const list = $('#ig-list');
+
+    if (!igLeads.length) {
+        list.innerHTML = `<li class="empty">
+            <b>Nema još profila.</b>
+            Upiši nišu i grad pa klikni „Pretraži".
+        </li>`;
+        return;
+    }
+
+    const sorted = [...igLeads].sort((a, b) => {
+        if (Boolean(a.email) !== Boolean(b.email)) return a.email ? -1 : 1;
+        return a.username.localeCompare(b.username);
+    });
+
+    list.innerHTML = '';
+    for (const lead of sorted) {
+        const item = document.createElement('li');
+        item.innerHTML = `
+            <div class="top">
+                <div style="min-width:0">
+                    <div class="name">${escapeHtml(lead.name ?? lead.username)}</div>
+                    <div class="ig">@${escapeHtml(lead.username)}</div>
+                </div>
+            </div>
+            ${lead.emails?.length ? `<div class="mail">${escapeHtml(lead.emails.join(', '))}</div>` : '<div class="pending">bez adrese u snippetu</div>'}
+            ${lead.keywords?.length ? `<div class="host">${escapeHtml(lead.keywords.join(' · '))}</div>` : ''}
+        `;
+        list.append(item);
+    }
+}
+
+async function loadIg() {
+    const response = await send({ type: 'get-ig-leads' });
+    igLeads = response?.leads ?? [];
+    renderIg();
+}
+
+const splitList = (value) => value.split(',').map((part) => part.trim()).filter(Boolean);
+
+function igBusy(isBusy, text = '') {
+    $('#ig-progress').style.display = isBusy ? 'block' : 'none';
+    $('#ig-progress').textContent = text;
+    for (const button of document.querySelectorAll('#pane-ig button')) button.disabled = isBusy;
+}
+
+$('#ig-run').onclick = async () => {
+    const keywords = splitList($('#ig-keywords').value);
+    if (!keywords.length) { igBusy(true, 'Upiši bar jednu ključnu reč.'); setTimeout(() => igBusy(false), 1800); return; }
+
+    igBusy(true, 'Pokrećem pretragu…');
+    const result = await send({
+        type: 'ig-search',
+        keywords,
+        location: $('#ig-location').value.trim(),
+        emailDomains: splitList($('#ig-domains').value),
+        pages: Number($('#ig-pages').value) || 2,
+    });
+    igBusy(false);
+    await loadIg();
+
+    if (result?.ok) {
+        igBusy(true, `Gotovo: ${result.queries} upita, ${result.found} novih profila.`);
+        setTimeout(() => igBusy(false), 3000);
+    }
+};
+
+$('#ig-export').onclick = () => {
+    if (!igLeads.length) return;
+
+    // One row per address, matching what the commercial actors emit.
+    const rows = igLeads.flatMap((lead) => (lead.emails?.length
+        ? lead.emails.map((email) => ({ ...lead, email }))
+        : [lead]));
+
+    const columns = ['keyword', 'username', 'name', 'email', 'url', 'description'];
+    const cell = (value) => {
+        const text = Array.isArray(value) ? value.join(' | ') : String(value ?? '');
+        return /[",\n;]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    };
+    const csv = [
+        columns.join(','),
+        ...rows.map((row) => columns.map((column) => cell(column === 'keyword' ? (row.keywords ?? []).join(' ') : row[column])).join(',')),
+    ].join('\n') + '\n';
+
+    download(csv);
+};
+
+$('#ig-clear').onclick = async () => { await send({ type: 'clear-ig-leads' }); await loadIg(); };
+$('#ig-panel').onclick = $('#to-panel').onclick;
+
+// --- tabs --------------------------------------------------------------------
+
+function showPane(which) {
+    $('#tab-sites').setAttribute('aria-selected', String(which === 'sites'));
+    $('#tab-ig').setAttribute('aria-selected', String(which === 'ig'));
+    $('#pane-sites').hidden = which !== 'sites';
+    $('#pane-ig').hidden = which !== 'ig';
+}
+
+$('#tab-sites').onclick = () => showPane('sites');
+$('#tab-ig').onclick = () => { showPane('ig'); loadIg(); };
+
 chrome.runtime.onMessage.addListener((message) => {
     if (message.type === 'scan-progress') {
         $('#progress').textContent = `Skeniram ${message.done}/${message.total}…`;
     }
+    if (message.type === 'ig-progress') {
+        $('#ig-progress').textContent = `Pretraga ${message.done}/${message.total} — ${message.label}`;
+    }
 });
 
 load();
+loadIg();

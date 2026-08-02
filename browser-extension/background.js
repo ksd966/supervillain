@@ -12,9 +12,11 @@
  */
 
 import { extractEmailsFromText } from './emails.js';
-import { instagramHandlesFromHtml } from './social.js';
+import { buildSearchQueries, igLeadFromResult } from './igSearch.js';
+import { instagramHandleFromUrl, instagramHandlesFromHtml } from './social.js';
 
 const STORE_KEY = 'leads';
+const IG_STORE_KEY = 'igLeads';
 const SETTINGS_KEY = 'settings';
 const DEFAULT_SETTINGS = {
     panelUrl: 'http://localhost:8377',
@@ -37,6 +39,16 @@ async function writeLeads(leads) {
     const pending = Object.values(leads).filter((lead) => !lead.scannedAt).length;
     await chrome.action.setBadgeText({ text: Object.keys(leads).length ? String(Object.keys(leads).length) : '' });
     await chrome.action.setBadgeBackgroundColor({ color: pending ? '#ffc107' : '#5ed6a4' });
+}
+
+/** @returns {Promise<Record<string, object>>} */
+async function readIgLeads() {
+    return (await chrome.storage.local.get(IG_STORE_KEY))[IG_STORE_KEY] ?? {};
+}
+
+/** @param {Record<string, object>} leads */
+async function writeIgLeads(leads) {
+    await chrome.storage.local.set({ [IG_STORE_KEY]: leads });
 }
 
 /** @returns {Promise<typeof DEFAULT_SETTINGS>} */
@@ -220,6 +232,82 @@ async function scanAll(onProgress) {
     return leads;
 }
 
+// --- Instagram keyword search ------------------------------------------------
+
+/**
+ * The keyword the sweep is currently on, so profiles reported by the content
+ * script can be tagged with it. One query runs at a time, so a single slot is
+ * enough and avoids threading state through the message.
+ */
+let activeSearch = null;
+
+/**
+ * Runs one search URL in a background tab and waits for the page to settle.
+ *
+ * A tab rather than `fetch` because that is the whole point: the request comes
+ * from the user's own logged-in browser, so the engine serves ordinary results
+ * instead of a CAPTCHA. `active: false` keeps it out of the way.
+ *
+ * @param {string} url
+ * @param {number} settleMs
+ */
+async function sweepUrl(url, settleMs) {
+    const tab = await chrome.tabs.create({ url, active: false });
+
+    await new Promise((resolve) => {
+        const done = () => {
+            chrome.tabs.onUpdated.removeListener(listener);
+            clearTimeout(timer);
+            resolve();
+        };
+        const listener = (tabId, info) => {
+            if (tabId === tab.id && info.status === 'complete') setTimeout(done, settleMs);
+        };
+        // A tab that never reports complete must not hang the sweep.
+        const timer = setTimeout(done, 25_000);
+        chrome.tabs.onUpdated.addListener(listener);
+    });
+
+    await chrome.tabs.remove(tab.id).catch(() => {});
+}
+
+/**
+ * @param {object} params
+ * @param {string[]} params.keywords
+ * @param {string} [params.location]
+ * @param {string[]} [params.emailDomains]
+ * @param {number} [params.pages] result pages per query
+ * @param {(done: number, total: number, label: string) => void} [params.onProgress]
+ * @returns {Promise<{queries: number, found: number}>}
+ */
+async function runIgSearch({ keywords, location, emailDomains, pages = 2, onProgress = () => {} }) {
+    const settings = await readSettings();
+    const queries = buildSearchQueries({ keywords, location, emailDomains });
+
+    const before = Object.keys(await readIgLeads()).length;
+    let done = 0;
+    const total = queries.length * pages;
+
+    for (const entry of queries) {
+        activeSearch = { keyword: entry.keyword, emailDomain: entry.emailDomain, emailDomains };
+
+        for (let page = 0; page < pages; page++) {
+            // num=20 asks for a fuller page; engines honour it inconsistently,
+            // which is why start= paging is used as well.
+            const url = 'https://www.google.com/search?num=20'
+                + `&q=${encodeURIComponent(entry.query)}`
+                + (page ? `&start=${page * 10}` : '');
+
+            await sweepUrl(url, Math.max(settings.scanDelayMs, 900));
+            done += 1;
+            onProgress(done, total, entry.query);
+        }
+    }
+
+    activeSearch = null;
+    return { queries: queries.length, found: Object.keys(await readIgLeads()).length - before };
+}
+
 // --- messages ----------------------------------------------------------------
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -252,9 +340,81 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
                 }
 
                 if (added) await writeLeads(leads);
+
+                // Instagram profiles from a `site:instagram.com` search: the
+                // bio the engine indexed is in the snippet, so the address is
+                // already here — nothing further needs fetching.
+                if (message.profiles?.length) {
+                    const igLeads = await readIgLeads();
+                    // Tracks any change, not just new profiles: a second
+                    // keyword finding the same profile, or a fuller snippet
+                    // carrying an address the first one truncated away, are
+                    // both worth persisting.
+                    let changed = false;
+
+                    for (const result of message.profiles) {
+                        const lead = igLeadFromResult(
+                            { ...result, keyword: activeSearch?.keyword ?? null },
+                            { instagramHandleFromUrl, extractEmailsFromText },
+                            { emailDomains: activeSearch?.emailDomains ?? [] },
+                        );
+                        if (!lead) continue;
+
+                        const existing = igLeads[lead.username];
+                        if (existing) {
+                            const emails = [...new Set([...(existing.emails ?? []), ...lead.emails])];
+                            const keywords = [...new Set([...(existing.keywords ?? []), lead.keyword].filter(Boolean))];
+
+                            if (emails.length !== (existing.emails ?? []).length
+                                || keywords.length !== (existing.keywords ?? []).length
+                                || (!existing.description && lead.description)) {
+                                changed = true;
+                            }
+
+                            existing.emails = emails;
+                            existing.email = existing.email ?? emails[0] ?? null;
+                            existing.keywords = keywords;
+                            existing.description = existing.description || lead.description;
+                            continue;
+                        }
+
+                        igLeads[lead.username] = {
+                            ...lead,
+                            keywords: [lead.keyword].filter(Boolean),
+                            foundAt: new Date().toISOString(),
+                        };
+                        changed = true;
+                    }
+
+                    if (changed) await writeIgLeads(igLeads);
+                }
+
                 sendResponse({ added });
                 return;
             }
+
+            case 'ig-search': {
+                const result = await runIgSearch({
+                    keywords: message.keywords ?? [],
+                    location: message.location ?? '',
+                    emailDomains: message.emailDomains ?? [],
+                    pages: message.pages ?? 2,
+                    onProgress: (done, total, label) => {
+                        chrome.runtime.sendMessage({ type: 'ig-progress', done, total, label }).catch(() => {});
+                    },
+                });
+                sendResponse({ ok: true, ...result });
+                return;
+            }
+
+            case 'get-ig-leads':
+                sendResponse({ leads: Object.values(await readIgLeads()) });
+                return;
+
+            case 'clear-ig-leads':
+                await writeIgLeads({});
+                sendResponse({ ok: true });
+                return;
 
             case 'scan-page': {
                 // Scan whatever tab the user is looking at, search page or not.
@@ -309,7 +469,11 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
                 if (!settings.panelToken) { sendResponse({ ok: false, reason: 'Nema tokena u podešavanjima.' }); return; }
 
                 const leads = Object.values(await readLeads());
-                const handles = [...new Set(leads.flatMap((lead) => lead.instagram ?? []))];
+                const igLeads = Object.values(await readIgLeads());
+                const handles = [...new Set([
+                    ...leads.flatMap((lead) => lead.instagram ?? []),
+                    ...igLeads.map((lead) => lead.username),
+                ].filter(Boolean))];
                 if (!handles.length) { sendResponse({ ok: false, reason: 'Nema nijednog Instagram handle-a.' }); return; }
 
                 try {

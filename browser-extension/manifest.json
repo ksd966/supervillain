@@ -3,7 +3,7 @@
     "name": "Lead Harvester",
     "version": "0.1.0",
     "description": "Skuplja e-mail adrese, imena i Instagram profile sa Google rezultata i sa bilo koje stranice. Izvoz u CSV jednim klikom.",
-    "permissions": ["storage", "activeTab", "scripting"],
+    "permissions": ["storage", "activeTab", "scripting", "tabs"],
     "host_permissions": ["http://*/*", "https://*/*"],
     "background": {
         "service_worker": "background.js",

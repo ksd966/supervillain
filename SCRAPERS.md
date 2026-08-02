@@ -1,7 +1,7 @@
 # Lead scraping actors
 
-Tri Apify actor-a koji rade lokalno, bez naloga i bez troška. Isti kod se može
-pushovati na Apify bez izmena, ako i kada zatreba.
+Pet Apify actor-a plus browser ekstenzija, sve lokalno, bez naloga i bez
+troška. Isti kod se može pushovati na Apify bez izmena, ako i kada zatreba.
 
 ## Kako se uklapaju
 
@@ -33,16 +33,22 @@ pushovati na Apify bez izmena, ako i kada zatreba.
         EMAILS_CSV
 ```
 
+`instagram-keyword-scraper` i IG tab u ekstenziji rade isto što i komercijalni
+„mass Instagram email scraper": pretražuju `site:instagram.com "niša" "grad"
+"@gmail.com"` i čitaju adresu iz **snippeta** — bio teksta koji pretraživač već
+ima indeksiran. Instagram se pritom uopšte ne kontaktira, pa njegov rate limit
+ne postoji.
+
 `apify-actor` je generički crawler — bilo koji sajt, tvoji CSS selektori, plus
-ekstrakcija e-mailova. Koristi ga kad ti treba nešto što ova druga dva ne
-pokrivaju.
+ekstrakcija e-mailova.
 
 ## Actor-i
 
 | Mapa | Šta radi | Blokira li se |
 | --- | --- | --- |
 | [`lead-normalizer`](lead-normalizer/) | **bilo čiji export → čist CSV** (ime, e-mail, IG…) | ne radi mrežu |
-| [`browser-extension`](browser-extension/) | pretražuješ Google → kupi rezultate → e-mail/ime/IG → CSV | **ne** — radi u tvom browseru |
+| [`browser-extension`](browser-extension/) | pretražuješ Google → kupi rezultate → e-mail/ime/IG → CSV, **plus IG pretraga po ključnoj reči** | **ne** — radi u tvom browseru |
+| [`instagram-keyword-scraper`](instagram-keyword-scraper/) | ključna reč + grad → IG profili sa e-mailom, preko pretraživača | DuckDuckGo ne, Google da |
 | [`google-leads-scraper`](google-leads-scraper/) | niša + grad → biznisi + e-mailovi + IG handle-ovi | Google da, OSM ne |
 | [`instagram-email-scraper`](instagram-email-scraper/) | IG profili → kontakt e-mailovi | da, ~20 profila / 30 min po IP |
 | [`apify-actor`](apify-actor/) | generički crawler sa CSS selektorima | zavisi od mete |
@@ -63,7 +69,12 @@ Svaki ima svoj README sa detaljima, ograničenjima i pravnim napomenama.
 
 ## Pokretanje
 
-**Najlakše — dupli klik na `Panel.bat`** (Windows). Otvori se
+**Najlakše — dupli klik na `Aplikacija.bat`** (Windows). Panel se otvori u
+zasebnom prozoru, bez adresne trake i tabova, sa svojom ikonom u taskbaru —
+Chrome/Edge u `--app` režimu. Nije Electron: to bi značilo 150 MB runtime-a i
+build korak za prozor koji izgleda isto, uz browser koji već imaš.
+
+`Panel.bat` radi isto ali u običnom tabu. Otvori se
 [kontrolni panel](control-panel/): forma, dugme, logovi uživo, CSV. Prvi put
 instalira zavisnosti, posle je instant.
 
@@ -74,8 +85,8 @@ kao aplikacija. Detalji u [control-panel/README.md](control-panel/README.md).
 Iz terminala:
 
 ```bash
-npm run install:all   # instalira zavisnosti u sva tri actor-a
-npm test              # deljeni moduli + sve tri test suite (228 testova)
+npm run install:all   # instalira zavisnosti u sve actor-e
+npm test              # deljeni moduli + sve test suite (485 testova)
 node control-panel/server.js
 ```
 
@@ -120,7 +131,7 @@ serija.
 
 ## Deljeni moduli
 
-`emails.js`, `website.js` i `emailVerify.js` postoje kao identične kopije u više
+`emails.js`, `website.js`, `social.js`, `igSearch.js` i `emailVerify.js` postoje kao identične kopije u više
 actor-a. Nije propust: Apify actor-i se deploy-uju kao samostalni Docker build
 konteksti, pa ne mogu da importuju iz susedne mape.
 
@@ -137,6 +148,9 @@ Kanonska kopija je prva u listi u `scripts/check-shared-modules.mjs`.
 
 - **google-leads-scraper** — Google daje ~100-120 rezultata po pretrazi i
   blokira bez rezidencijalnih proxija; OSM ne blokira nikad ali zna manje.
+- **instagram-keyword-scraper** — dobijaš samo ono što je pretraživač
+  indeksirao: bio tekst, bez broja pratilaca; DuckDuckGo ima manji indeks od
+  Google-a, a Google bez proxija dobija CAPTCHA.
 - **instagram-email-scraper** — ~20 profila na 30 minuta po IP adresi, klizni
   prozor, bez `sessionCookie` prinos je mali.
 - **apify-actor** — koliko izdrži meta koju krouluješ.

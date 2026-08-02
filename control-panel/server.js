@@ -41,6 +41,11 @@ const ACTORS = [
         blurb: 'Niša + grad → biznisi, telefoni, e-mailovi, Instagram handle-ovi.',
     },
     {
+        id: 'instagram-keyword-scraper',
+        title: 'Instagram po ključnoj reči',
+        blurb: 'Niša + grad → IG profili sa e-mailom, preko pretraživača. Instagram se ne dira.',
+    },
+    {
         id: 'instagram-email-scraper',
         title: 'Instagram e-mailovi',
         blurb: 'Lista profila → kontakt e-mailovi. Prima INSTAGRAM_HANDLES iz prethodnog.',
@@ -492,6 +497,48 @@ const server = http.createServer(async (req, res) => {
     }
 });
 
+/**
+ * Opens the panel in a browser app window — its own window and taskbar entry,
+ * no address bar, no tabs. That is what `--app` gives you, and it is the whole
+ * of what an Electron shell would have added here, minus the 150 MB runtime and
+ * the build step.
+ *
+ * @param {string} url
+ */
+function openAppWindow(url) {
+    const candidates = process.platform === 'win32'
+        ? [
+            `${process.env.ProgramFiles}\\Google\\Chrome\\Application\\chrome.exe`,
+            `${process.env['ProgramFiles(x86)']}\\Google\\Chrome\\Application\\chrome.exe`,
+            `${process.env.LOCALAPPDATA}\\Google\\Chrome\\Application\\chrome.exe`,
+            `${process.env['ProgramFiles(x86)']}\\Microsoft\\Edge\\Application\\msedge.exe`,
+            `${process.env.ProgramFiles}\\Microsoft\\Edge\\Application\\msedge.exe`,
+        ]
+        : process.platform === 'darwin'
+            ? [
+                '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+                '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+                '/Applications/Chromium.app/Contents/MacOS/Chromium',
+            ]
+            : ['google-chrome', 'chromium', 'chromium-browser', 'microsoft-edge'];
+
+    const found = candidates.find((path) => (path.includes('/') || path.includes('\\') ? existsSync(path) : true));
+
+    if (!found) {
+        console.log('  Chrome/Edge nisu pronađeni — otvori gornju adresu ručno u browseru.\n');
+        return;
+    }
+
+    const child = spawn(found, [`--app=${url}`, '--window-size=1180,900'], {
+        detached: true,
+        stdio: 'ignore',
+    });
+    child.on('error', () => {
+        console.log('  Nije uspelo otvaranje prozora — otvori gornju adresu ručno.\n');
+    });
+    child.unref();
+}
+
 server.listen(PORT, HOST, () => {
     const line = '─'.repeat(64);
     console.log(`\n${line}`);
@@ -503,4 +550,6 @@ server.listen(PORT, HOST, () => {
     console.log(`  (čuva se u control-panel/.token — obriši fajl da dobiješ novi)`);
     console.log(`\n  Actor-i: ${ACTORS.map((a) => a.id).join(', ') || 'nijedan pronađen'}`);
     console.log(`${line}\n`);
+
+    if (process.argv.includes('--open')) openAppWindow(`http://localhost:${PORT}/?token=${TOKEN}`);
 });

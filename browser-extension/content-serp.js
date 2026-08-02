@@ -16,70 +16,91 @@
 
     /**
      * @param {string} href
-     * @returns {URL|null}
+     * @returns {URL|null} parsed and unwrapped, whatever the host
      */
-    function usableUrl(href) {
+    function resolve(href) {
         try {
             // DuckDuckGo and Bing wrap results in a redirector.
             const direct = new URL(href, location.href);
             const wrapped = direct.searchParams.get('uddg') ?? direct.searchParams.get('u');
             const parsed = wrapped ? new URL(wrapped) : direct;
 
-            if (!/^https?:$/.test(parsed.protocol)) return null;
-            if (SKIP_HOSTS.test(parsed.hostname)) return null;
-            return parsed;
+            return /^https?:$/.test(parsed.protocol) ? parsed : null;
         } catch {
             return null;
         }
     }
 
     /**
+     * @param {URL|null} parsed
+     * @returns {boolean}
+     */
+    const isProspectSite = (parsed) => Boolean(parsed) && !SKIP_HOSTS.test(parsed.hostname);
+
+    /**
+     * Instagram is on the skip list for ordinary prospecting — there is nothing
+     * to fetch from a profile page — but on a `site:instagram.com` search the
+     * profiles *are* the results, and the bio the engine indexed is sitting in
+     * the snippet. So they are collected separately rather than dropped.
+     *
+     * @param {URL|null} parsed
+     * @returns {boolean}
+     */
+    const isInstagramProfile = (parsed) => Boolean(parsed) && /(^|\.)instagram\.com$/i.test(parsed.hostname);
+
+    /**
      * Reads the result list without depending on Google's obfuscated class
      * names: every organic result is an <a> carrying an <h3>. That shape has
      * outlived many redesigns.
      *
-     * @returns {Array<{url: string, name: string, snippet: string}>}
+     * @returns {{sites: object[], profiles: object[]}}
      */
     function collectResults() {
-        const seen = new Map();
+        const sites = new Map();
+        const profiles = new Map();
 
         for (const anchor of document.querySelectorAll('a[href]')) {
             const heading = anchor.querySelector('h3, h2');
             if (!heading) continue;
 
-            const parsed = usableUrl(anchor.getAttribute('href'));
+            const parsed = resolve(anchor.getAttribute('href'));
             if (!parsed) continue;
 
             // Must match the key the service worker uses, port included:
             // keying on hostname alone would collapse two different businesses
             // that happen to share a host.
             const key = `${parsed.host.replace(/^www\./i, '').toLowerCase()}${parsed.pathname.replace(/\/+$/, '').toLowerCase()}`;
-            if (seen.has(key)) continue;
+            const bucket = isInstagramProfile(parsed) ? profiles : (isProspectSite(parsed) ? sites : null);
+            if (!bucket || bucket.has(key)) continue;
 
-            // The snippet usually sits in a sibling of the link's container and
-            // sometimes already contains a phone number or an address.
+            // The snippet sits in a sibling of the link's container. On an
+            // ordinary search it may hold a phone number; on a
+            // `site:instagram.com` search it is the indexed bio, which is where
+            // the e-mail address lives.
             const container = anchor.closest('div[data-hveid], li, article') ?? anchor.parentElement;
-            const snippet = (container?.innerText ?? '').replace(/\s+/g, ' ').trim().slice(0, 400);
+            const snippet = (container?.innerText ?? '').replace(/\s+/g, ' ').trim().slice(0, 500);
 
-            seen.set(key, {
+            bucket.set(key, {
                 url: parsed.href,
                 name: heading.innerText.trim(),
+                title: heading.innerText.trim(),
                 snippet,
             });
         }
 
-        return [...seen.values()];
+        return { sites: [...sites.values()], profiles: [...profiles.values()] };
     }
 
     function report() {
-        const results = collectResults();
-        if (!results.length) return;
+        const { sites, profiles } = collectResults();
+        if (!sites.length && !profiles.length) return;
 
         chrome.runtime.sendMessage({
             type: 'serp-results',
             query: new URLSearchParams(location.search).get('q') ?? '',
             source: location.hostname,
-            results,
+            results: sites,
+            profiles,
         }).catch(() => {
             // The service worker may be asleep mid-navigation; the next page
             // load reports again, so a dropped message costs nothing.
