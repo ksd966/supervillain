@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scraper panel — prijava</title>
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="icon" href="/icon-192.png">
+<meta name="theme-color" content="#11141a">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px;
+    background: #11141a; color: #e8ecf2;
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .box { width: 100%; max-width: 340px; text-align: center; }
+  img { width: 64px; height: 64px; border-radius: 15px; margin-bottom: 18px; }
+  h1 { font-size: 19px; margin: 0 0 6px; font-weight: 600; }
+  p { color: #8b96a8; font-size: 13px; margin: 0 0 20px; }
+  input {
+    width: 100%; padding: 13px; border-radius: 11px; border: 1px solid #2a303c;
+    background: #1e232d; color: #e8ecf2; font: inherit; font-size: 16px; text-align: center;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  input:focus { outline: 2px solid #5ed6a4; outline-offset: -1px; }
+  button {
+    width: 100%; margin-top: 11px; padding: 13px; border: 0; border-radius: 11px;
+    background: #5ed6a4; color: #06281c; font: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
+  }
+  .err { color: #ff6b6b; font-size: 13px; margin-top: 12px; min-height: 18px; }
+</style>
+</head>
+<body>
+<div class="box">
+  <img src="/icon-192.png" alt="">
+  <h1>Scraper panel</h1>
+  <p>Token je ispisan u konzoli kad se panel pokrene.</p>
+  <input id="token" type="text" placeholder="token" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+  <button id="go">Uđi</button>
+  <div class="err" id="err"></div>
+</div>
+<script type="module">
+const input = document.getElementById('token');
+const error = document.getElementById('err');
+
+async function submit() {
+  const token = input.value.trim();
+  if (!token) return;
+
+  error.textContent = '';
+  const response = await fetch('/api/actors', { headers: { authorization: `Bearer ${token}` } });
+
+  if (response.ok) {
+    localStorage.setItem('panelToken', token);
+    location.href = '/';
+  } else {
+    error.textContent = 'Pogrešan token.';
+  }
+}
+
+document.getElementById('go').onclick = submit;
+input.addEventListener('keydown', (event) => { if (event.key === 'Enter') submit(); });
+input.focus();
+</script>
+</body>
+</html>

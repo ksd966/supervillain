@@ -8,6 +8,7 @@ import {
     parsePlacePanel,
     searchUrl,
 } from './googleMaps.js';
+import { createMxChecker, keepSendable, verifyEmails } from './emailVerify.js';
 import { collectLeads } from './leads.js';
 import { runOverpassQuery } from './overpass.js';
 import { buildOverpassQuery, buildQueries, osmTagsForNiche } from './queries.js';
@@ -29,6 +30,9 @@ const {
     maxWebsitePagesPerLead = 3,
     onlyWithEmail = false,
     emailDomainBlocklist = [],
+    verifyEmailDomains = true,
+    dropUndeliverable = false,
+    dropRoleAccounts = false,
     proxyConfiguration: proxyInput,
     requestTimeoutSecs = 30,
     placeDelayMs = 1200,
@@ -185,6 +189,30 @@ if (enrichFromWebsite && maxWebsitePagesPerLead > 0) {
         lead.instagramHandles = [...new Set([...(lead.instagramHandles ?? []), ...instagramHandles])].sort();
         lead.websitePagesChecked = pagesChecked.length;
     }
+}
+
+// --- Verification ------------------------------------------------------------
+
+if (verifyEmailDomains) {
+    // One checker for the whole run, so a domain shared by several leads costs
+    // a single DNS query.
+    const hasMx = createMxChecker();
+    let dropped = 0;
+
+    for (const lead of allLeads) {
+        if (!lead.emails?.length) continue;
+
+        const verified = await verifyEmails(lead.emails, { hasMx });
+        lead.emailDetails = verified;
+
+        if (dropUndeliverable || dropRoleAccounts) {
+            const kept = keepSendable(verified, { requireMx: dropUndeliverable, dropRoleAccounts });
+            dropped += lead.emails.length - kept.length;
+            lead.emails = kept;
+        }
+    }
+
+    if (dropped) log.info(`Verification dropped ${dropped} address(es) as undeliverable, disposable or role.`);
 }
 
 // --- Output ------------------------------------------------------------------

@@ -81,6 +81,26 @@
             "editor": "stringList",
             "default": []
         },
+        "verifyEmailDomains": {
+            "title": "Verify addresses (MX + classification)",
+            "type": "boolean",
+            "description": "One cached DNS query per domain. Adds `emailDetails` to every lead: whether the domain accepts mail at all, and whether the address is a role account (`info@`), a free-mail box (`gmail.com`) or a disposable one.",
+            "default": true,
+            "sectionCaption": "Verification",
+            "sectionDescription": "Sending to dead addresses is what wrecks a sending domain's reputation, and that damage is slow to undo. This check costs one DNS lookup per domain."
+        },
+        "dropUndeliverable": {
+            "title": "Drop addresses whose domain has no mail server",
+            "type": "boolean",
+            "description": "Removes them from `emails` instead of only labelling them. Disposable providers are always dropped when verification is on.",
+            "default": false
+        },
+        "dropRoleAccounts": {
+            "title": "Drop role accounts",
+            "type": "boolean",
+            "description": "Removes `info@`, `office@`, `prodaja@` and similar. Off by default: for small businesses that is very often the only published address, so dropping them guts the list.",
+            "default": false
+        },
         "placeSelectors": {
             "title": "Place panel selectors",
             "type": "object",

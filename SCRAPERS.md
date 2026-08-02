@@ -43,25 +43,66 @@ Svaki ima svoj README sa detaljima, ograničenjima i pravnim napomenama.
 
 ## Pokretanje
 
+**Najlakše — dupli klik na `Panel.bat`** (Windows). Otvori se
+[kontrolni panel](control-panel/): forma, dugme, logovi uživo, CSV. Prvi put
+instalira zavisnosti, posle je instant.
+
+Sa telefona: `Panel-Telefon.bat` ispiše LAN adresu. Van kuće: `ngrok http 8377`.
+Na iPhoneu Safari → Share → „Add to Home Screen" i dobiješ ikonu koja se otvara
+kao aplikacija. Detalji u [control-panel/README.md](control-panel/README.md).
+
+Iz terminala:
+
 ```bash
-npm run install:all   # instalira zavisnosti u sva tri
-npm test              # provera deljenih modula + sve tri test suite (176 testova)
+npm run install:all   # instalira zavisnosti u sva tri actor-a
+npm test              # deljeni moduli + sve tri test suite (228 testova)
+node control-panel/server.js
 ```
 
-Pojedinačno:
+Pojedinačni actor bez panela:
 
 ```bash
 cd google-leads-scraper && npm install && npm start
 ```
 
 Input ide u `<actor>/storage/key_value_stores/default/INPUT.json`, rezultati
-izlaze u `<actor>/storage/`. Ništa ne napušta tvoju mašinu.
+izlaze u `<actor>/storage/`. Kroz panel, svaki run dobija svoj
+`control-panel/runs/<id>/`. Ništa ne napušta tvoju mašinu.
+
+## Verifikacija adresa
+
+Oba lead actor-a rade MX proveru pre nego što upišu rezultat (`verifyEmailDomains`,
+podrazumevano uključeno): jedan keširan DNS upit po domenu utvrdi da li domen
+uopšte prima poštu, plus labeliranje — role nalog (`info@`), free-mail
+(`gmail.com`), disposable.
+
+Po defaultu se **labelira, ne briše** — vidiš `emailDetails` uz svaki rezultat i
+sam odlučuješ. `dropUndeliverable` i `dropRoleAccounts` prebacuju na brisanje.
+
+Role naloge namerno ne bacam podrazumevano: kod malih firmi je `info@` vrlo
+često jedina objavljena adresa, pa bi ih brisanje prepolovilo listu.
+
+## Kad te Instagram ili Google blokira, a imaš VPN
+
+Limit je po IP adresi. Nijedan trik u kodu to ne menja — ali promena IP-a menja.
+Radni tok koji košta nula:
+
+1. Pusti run. Actor sam stane kad naleti na zid
+   (`stopAfterConsecutiveFailures`), umesto da spali ostatak liste.
+2. Prebaci VPN na drugi server.
+3. Pusti ostatak liste.
+
+Zato Instagram actor piše zapis sa `error: "rate-limited"` umesto da tiho
+preskoči — iz dataseta tačno vidiš dokle je stigao. Nisam automatizovao
+prebacivanje VPN-a jer svaki klijent ima svoj CLI, a ne mogu da testiram ni
+jedan; ako mi kažeš koji VPN koristiš, mogu da dodam hook koji ga zove između
+serija.
 
 ## Deljeni moduli
 
-`emails.js` i `website.js` postoje kao identične kopije u više actor-a. Nije
-propust: Apify actor-i se deploy-uju kao samostalni Docker build konteksti, pa
-ne mogu da importuju iz susedne mape.
+`emails.js`, `website.js` i `emailVerify.js` postoje kao identične kopije u više
+actor-a. Nije propust: Apify actor-i se deploy-uju kao samostalni Docker build
+konteksti, pa ne mogu da importuju iz susedne mape.
 
 Da duplikacija ne bi tiho razišla kopije:
 

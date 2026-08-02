@@ -33,6 +33,14 @@ const SHARED_FILES = [
         'instagram-email-scraper/src/website.js',
     ],
     [
+        'google-leads-scraper/src/emailVerify.js',
+        'instagram-email-scraper/src/emailVerify.js',
+    ],
+    [
+        'google-leads-scraper/test/emailVerify.test.js',
+        'instagram-email-scraper/test/emailVerify.test.js',
+    ],
+    [
         'apify-actor/test/emails.test.js',
         'instagram-email-scraper/test/emails.test.js',
         'google-leads-scraper/test/emails.test.js',

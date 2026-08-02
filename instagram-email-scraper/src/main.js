@@ -2,6 +2,7 @@ import { Actor } from 'apify';
 import { log } from 'crawlee';
 
 import { extractEmailsFromText } from './emails.js';
+import { createMxChecker, keepSendable, verifyEmails } from './emailVerify.js';
 import { explainFailure, fetchProfile, mapProfile } from './instagram.js';
 import { resolveTargets } from './targets.js';
 import { scrapeWebsiteForEmails } from './website.js';
@@ -22,6 +23,9 @@ const {
     stopAfterConsecutiveFailures = 5,
     onlyWithEmail = false,
     emailDomainBlocklist = [],
+    verifyEmailDomains = true,
+    dropUndeliverable = false,
+    dropRoleAccounts = false,
     proxyConfiguration: proxyInput,
     requestTimeoutSecs = 30,
 } = input;
@@ -46,6 +50,10 @@ if (!sessionCookie) {
 }
 
 const sleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
+
+// One checker for the whole run, so a domain shared by several profiles costs a
+// single DNS query.
+const hasMx = verifyEmailDomains ? createMxChecker() : null;
 
 /** email -> usernames it belongs to */
 const emailIndex = new Map();
@@ -141,6 +149,17 @@ for (const [index, username] of targets.entries()) {
         emailSources,
         scrapedAt: new Date().toISOString(),
     };
+
+    if (hasMx && record.emails.length) {
+        record.emailDetails = await verifyEmails(record.emails, { hasMx });
+
+        if (dropUndeliverable || dropRoleAccounts) {
+            record.emails = keepSendable(record.emailDetails, {
+                requireMx: dropUndeliverable,
+                dropRoleAccounts,
+            });
+        }
+    }
 
     profilesScraped += 1;
     if (record.emails.length) {
