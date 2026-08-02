@@ -16,6 +16,7 @@ import { gotScraping } from 'crawlee';
 import * as cheerio from 'cheerio';
 
 import { extractEmailsFromPage } from './emails.js';
+import { instagramHandleFromUrl } from './social.js';
 
 /** Path segments that mark a page as worth a second look. */
 const CONTACT_SEGMENTS = new Set([
@@ -32,9 +33,6 @@ const GUESSED_PATHS = ['/contact', '/kontakt', '/contact-us', '/about'];
 /** Link-in-bio services: the addresses live behind the outbound links, not on the page. */
 const LINK_HUBS = /(^|\.)(linktr\.ee|beacons\.ai|linkin\.bio|lnk\.bio|milkshake\.app|carrd\.co|bio\.link|solo\.to|taplink\.cc)$/i;
 
-/** Instagram paths that are features rather than handles. */
-const IG_RESERVED = new Set(['p', 'reel', 'reels', 'explore', 'stories', 'tv', 'accounts', 'direct']);
-
 /**
  * @param {string} hostname
  * @returns {boolean}
@@ -43,24 +41,7 @@ export function isLinkHub(hostname) {
     return LINK_HUBS.test(hostname);
 }
 
-/**
- * @param {string} value
- * @returns {string|null}
- */
-export function instagramHandleFromUrl(value) {
-    try {
-        const { hostname, pathname } = new URL(value);
-        if (!/(^|\.)instagram\.com$/i.test(hostname)) return null;
-
-        const [handle] = pathname.split('/').filter(Boolean);
-        if (!handle || IG_RESERVED.has(handle.toLowerCase())) return null;
-        if (!/^[A-Za-z0-9._]{1,30}$/.test(handle)) return null;
-
-        return handle.toLowerCase();
-    } catch {
-        return null;
-    }
-}
+export { instagramHandleFromUrl };
 
 /**
  * @param {string} url

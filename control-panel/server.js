@@ -351,6 +351,24 @@ const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host ?? 'localhost'}`);
     const path = url.pathname;
 
+    // The browser extension posts from a `chrome-extension://` origin, which the
+    // same-origin policy blocks without this. Only extension origins are
+    // allowed: a web page must not be able to drive the panel just because the
+    // user happens to have it running.
+    const origin = req.headers.origin;
+    if (origin && /^(chrome|moz|safari-web)-extension:\/\//.test(origin)) {
+        res.setHeader('access-control-allow-origin', origin);
+        res.setHeader('access-control-allow-headers', 'authorization, content-type');
+        res.setHeader('access-control-allow-methods', 'GET, POST, DELETE, OPTIONS');
+        res.setHeader('vary', 'origin');
+    }
+
+    if (req.method === 'OPTIONS') {
+        res.writeHead(204);
+        res.end();
+        return;
+    }
+
     // The login page and the icons are the only unauthenticated surface: the
     // page itself contains no data and iOS fetches icons without headers.
     const isPublicAsset = path === '/login' || path.startsWith('/icon-') || path === '/manifest.webmanifest';

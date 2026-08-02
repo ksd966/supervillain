@@ -27,6 +27,12 @@ const SHARED_FILES = [
         'apify-actor/src/emails.js',
         'instagram-email-scraper/src/emails.js',
         'google-leads-scraper/src/emails.js',
+        'browser-extension/emails.js',
+    ],
+    [
+        'google-leads-scraper/src/social.js',
+        'instagram-email-scraper/src/social.js',
+        'browser-extension/social.js',
     ],
     [
         'google-leads-scraper/src/website.js',
@@ -35,6 +41,10 @@ const SHARED_FILES = [
     [
         'google-leads-scraper/src/emailVerify.js',
         'instagram-email-scraper/src/emailVerify.js',
+    ],
+    [
+        'google-leads-scraper/test/social.test.js',
+        'instagram-email-scraper/test/social.test.js',
     ],
     [
         'google-leads-scraper/test/emailVerify.test.js',

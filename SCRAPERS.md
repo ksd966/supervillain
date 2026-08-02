@@ -35,9 +35,15 @@ pokrivaju.
 
 | Mapa | Šta radi | Blokira li se |
 | --- | --- | --- |
+| [`browser-extension`](browser-extension/) | pretražuješ Google → kupi rezultate → e-mail/ime/IG → CSV | **ne** — radi u tvom browseru |
 | [`google-leads-scraper`](google-leads-scraper/) | niša + grad → biznisi + e-mailovi + IG handle-ovi | Google da, OSM ne |
 | [`instagram-email-scraper`](instagram-email-scraper/) | IG profili → kontakt e-mailovi | da, ~20 profila / 30 min po IP |
 | [`apify-actor`](apify-actor/) | generički crawler sa CSS selektorima | zavisi od mete |
+
+**Ekstenzija je jedini način da se Google skrejpuje bez blokade**, jer se
+zahtevi ne razlikuju od tvog običnog pretraživanja — Google i vidi korisnika
+koji pretražuje. Cena je što pretrage kucaš sam. Actor je za obim koji se ne
+kuca ručno i za OSM, koji nikad ne blokira.
 
 Svaki ima svoj README sa detaljima, ograničenjima i pravnim napomenama.
 
