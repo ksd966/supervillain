@@ -105,6 +105,17 @@ Ovo su svi pravi bugovi nađeni tokom rada, ne hipotetički:
    imena; svaki actor dodat kasnije imao je praznu formu.
 10. **`igSearch.js`** — nađene adrese su se filtrirale na iste domene kojima je
     profil pronađen, pa se poslovna adresa nalazila pa bacala.
+11. **`apify-actor` input schema** — `proxyConfiguration` je imao default
+    `{"useApifyProxy": true}`, pa je generički crawler iz panela tražio Apify
+    proxy koji lokalno ne postoji; svaki zahtev je visio 45 s pa pao. Jedini
+    actor od pet koji je to imao.
+12. **`igSearch.js`** — rezultat čiji je URL post ili reel se odbacivao iako
+    naslov (`Instagram · handle`) imenuje nalog. Isto je pogađalo i nalepljene
+    izvoze i keyword pretragu.
+13. **Panel** — tabela rezultata je imala kolone Naziv/E-mail/Telefon/Sajt, pa
+    je run nad Instagram izvozom prikazivao samo redove crtica; a brojač „sa
+    e-mailom" je gledao samo polje `emails`, pa je run sa razdvojenim adresama
+    prijavljivao nulu.
 
 ## 5. Šta nije testirano protiv pravog sveta
 
@@ -112,6 +123,13 @@ Sandbox u kom je ovo pisano ima proxy sa allowlistom, pa **nijedan run nije iša
 protiv pravog Google-a, Instagrama ni Overpass-a.** Sve je testirano protiv
 lokalnih stub servera koji vraćaju realan oblik odgovora, plus ekstenzija u
 pravom Chromiumu protiv lažnog SERP-a.
+
+Sva četiri mrežna actor-a **jesu** prošla ceo lanac kroz panel protiv stubova:
+`google-leads-scraper` (OSM → sajt → adrese → IG handle-ovi), `apify-actor`
+(crawl → deobfuskacija → CSV), `instagram-keyword-scraper` (SERP → profili →
+adrese) i `lead-normalizer` (bez mreže, pa je potpuno pokriven). Kod
+`instagram-email-scraper` proveren je samo ulaz — sam Instagram je nedostupan
+odavde. Bugovi 11–13 su nađeni baš tim prolazom, ne testovima.
 
 Konkretno nije provereno:
 - **Google Maps selektori** (`googleMaps.js`) — ciljaju `data-item-id` i ARIA

@@ -199,10 +199,24 @@ describe('igLeadFromResult', () => {
         assert.equal(lead.email, 'primepixelit@gmail.com');
     });
 
-    it('rejects results that are not profile pages', () => {
-        assert.equal(igLeadFromResult({ ...result, url: 'https://www.instagram.com/p/Cabc123/' }, helpers), null);
-        assert.equal(igLeadFromResult({ ...result, url: 'https://example.com/x' }, helpers), null);
+    it('rejects results that name nobody', () => {
+        // A post URL whose title carries no handle either.
+        assert.equal(igLeadFromResult({ url: 'https://www.instagram.com/p/Cabc123/', title: 'Instagram' }, helpers), null);
+        assert.equal(igLeadFromResult({ ...result, url: 'https://example.com/x', title: 'Some site' }, helpers), null);
         assert.equal(igLeadFromResult({ url: '' }, helpers), null);
+    });
+
+    it('keeps a post or reel result when the title names the account', () => {
+        // Search exports are full of these, and the URL identifies no one.
+        const lead = igLeadFromResult({
+            ...result,
+            url: 'https://www.instagram.com/reel/Dbd5W7ECR1q/',
+            title: 'Instagram · palmfitstudio',
+        }, helpers);
+
+        assert.equal(lead.username, 'palmfitstudio');
+        assert.equal(lead.url, 'https://www.instagram.com/palmfitstudio/');
+        assert.equal(lead.email, 'primepixelit@gmail.com');
     });
 
     it('returns a lead with no address rather than nothing', () => {

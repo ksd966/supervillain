@@ -137,6 +137,15 @@ export function buildSearchQueries({
 }
 
 /**
+ * Words that can follow "Instagram" in a title without being anyone's handle.
+ * Without them, `Instagram Reels` reads as the user `reels`.
+ */
+const TITLE_STOPWORDS = new Set([
+    'p', 'reel', 'reels', 'explore', 'stories', 'tv', 'accounts', 'direct',
+    'photos', 'videos', 'posts', 'login', 'signup', 'help', 'search',
+]);
+
+/**
  * Search engines render the profile title as `Full Name (@handle) • Instagram`
  * or `Full Name (@handle) on Instagram`. The display name is the part before
  * the parenthesis.
@@ -151,6 +160,17 @@ export function parseProfileTitle(title) {
     const match = text.match(/^(.*?)\s*\(@([A-Za-z0-9._]{1,30})\)/);
     if (match) {
         return { name: match[1].trim() || null, handleFromTitle: match[2].toLowerCase() };
+    }
+
+    // `Instagram · handle` — what a search result for a post or a reel looks
+    // like, where the URL names nobody. Matched on the ASCII run rather than on
+    // the separator, so an export read with the wrong code page
+    // (`Instagram聽路聽handle`) still resolves to the same handle. Anchored at
+    // both ends so a caption (`Ana on Instagram: "..."`) cannot match.
+    const collapsed = text.replace(/[^A-Za-z0-9._]+/g, ' ').replace(/\s+/g, ' ').trim();
+    const bare = collapsed.match(/^Instagram ([A-Za-z0-9._]{1,30})$/i);
+    if (bare && !TITLE_STOPWORDS.has(bare[1].toLowerCase())) {
+        return { name: null, handleFromTitle: bare[1].toLowerCase() };
     }
 
     // No handle in the title — strip the trailing site name and keep the rest.
@@ -178,9 +198,14 @@ export function igLeadFromResult(result, helpers, options = {}) {
     const { keepOnlyDomains = [] } = options;
 
     const handle = instagramHandleFromUrl(result?.url ?? '');
-    if (!handle) return null;
-
     const { name, handleFromTitle } = parseProfileTitle(result.title);
+
+    // A result whose URL is a post or a reel names nobody, but the title still
+    // does. Requiring the URL to resolve dropped those outright — on a real
+    // search export that is roughly a third of the rows.
+    const username = handleFromTitle ?? handle;
+    if (!username) return null;
+
     const snippet = String(result.snippet ?? '').replace(/\s+/g, ' ').trim();
 
     // Every address in the snippet is kept by default. Which domain was used to
@@ -196,11 +221,11 @@ export function igLeadFromResult(result, helpers, options = {}) {
 
     return {
         keyword: result.keyword ?? null,
-        username: handleFromTitle ?? handle,
+        username,
         title: result.title ?? null,
         name,
         description: snippet || null,
-        url: `https://www.instagram.com/${handleFromTitle ?? handle}/`,
+        url: `https://www.instagram.com/${username}/`,
         email: emails[0] ?? null,
         emails,
     };

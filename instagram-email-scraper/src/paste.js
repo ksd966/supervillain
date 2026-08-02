@@ -13,17 +13,9 @@
  * one column over, in the result title.
  */
 
+import { parseProfileTitle } from './igSearch.js';
 import { parseDelimited } from './parse.js';
-import { RESERVED_PATHS, usernameFromUrl } from './targets.js';
-
-/**
- * Words that follow "Instagram" in a title without being anyone's handle.
- * Without this, `Instagram Reels` reads as the user `reels`.
- */
-const TITLE_STOPWORDS = new Set([
-    ...RESERVED_PATHS,
-    'photos', 'videos', 'posts', 'login', 'signup', 'help', 'search',
-]);
+import { usernameFromUrl } from './targets.js';
 
 /** Column names a header row uses for the handle — never handles themselves. */
 const HEADER_WORDS = new Set([
@@ -32,14 +24,6 @@ const HEADER_WORDS = new Set([
     'name', 'title', 'column_1',
 ]);
 
-/**
- * Everything a handle cannot contain. Replacing rather than stripping keeps
- * word boundaries, which is what lets a mangled separator still separate:
- * a CSV read with the wrong code page turns `Instagram · ana` into
- * `Instagram聽路聽ana`, and both forms have to reach the same handle.
- */
-const NOT_HANDLE = /[^A-Za-z0-9._@()]+/g;
-
 /** Finds URL-shaped tokens, with or without a scheme. */
 const URL_TOKEN = /https?:\/\/\S+|(?:[a-z0-9-]+\.)*instagram\.com\/\S*/gi;
 
@@ -47,22 +31,14 @@ const URL_TOKEN = /https?:\/\/\S+|(?:[a-z0-9-]+\.)*instagram\.com\/\S*/gi;
  * `Ana Kay (@anakayfit) • Instagram` → `anakayfit`
  * `Instagram · anakayfit`           → `anakayfit`
  *
+ * Delegates to the shared title parser so this actor and the keyword scraper
+ * cannot disagree about what a title names.
+ *
  * @param {string} title
  * @returns {string|null}
  */
 export function handleFromTitle(title) {
-    const text = String(title ?? '').replace(NOT_HANDLE, ' ').replace(/\s+/g, ' ').trim();
-    if (!text) return null;
-
-    const parenthesised = text.match(/\(@([A-Za-z0-9._]{1,30})\)/);
-    if (parenthesised) return parenthesised[1].toLowerCase();
-
-    // Anchored at both ends on purpose: `Ana on Instagram: "new drop"` collapses
-    // to several words and must not match, or every caption becomes a handle.
-    const bare = text.match(/^Instagram @?([A-Za-z0-9._]{1,30})$/i);
-    if (bare && !TITLE_STOPWORDS.has(bare[1].toLowerCase())) return bare[1].toLowerCase();
-
-    return null;
+    return parseProfileTitle(title).handleFromTitle;
 }
 
 /**

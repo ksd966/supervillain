@@ -127,11 +127,9 @@
         "proxyConfiguration": {
             "title": "Proxy",
             "type": "object",
-            "description": "Strongly recommended. Residential proxies help on sites that block datacenter IPs.",
+            "description": "Empty means crawl from this machine's own IP, which is what a local run wants. Filling it in asks for Apify Proxy, which needs a paid Apify account — locally that only makes every request hang until it times out.",
             "editor": "proxy",
-            "default": {
-                "useApifyProxy": true
-            },
+            "default": {},
             "sectionCaption": "Performance & networking"
         },
         "maxConcurrency": {

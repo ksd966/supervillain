@@ -46,6 +46,7 @@ const SHARED_FILES = [
         'google-leads-scraper/src/igSearch.js',
         'browser-extension/igSearch.js',
         'instagram-keyword-scraper/src/igSearch.js',
+        'instagram-email-scraper/src/igSearch.js',
     ],
     [
         'google-leads-scraper/src/website.js',
