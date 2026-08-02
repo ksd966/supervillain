@@ -1,0 +1,119 @@
+{
+    "title": "Google Maps Leads + E-mail Extractor",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "niche": {
+            "title": "Niche",
+            "type": "string",
+            "description": "What the businesses do — `frizerski salon`, `teretana`, `restoran`, `zubar`. For the OpenStreetMap source you can also pass a raw OSM tag such as `shop=hairdresser`.",
+            "editor": "textfield",
+            "prefill": "frizerski salon"
+        },
+        "city": {
+            "title": "City",
+            "type": "string",
+            "description": "Where to look. For OpenStreetMap use the local name — `Beograd`, not `Belgrade` — because it matches the administrative boundary by name.",
+            "editor": "textfield",
+            "prefill": "Novi Sad"
+        },
+        "queries": {
+            "title": "Explicit search phrases",
+            "type": "array",
+            "description": "Overrides `niche` + `city` for the Google Maps source. Use it when you want full control over the phrasing.",
+            "editor": "stringList",
+            "default": []
+        },
+        "source": {
+            "title": "Source",
+            "type": "string",
+            "description": "**Google Maps** has by far the best coverage but needs a browser and gets CAPTCHA'd without residential proxies. **OpenStreetMap** covers less but is a free public API that never blocks you — the dependable option for unattended local runs. **Both** merges and de-duplicates them.",
+            "editor": "select",
+            "default": "google-maps",
+            "enum": ["google-maps", "openstreetmap", "both"],
+            "enumTitles": [
+                "Google Maps — best coverage, gets blocked",
+                "OpenStreetMap — less coverage, never blocked",
+                "Both — merged and de-duplicated"
+            ]
+        },
+        "maxResultsPerQuery": {
+            "title": "Max results per query",
+            "type": "integer",
+            "description": "Google Maps itself stops at roughly 100-120 places per search, so going much higher only lengthens the run.",
+            "editor": "number",
+            "default": 40,
+            "minimum": 1,
+            "maximum": 500
+        },
+        "languageCode": {
+            "title": "Google language",
+            "type": "string",
+            "description": "The `hl` parameter. Affects result ranking and the labels the panel renders.",
+            "editor": "textfield",
+            "default": "sr"
+        },
+        "enrichFromWebsite": {
+            "title": "Scrape each website for contacts",
+            "type": "boolean",
+            "description": "Where the e-mails actually come from — Google Maps shows a website, almost never an address. Requests go to the business's own server, so no Google limit applies.",
+            "default": true,
+            "sectionCaption": "E-mail extraction"
+        },
+        "maxWebsitePagesPerLead": {
+            "title": "Max website pages per lead",
+            "type": "integer",
+            "description": "Landing page included. If it holds no address, the usual contact pages are tried next.",
+            "editor": "number",
+            "default": 3,
+            "minimum": 0,
+            "maximum": 20
+        },
+        "onlyWithEmail": {
+            "title": "Only save leads that have an e-mail",
+            "type": "boolean",
+            "default": false
+        },
+        "emailDomainBlocklist": {
+            "title": "Ignored e-mail domains",
+            "type": "array",
+            "description": "Added to the built-in list of tracker and placeholder domains. An entry blocks its subdomains too.",
+            "editor": "stringList",
+            "default": []
+        },
+        "placeSelectors": {
+            "title": "Place panel selectors",
+            "type": "object",
+            "description": "Escape hatch for when Google changes the Maps layout. Override only the keys that broke — `name`, `website`, `phone`, `address`, `category`, `rating`, `feed`, `placeLink`. Example: `{ \"website\": \"a[data-item-id='authority']\" }`.",
+            "editor": "json",
+            "default": {},
+            "sectionCaption": "Google Maps internals",
+            "sectionDescription": "The Maps DOM is generated and unversioned. These defaults target data-item-id and ARIA attributes, which survive restyling better than class names — but when a run suddenly returns names and nothing else, this is the place to fix it."
+        },
+        "placeDelayMs": {
+            "title": "Delay between places (ms)",
+            "type": "integer",
+            "description": "Pacing between opening one place panel and the next.",
+            "editor": "number",
+            "default": 1200,
+            "minimum": 0,
+            "maximum": 60000
+        },
+        "proxyConfiguration": {
+            "title": "Proxy",
+            "type": "object",
+            "description": "Residential proxies are close to mandatory for the Google Maps source at any real volume. The OpenStreetMap source does not need one.",
+            "editor": "proxy",
+            "default": {},
+            "sectionCaption": "Networking"
+        },
+        "requestTimeoutSecs": {
+            "title": "Request timeout (s)",
+            "type": "integer",
+            "editor": "number",
+            "default": 30,
+            "minimum": 5,
+            "maximum": 300
+        }
+    }
+}

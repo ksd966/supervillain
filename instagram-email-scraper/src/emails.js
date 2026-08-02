@@ -4,10 +4,11 @@
  * Everything here is pure and DOM-library agnostic (it takes a Cheerio instance
  * plus the raw HTML), so it can be unit tested without spinning up a crawler.
  *
- * Kept byte-identical to `../../apify-actor/src/emails.js`. Apify actors deploy
- * as self-contained Docker build contexts, so each one carries its own copy
- * rather than reaching outside its directory. Change one, change both — the
- * test suite is duplicated alongside it to catch drift.
+ * SHARED MODULE — byte-identical across every actor in this repo. Apify actors
+ * deploy as self-contained Docker build contexts, so each carries its own copy
+ * instead of reaching outside its directory. Edit one, then run
+ * `node scripts/check-shared-modules.mjs --fix` from the repo root to
+ * propagate; `npm test` at the root fails if the copies drift apart.
  */
 
 /**
