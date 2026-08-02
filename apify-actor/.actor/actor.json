@@ -1,0 +1,16 @@
+{
+    "actorSpecification": 1,
+    "name": "generic-scraper-email-extractor",
+    "title": "Generic Web Scraper + E-mail Extractor",
+    "description": "Crawls any website using CSS selectors you supply and collects every e-mail address it finds along the way.",
+    "version": "0.1",
+    "buildTag": "latest",
+    "meta": {
+        "templateId": "js-crawlee-cheerio"
+    },
+    "input": "./input_schema.json",
+    "dockerfile": "../Dockerfile",
+    "storages": {
+        "dataset": "./dataset_schema.json"
+    }
+}

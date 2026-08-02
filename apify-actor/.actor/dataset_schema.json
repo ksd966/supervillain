@@ -1,0 +1,34 @@
+{
+    "actorSpecification": 1,
+    "fields": {
+        "type": "object",
+        "properties": {
+            "url": { "type": "string" },
+            "loadedUrl": { "type": "string" },
+            "title": { "type": "string" },
+            "depth": { "type": "integer" },
+            "statusCode": { "type": "integer" },
+            "emails": { "type": "array", "items": { "type": "string" } },
+            "scrapedAt": { "type": "string" }
+        }
+    },
+    "views": {
+        "overview": {
+            "title": "Overview",
+            "transformation": {
+                "fields": ["url", "title", "emails", "depth", "statusCode", "scrapedAt"]
+            },
+            "display": {
+                "component": "table",
+                "properties": {
+                    "url": { "label": "URL", "format": "link" },
+                    "title": { "label": "Title", "format": "text" },
+                    "emails": { "label": "E-mails", "format": "array" },
+                    "depth": { "label": "Depth", "format": "number" },
+                    "statusCode": { "label": "Status", "format": "number" },
+                    "scrapedAt": { "label": "Scraped at", "format": "datetime" }
+                }
+            }
+        }
+    }
+}
