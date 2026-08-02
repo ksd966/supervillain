@@ -1,0 +1,113 @@
+{
+    "title": "Instagram E-mail Scraper",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "usernames": {
+            "title": "Usernames",
+            "type": "array",
+            "description": "Handles to scrape, with or without the leading `@`. Full profile URLs are accepted too.",
+            "editor": "stringList",
+            "prefill": ["natgeo"],
+            "default": []
+        },
+        "directUrls": {
+            "title": "Profile URLs",
+            "type": "array",
+            "description": "Instagram profile URLs — merged with the list above and de-duplicated.",
+            "editor": "requestListSources",
+            "default": []
+        },
+        "sessionCookie": {
+            "title": "Session cookie (sessionid)",
+            "type": "string",
+            "description": "Value of the `sessionid` cookie from a logged-in browser. Logged-out access to this endpoint is heavily restricted, so without it most profiles return nothing.\n\n**The account whose cookie you use is the account that gets flagged.** Use a throwaway, never your main one.",
+            "editor": "textfield",
+            "isSecret": true,
+            "sectionCaption": "Authentication"
+        },
+        "enrichFromWebsite": {
+            "title": "Follow bio links to find e-mails",
+            "type": "boolean",
+            "description": "Most accounts never fill in the public business e-mail but do link to a site that lists one. Following that link does not touch Instagram's rate limit, so this is where most of the yield comes from.",
+            "default": true,
+            "sectionCaption": "E-mail extraction"
+        },
+        "maxWebsitePagesPerProfile": {
+            "title": "Max website pages per profile",
+            "type": "integer",
+            "description": "Landing page included. If it holds no address, the usual contact pages (`/contact`, `/kontakt`, `/impressum`, …) are tried next. Link-in-bio hubs like Linktree are expanded into their outbound links instead.",
+            "editor": "number",
+            "default": 3,
+            "minimum": 0,
+            "maximum": 20
+        },
+        "emailDomainBlocklist": {
+            "title": "Ignored e-mail domains",
+            "type": "array",
+            "description": "Added to the built-in list of tracker and placeholder domains. An entry blocks its subdomains too.",
+            "editor": "stringList",
+            "default": []
+        },
+        "onlyWithEmail": {
+            "title": "Only save profiles that have an e-mail",
+            "type": "boolean",
+            "description": "Keeps the dataset to usable leads. Turn it off when you want the profile data regardless.",
+            "default": false
+        },
+        "requestDelaySecs": {
+            "title": "Delay between profiles (s)",
+            "type": "integer",
+            "description": "Instagram's limiter is a sliding window, so this does not raise the ceiling — it spreads the run out so a block arrives later and recovers cleanly. Below ~10 s you will hit the wall quickly.",
+            "editor": "number",
+            "default": 20,
+            "minimum": 0,
+            "maximum": 600,
+            "sectionCaption": "Rate limiting",
+            "sectionDescription": "The endpoint allows roughly 20 profiles per 30 minutes per IP. These settings decide how the run behaves when that limit is reached."
+        },
+        "rateLimitBackoffMins": {
+            "title": "Backoff after a block (min)",
+            "type": "integer",
+            "description": "How long to sit still after a 401/429. The observed window is about 29 minutes.",
+            "editor": "number",
+            "default": 30,
+            "minimum": 1,
+            "maximum": 180
+        },
+        "maxRateLimitRetries": {
+            "title": "Retries after a block",
+            "type": "integer",
+            "description": "How many times to wait-and-retry a single profile before writing it off.",
+            "editor": "number",
+            "default": 2,
+            "minimum": 0,
+            "maximum": 10
+        },
+        "stopAfterConsecutiveFailures": {
+            "title": "Stop after N failures in a row",
+            "type": "integer",
+            "description": "A run of failures means the IP is blocked or the session died. Stopping preserves the rest of your list for a later attempt.",
+            "editor": "number",
+            "default": 5,
+            "minimum": 1,
+            "maximum": 100
+        },
+        "proxyConfiguration": {
+            "title": "Proxy",
+            "type": "object",
+            "description": "The only way past the per-IP limit. Residential proxies work; datacenter ranges are largely burned on Instagram. Leave empty to run from your own IP.",
+            "editor": "proxy",
+            "default": {},
+            "sectionCaption": "Networking"
+        },
+        "requestTimeoutSecs": {
+            "title": "Request timeout (s)",
+            "type": "integer",
+            "editor": "number",
+            "default": 30,
+            "minimum": 5,
+            "maximum": 180
+        }
+    }
+}

@@ -3,6 +3,11 @@
  *
  * Everything here is pure and DOM-library agnostic (it takes a Cheerio instance
  * plus the raw HTML), so it can be unit tested without spinning up a crawler.
+ *
+ * Kept byte-identical to `../../apify-actor/src/emails.js`. Apify actors deploy
+ * as self-contained Docker build contexts, so each one carries its own copy
+ * rather than reaching outside its directory. Change one, change both — the
+ * test suite is duplicated alongside it to catch drift.
  */
 
 /**

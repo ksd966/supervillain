@@ -1,0 +1,37 @@
+{
+    "actorSpecification": 1,
+    "fields": {
+        "type": "object",
+        "properties": {
+            "username": { "type": "string" },
+            "fullName": { "type": "string" },
+            "emails": { "type": "array", "items": { "type": "string" } },
+            "businessEmail": { "type": "string" },
+            "followersCount": { "type": "integer" },
+            "externalUrl": { "type": "string" },
+            "businessCategoryName": { "type": "string" },
+            "url": { "type": "string" },
+            "scrapedAt": { "type": "string" }
+        }
+    },
+    "views": {
+        "overview": {
+            "title": "Leads",
+            "transformation": {
+                "fields": ["username", "fullName", "emails", "followersCount", "businessCategoryName", "externalUrl", "url"]
+            },
+            "display": {
+                "component": "table",
+                "properties": {
+                    "username": { "label": "Username", "format": "text" },
+                    "fullName": { "label": "Name", "format": "text" },
+                    "emails": { "label": "E-mails", "format": "array" },
+                    "followersCount": { "label": "Followers", "format": "number" },
+                    "businessCategoryName": { "label": "Category", "format": "text" },
+                    "externalUrl": { "label": "Website", "format": "link" },
+                    "url": { "label": "Profile", "format": "link" }
+                }
+            }
+        }
+    }
+}
