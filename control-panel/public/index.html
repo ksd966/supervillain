@@ -373,23 +373,36 @@ async function loadPreview(id, card) {
   const rows = await previewCache.get(id);
   if (!rows.length || !card.isConnected) return;
 
-  const withEmail = rows.filter((row) => row.emails?.length).length;
+  // `emails` is the array every actor writes; `email` is the single-address
+  // column lead-normalizer produces when it explodes rows. Counting only the
+  // first reported an exploded run as having found nothing.
+  const addressesOf = (row) => (row.emails?.length ? row.emails : [row.email, row.businessEmail].filter(Boolean));
+  const handleOf = (row) => row.instagram ?? row.username ?? (row.instagramAll ?? [])[0] ?? null;
+
+  const withEmail = rows.filter((row) => addressesOf(row).length).length;
+  const withHandle = rows.filter((row) => handleOf(row)).length;
+
   const stats = document.createElement('div');
   stats.style.marginTop = '14px';
   stats.innerHTML = `
     <span class="stat"><b>${rows.length}</b><span>rezultata</span></span>
-    <span class="stat"><b>${withEmail}</b><span>sa e-mailom</span></span>`;
+    <span class="stat"><b>${withEmail}</b><span>sa e-mailom</span></span>
+    <span class="stat"><b>${withHandle}</b><span>sa Instagramom</span></span>`;
   card.append(stats);
 
   const wrap = document.createElement('div');
   wrap.className = 'tablewrap';
-  wrap.innerHTML = `<table><thead><tr><th>Naziv</th><th>E-mail</th><th>Telefon</th><th>Sajt</th></tr></thead><tbody>${
-    rows.slice(0, 25).map((row) => `<tr>
-      <td>${escapeHtml(row.name ?? row.username ?? row.title ?? '—')}</td>
-      <td class="mail">${escapeHtml((row.emails ?? []).join(', ') || '—')}</td>
+  wrap.innerHTML = `<table><thead><tr><th>Naziv</th><th>E-mail</th><th>Instagram</th><th>Telefon</th><th>Sajt</th></tr></thead><tbody>${
+    rows.slice(0, 25).map((row) => {
+      const handle = handleOf(row);
+      return `<tr>
+      <td>${escapeHtml(row.name ?? row.fullName ?? row.username ?? row.title ?? '—')}</td>
+      <td class="mail">${escapeHtml(addressesOf(row).join(', ') || '—')}</td>
+      <td>${handle ? `@${escapeHtml(handle)}` : '—'}</td>
       <td>${escapeHtml(row.phone ?? row.businessPhoneNumber ?? '—')}</td>
       <td>${escapeHtml(row.website ?? row.externalUrl ?? row.url ?? '—')}</td>
-    </tr>`).join('')
+    </tr>`;
+    }).join('')
   }</tbody></table>`;
   card.append(wrap);
 }
