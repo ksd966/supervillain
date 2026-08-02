@@ -63,6 +63,10 @@
 
   details.advanced { margin: 4px 0 14px; }
   details.advanced summary { cursor: pointer; color: var(--muted); font-size: 13px; padding: 8px 0; font-weight: 500; }
+  .section-label {
+    font-size: 11px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted);
+    font-weight: 700; margin: 16px 0 10px; padding-top: 12px; border-top: 1px solid var(--line);
+  }
 
   button.primary {
     width: 100%; padding: 14px; border: 0; border-radius: 12px; background: var(--accent);
@@ -156,12 +160,22 @@ function toast(message) {
 let actors = [];
 let active = 0;
 
-/** Fields worth showing up front; everything else hides behind "More settings". */
-const PRIMARY = new Set([
-  'niche', 'city', 'source', 'maxResultsPerQuery', 'onlyWithEmail',
-  'usernames', 'sessionCookie', 'enrichFromWebsite',
-  'startUrls', 'crawlerType', 'maxCrawlDepth', 'maxRequestsPerCrawl',
-]);
+/**
+ * Which fields show up front.
+ *
+ * Derived from the schema rather than from a list of names here: an Apify
+ * schema uses `sectionCaption` to start a new group, so everything before the
+ * first one is the actor's own idea of its main inputs. A hardcoded allowlist
+ * silently buried every field of any actor added later — which is exactly what
+ * happened.
+ *
+ * @param {object[]} fields
+ * @returns {number} index of the first sectioned field
+ */
+function primaryCount(fields) {
+  const first = fields.findIndex((field) => field.section);
+  return first === -1 ? fields.length : first;
+}
 
 function renderField(field) {
   const id = `f-${field.name}`;
@@ -214,9 +228,23 @@ function renderForm() {
   advanced.className = 'advanced';
   advanced.innerHTML = '<summary>Ostala podešavanja</summary>';
 
-  for (const field of actor.fields) {
-    (PRIMARY.has(field.name) ? primary : advanced).appendChild(renderField(field));
-  }
+  const split = primaryCount(actor.fields);
+  let lastSection = null;
+
+  actor.fields.forEach((field, index) => {
+    if (index < split) { primary.appendChild(renderField(field)); return; }
+
+    // Carry the schema's own section headings through, so the advanced block
+    // stays navigable instead of being one long run of inputs.
+    if (field.section && field.section !== lastSection) {
+      lastSection = field.section;
+      const heading = document.createElement('div');
+      heading.className = 'section-label';
+      heading.textContent = field.section;
+      advanced.appendChild(heading);
+    }
+    advanced.appendChild(renderField(field));
+  });
 
   card.append(primary);
   if (advanced.childElementCount > 1) card.append(advanced);
