@@ -10,6 +10,14 @@
             "editor": "textarea",
             "default": ""
         },
+        "sessionCookies": {
+            "title": "Session cookies (one per line)",
+            "type": "array",
+            "description": "The single biggest thing you can do for the yield. Logged out, Instagram returns almost nothing — no `business_email` at all — so without at least one cookie here most profiles come back empty.\n\nEach cookie is a separate budget of roughly 20 profiles per 30 minutes. Three cookies means the run switches instead of stopping when one hits the wall.\n\nChrome → F12 → Application → Cookies → `https://www.instagram.com` → copy the value of `sessionid`. Pasting `sessionid=…` or a whole cookie header works too.\n\n**The account whose cookie you use is the account that gets flagged. Use throwaways, never your main one.**",
+            "editor": "stringList",
+            "isSecret": true,
+            "default": []
+        },
         "usernames": {
             "title": "Usernames",
             "type": "array",
@@ -27,9 +35,9 @@
             "default": []
         },
         "sessionCookie": {
-            "title": "Session cookie (sessionid)",
+            "title": "Session cookie (single, legacy)",
             "type": "string",
-            "description": "Value of the `sessionid` cookie from a logged-in browser. Logged-out access to this endpoint is heavily restricted, so without it most profiles return nothing.\n\n**The account whose cookie you use is the account that gets flagged.** Use a throwaway, never your main one.",
+            "description": "The old single-cookie field. Still honoured and merged with the list above, so existing inputs keep working — for anything new, use the list.",
             "editor": "textfield",
             "isSecret": true,
             "sectionCaption": "Authentication"

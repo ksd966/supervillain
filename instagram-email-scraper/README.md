@@ -18,10 +18,12 @@ Za hiljade profila treba ti rotacija rezidencijalnih proxija, a to se plaća.
 Actor je napisan da se sa tim limitom nosi pristojno (backoff, circuit breaker),
 ne da ga zaobiđe — jer se ne može zaobići bez proxija.
 
-**2. Bez `sessionCookie` prinos je mali.** Anonimni pristup ovom endpointu je od
-2024. jako sužen. Cookie iz ulogovanog browsera drastično popravlja rezultat —
-ali **nalog čiji cookie koristiš je nalog koji će biti flagovan**. Koristi
-throwaway nalog, nikad glavni.
+**2. Bez cookie-ja prinos je mali.** Anonimni pristup ovom endpointu je od 2024.
+jako sužen. Cookie iz ulogovanog browsera drastično popravlja rezultat, a više
+njih množi i plafon — limit se broji po sesiji, pa svaki dodatni cookie donosi
+još ~20 profila na pola sata i actor prebacuje na sledeći umesto da stane. Ali
+**nalog čiji cookie koristiš je nalog koji će biti flagovan**. Koristi throwaway
+naloge, nikad glavni.
 
 **3. Pravni okvir.** Skrejpovanje javnih, izlogovanih podataka nije CFAA
 prekršaj (*Meta v. Bright Data*, N.D. Cal. 2024), ali **jeste** kršenje
@@ -58,7 +60,7 @@ isti modul kao u `../apify-actor`.
 
 ```bash
 npm install
-npm test          # 95 testova, ne dira mrežu osim lokalnog fixture servera
+npm test          # 139 testova, ne dira mrežu osim lokalnog fixture servera
 
 mkdir -p storage/key_value_stores/default
 ```
@@ -68,7 +70,7 @@ mkdir -p storage/key_value_stores/default
 ```json
 {
   "list": "https://www.instagram.com/salon_nina/\nhttps://www.instagram.com/reel/Dbd5W7ECR1q/,Instagram · pekara_mika\n@kafic_luna",
-  "sessionCookie": "",
+  "sessionCookies": ["prvi_sessionid", "drugi_sessionid"],
   "requestDelaySecs": 20,
   "enrichFromWebsite": true,
   "onlyWithEmail": true
@@ -98,10 +100,34 @@ npm start
 Rezultati završe u `storage/` — dataset po profilu, plus `EMAILS` (JSON) i
 `EMAILS_CSV` (CSV) u key-value storeu. Ništa ne odlazi van tvoje mašine.
 
-### Odakle `sessionCookie`
+### Odakle cookie, i zašto ih treba više
 
 Uloguj se na throwaway nalog u browseru → DevTools → Application → Cookies →
-`https://www.instagram.com` → vrednost polja `sessionid`.
+`https://www.instagram.com` → vrednost polja `sessionid`. Možeš nalepiti i
+`sessionid=…` ili ceo cookie header, actor to očisti sam.
+
+**Bez ijednog cookie-ja prinos je mali.** Izlogovan pogled na ovaj endpoint
+Instagram je od 2024. jako sužio — `business_email` se tada ne vidi uopšte, pa
+ti ostaje samo ono što neko napiše u bio tekstu.
+
+Limit se broji **po sesiji, ne samo po IP adresi**. Zato svaki dodatni cookie
+znači još jedan budžet od ~20 profila na 30 minuta, a actor prebacuje na
+sledeći umesto da stane:
+
+```
+WARN  Rate-limited on @a10 (sesija 1/3). Switching — 2 of 3 still usable.
+WARN  Rate-limited on @a10 (sesija 2/3). Switching — 1 of 3 still usable.
+INFO  Sessions — sesija 1/3: 3 profila, 1× blokirana | sesija 2/3: 3 profila…
+```
+
+Isti test, ista lista, stub koji limitira po cookie-ju: **jedan cookie → 3
+profila, tri cookie-ja → 9.** Čeka se tek kad su sve sesije na hlađenju.
+
+Posao se ravnomerno raspoređuje (uvek ide na sesiju sa najmanje upita), jer
+mlaćenje jednog naloga do zida je ono što nalog i odvede u flag.
+
+**Nalog čiji cookie koristiš je nalog koji će biti flagovan. Throwaway nalozi,
+nikad glavni.** Cookie se nikad ne ispisuje u logu — samo `sesija 2/3`.
 
 ---
 
@@ -110,9 +136,10 @@ Uloguj se na throwaway nalog u browseru → DevTools → Application → Cookies
 | Polje | Default | Opis |
 | --- | --- | --- |
 | `list` | `""` | **jedino koje ti stvarno treba** — nalepi CSV, URL-ove ili handle-ove |
+| `sessionCookies` | `[]` | **najveća poluga za prinos** — jedan `sessionid` po redu, rotiraju se |
 | `usernames` | `[]` | handle-ovi, sa ili bez `@`, ili pune URL adrese |
 | `directUrls` | `[]` | profilni URL-ovi, spajaju se sa gornjim i dedupluju |
-| `sessionCookie` | `""` | vrednost `sessionid` cookie-ja |
+| `sessionCookie` | `""` | stari oblik sa jednim cookie-jem, i dalje radi |
 | `enrichFromWebsite` | `true` | prati bio link i traži adresu na sajtu |
 | `maxWebsitePagesPerProfile` | `3` | uključujući landing stranu |
 | `onlyWithEmail` | `false` | upiši samo profile koji su dali adresu |
@@ -172,8 +199,11 @@ porudzbine@pekaramika.rs,"pekara_mika salon_nina"
 
 ## Ponašanje kad te Instagram blokira
 
-- **401/429** → čeka `rateLimitBackoffMins` (default 30 min), pa proba ponovo,
-  najviše `maxRateLimitRetries` puta.
+- **401/429** → ta sesija ide na hlađenje (`rateLimitBackoffMins`, default 30
+  min) i **odmah se prelazi na sledeći cookie**. Isti profil se pokušava dalje,
+  bez ijedne sekunde čekanja dok god ima slobodne sesije.
+- **Sve sesije na hlađenju** → tek tada se čeka, i to tačno do trenutka kad se
+  prva oslobodi, najviše `maxRateLimitRetries` puta.
 - **N grešaka zaredom** → prekida run. Ostatak liste ostaje netaknut za kasnije,
   umesto da se spali u blokadu.
 - Poruke u logu razlikuju „blokiran si" od „taj profil ne postoji" i od
@@ -195,11 +225,12 @@ src/
   main.js         orkestracija, pacing, agregacija
   instagram.js    endpoint, headeri, mapiranje odgovora
   paste.js        nalepljeni blob → handle-ovi (naslov kad URL je post/reel)
+  sessions.js     pool cookie-ja: koji sledeći, koji je na hlađenju
   parse.js        CSV/TSV/JSON čitač (kopija iz ../lead-normalizer)
   targets.js      handle-ovi/URL-ovi → jedinstvena lista
   website.js      obilazak bio linkova i kontakt strana
   emails.js       detekcija/de-obfuskacija/filtriranje (kopija iz ../apify-actor)
-test/             95 testova
+test/             139 testova
 ```
 
 `emails.js` je namerno identična kopija iz `../apify-actor` — Apify actor-i se

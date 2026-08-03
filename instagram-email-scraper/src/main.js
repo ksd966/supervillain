@@ -5,6 +5,7 @@ import { extractEmailsFromText } from './emails.js';
 import { createMxChecker, keepSendable, verifyEmails } from './emailVerify.js';
 import { explainFailure, fetchProfile, mapProfile } from './instagram.js';
 import { handlesFromText } from './paste.js';
+import { createSessionPool } from './sessions.js';
 import { resolveTargets } from './targets.js';
 import { scrapeWebsiteForEmails } from './website.js';
 
@@ -16,6 +17,7 @@ const {
     list = '',
     usernames = [],
     directUrls = [],
+    sessionCookies = [],
     sessionCookie = '',
     enrichFromWebsite = true,
     maxWebsitePagesPerProfile = 3,
@@ -52,8 +54,17 @@ if (!wantsProxy) {
         + `web_profile_info per IP (roughly 20 profiles per 30 minutes), so expect a pause after ~${20} profiles.`,
     );
 }
-if (!sessionCookie) {
-    log.warning('No sessionCookie supplied. Logged-out access is heavily restricted; many profiles will come back empty.');
+
+// The limiter is keyed on session as well as IP, so each extra cookie is
+// another budget of roughly twenty profiles per half hour.
+const sessions = createSessionPool([...sessionCookies, sessionCookie], {
+    backoffMs: rateLimitBackoffMins * 60_000,
+});
+
+if (!sessions.loggedIn) {
+    log.warning('No session cookie supplied. Logged-out access is heavily restricted; most profiles will come back empty.');
+} else {
+    log.info(`${sessions.size} session cookie(s) in rotation — roughly ${sessions.size * 20} profiles per 30 minutes.`);
 }
 
 const sleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
@@ -78,19 +89,41 @@ for (const [index, username] of targets.entries()) {
     }
 
     const proxyUrl = await proxyConfiguration?.newUrl(`session${index}`);
-    let result;
+    let result = { ok: false, reason: 'rate-limited' };
+    let waits = 0;
 
-    // Rate limiting is a sliding window, so the only useful response is to wait
-    // it out — retrying immediately just extends the block.
-    for (let attempt = 0; attempt <= maxRateLimitRetries; attempt++) {
-        result = await fetchProfile(username, { sessionCookie, proxyUrl, timeoutSecs: requestTimeoutSecs });
-        if (result.ok || result.reason !== 'rate-limited') break;
+    // A block is a property of one session, not of the run. So: switch sessions
+    // first and only wait once every one of them is cooling down — waiting with
+    // a free cookie in hand is pure lost time. The window is a sliding one, so
+    // when there is nothing left to switch to, waiting is the only thing that
+    // helps; retrying sooner just extends the block.
+    while (waits <= maxRateLimitRetries) {
+        const session = sessions.acquire(Date.now());
 
-        if (attempt < maxRateLimitRetries) {
-            log.warning(`Rate-limited on @${username}. Waiting ${rateLimitBackoffMins} min before retrying `
-                + `(attempt ${attempt + 1}/${maxRateLimitRetries}).`);
-            await sleep(rateLimitBackoffMins * 60_000);
+        if (!session) {
+            if (waits === maxRateLimitRetries) break;
+
+            const waitMs = Math.max(sessions.nextAvailableAt(Date.now()) - Date.now(), 1000);
+            log.warning(`All ${sessions.size} session(s) are cooling down. Waiting ${Math.ceil(waitMs / 60_000)} min `
+                + `before @${username} (attempt ${waits + 1}/${maxRateLimitRetries}).`);
+            await sleep(waitMs);
+            waits += 1;
+            continue;
         }
+
+        result = await fetchProfile(username, {
+            sessionCookie: session.cookie,
+            proxyUrl,
+            timeoutSecs: requestTimeoutSecs,
+        });
+
+        if (result.ok) { sessions.succeed(session); break; }
+        if (result.reason !== 'rate-limited') break;
+
+        sessions.block(session, Date.now());
+        const left = sessions.available(Date.now()).length;
+        log.warning(`Rate-limited on @${username} (${session.label}). `
+            + (left ? `Switching — ${left} of ${sessions.size} still usable.` : 'No session left to switch to.'));
     }
 
     if (!result.ok) {
@@ -214,5 +247,9 @@ log.info(
     `Done: ${rows.length} unique e-mail(s) from ${profilesWithEmail}/${profilesScraped} scraped profile(s). `
     + 'Full list in the key-value store under "EMAILS" (JSON) and "EMAILS_CSV" (CSV).',
 );
+
+// Which cookie carried the run and which ones got blocked is the first thing
+// worth knowing when the yield looks wrong. Carries no cookie values.
+if (sessions.loggedIn) log.info(`Sessions — ${sessions.summary()}`);
 
 await Actor.exit();
