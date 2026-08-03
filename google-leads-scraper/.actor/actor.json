@@ -1,0 +1,13 @@
+{
+    "actorSpecification": 1,
+    "name": "google-leads-scraper",
+    "title": "Google Maps Leads + E-mail Extractor",
+    "description": "Finds every business in a niche and a city, then scrapes their websites for contact e-mails and Instagram handles.",
+    "version": "0.1",
+    "buildTag": "latest",
+    "input": "./input_schema.json",
+    "dockerfile": "../Dockerfile",
+    "storages": {
+        "dataset": "./dataset_schema.json"
+    }
+}

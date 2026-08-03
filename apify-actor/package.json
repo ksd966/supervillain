@@ -1,0 +1,20 @@
+{
+    "name": "generic-scraper-email-extractor",
+    "version": "0.1.0",
+    "type": "module",
+    "description": "Configurable Apify actor: crawls any website with user-supplied CSS selectors and harvests e-mail addresses.",
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "scripts": {
+        "start": "node src/main.js",
+        "start:dev": "node src/main.js",
+        "test": "node --test \"test/**/*.test.js\""
+    },
+    "dependencies": {
+        "apify": "^3.2.6",
+        "cheerio": "^1.0.0",
+        "crawlee": "^3.13.0",
+        "playwright": "*"
+    }
+}

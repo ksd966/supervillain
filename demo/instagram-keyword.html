@@ -1,0 +1,944 @@
+<title>Instagram po ključnoj reči — probaj</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --ground:#eef1f6; --plate:#fff; --plate-2:#f7f9fc;
+  --ink:#141c28; --muted:#5b6b80; --line:#d2dae5;
+  --ok:#0f6e5a; --ok-bg:#daeee7; --warn:#9e4f27; --warn-bg:#f6e6db;
+  --signal:#2a55c4; --signal-bg:#e2e9fa;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --ground:#0e131a; --plate:#161d27; --plate-2:#1b232f; --ink:#e4eaf2; --muted:#8a99ad;
+          --line:#242e3c; --ok:#48be9e; --ok-bg:#12312a; --warn:#d4885b; --warn-bg:#33231a;
+          --signal:#7098ff; --signal-bg:#1a2440; }
+}
+:root[data-theme="dark"] { --ground:#0e131a; --plate:#161d27; --plate-2:#1b232f; --ink:#e4eaf2;
+  --muted:#8a99ad; --line:#242e3c; --ok:#48be9e; --ok-bg:#12312a; --warn:#d4885b; --warn-bg:#33231a;
+  --signal:#7098ff; --signal-bg:#1a2440; }
+:root[data-theme="light"] { --ground:#eef1f6; --plate:#fff; --plate-2:#f7f9fc; --ink:#141c28;
+  --muted:#5b6b80; --line:#d2dae5; --ok:#0f6e5a; --ok-bg:#daeee7; --warn:#9e4f27; --warn-bg:#f6e6db;
+  --signal:#2a55c4; --signal-bg:#e2e9fa; }
+
+* { box-sizing: border-box; }
+body { margin:0; background:var(--ground); color:var(--ink);
+  font:15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+.mono, h1, h2, .eyebrow, .q, th, td, textarea, pre, .stat b, code, input, .step b {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
+
+.wrap { max-width:1000px; margin:0 auto; padding:0 20px 80px; }
+header.top { border-bottom:1px solid var(--line); background:var(--plate); }
+header.top .wrap { padding-block:38px 32px; }
+.eyebrow { font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin:0 0 14px; }
+h1 { font-size:clamp(25px,4.2vw,36px); line-height:1.15; margin:0 0 14px; font-weight:600;
+     letter-spacing:-.02em; text-wrap:balance; }
+header.top p { margin:0; max-width:64ch; color:var(--muted); font-size:16px; }
+
+section { margin-top:38px; }
+h2 { font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted);
+     margin:0 0 14px; font-weight:600; }
+.panel { background:var(--plate); border:1px solid var(--line); border-radius:8px; }
+.panel-pad { padding:18px; }
+
+.fields { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); }
+label { display:block; }
+label span.lbl { display:block; font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+                 color:var(--muted); margin-bottom:6px; font-weight:600; }
+input, textarea {
+  width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:6px;
+  background:var(--plate-2); color:var(--ink); font-size:14px; }
+textarea { min-height:150px; resize:vertical; font-size:12px; line-height:1.6; white-space:pre; overflow-x:auto; }
+input:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visible {
+  outline:2px solid var(--signal); outline-offset:2px; }
+
+button { font:inherit; font-size:14px; cursor:pointer; padding:10px 15px; border-radius:6px;
+         border:1px solid var(--line); background:var(--plate-2); color:var(--ink); }
+button.run { background:var(--signal); border-color:var(--signal); color:#fff; font-weight:600; }
+button:hover:not(.run) { border-color:var(--signal); }
+.controls { display:flex; gap:9px; flex-wrap:wrap; margin-top:14px; }
+
+ol.queries { list-style:none; margin:0; padding:0; display:grid; gap:1px; background:var(--line); }
+ol.queries { max-height:420px; overflow-y:auto; }
+ol.queries li { background:var(--plate); padding:11px 16px; display:flex; gap:12px;
+                align-items:center; flex-wrap:wrap; }
+.q { flex:1 1 320px; }
+.probe { flex:0 0 auto; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;
+         padding:3px 8px; border-radius:4px; font-weight:700; }
+.probe.freeMail { background:var(--signal-bg); color:var(--signal); }
+.probe.rolePrefix { background:var(--ok-bg); color:var(--ok); }
+.probe.plain { background:var(--warn-bg); color:var(--warn); }
+.probes { display:flex; flex-direction:column; gap:6px; padding-top:2px; }
+label.cb { display:flex; align-items:center; gap:7px; font-size:13px; cursor:pointer; }
+label.cb input { width:15px; height:15px; accent-color:var(--signal); margin:0; }
+label.cb em { color:var(--muted); font-style:normal; font-size:11.5px; }
+.q { font-size:12.5px; word-break:break-all; }
+a.open { flex:0 0 auto; font-size:12px; text-decoration:none; padding:5px 11px; border-radius:5px;
+         background:var(--signal-bg); color:var(--signal); font-weight:600; white-space:nowrap; }
+
+.steps { display:grid; gap:1px; background:var(--line); border:1px solid var(--line);
+         border-radius:8px; overflow:hidden; margin-bottom:14px; }
+.step { background:var(--plate); padding:12px 16px; display:flex; gap:12px; align-items:baseline; font-size:14px; }
+.step b { flex:0 0 auto; color:var(--signal); font-size:12px; min-width:18px; }
+.step code { font-size:12.5px; background:var(--plate-2); padding:1px 6px; border-radius:4px; }
+
+.stats { display:flex; gap:24px; flex-wrap:wrap; padding:15px 18px; border-bottom:1px solid var(--line); }
+.stat b { display:block; font-size:21px; font-weight:600; font-variant-numeric:tabular-nums; }
+.stat span { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+
+.tablewrap { overflow-x:auto; }
+table { border-collapse:collapse; width:100%; font-size:12.5px; }
+th, td { text-align:left; padding:9px 12px; border-bottom:1px solid var(--line); white-space:nowrap; }
+th { font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); font-weight:600; }
+tbody tr:last-child td { border-bottom:0; }
+td.mail { color:var(--ok); }
+td.dim { color:var(--muted); }
+pre.csv { margin:0; padding:16px; overflow-x:auto; font-size:12px; line-height:1.7;
+          background:var(--plate-2); border-radius:0 0 8px 8px; }
+.note { color:var(--muted); font-size:13px; }
+.warnbox { background:var(--warn-bg); color:var(--warn); border-radius:6px; padding:11px 14px;
+           font-size:13px; margin-top:14px; }
+footer { margin-top:52px; padding-top:22px; border-top:1px solid var(--line); color:var(--muted); font-size:13px; }
+footer a { color:var(--signal); }
+@media (prefers-reduced-motion: reduce) { * { transition:none !important; animation:none !important; } }
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <p class="eyebrow">instagram-keyword-scraper · probaj uživo</p>
+    <h1>Instagram profili sa e-mailom, bez diranja Instagrama.</h1>
+    <p>
+      Javni Instagram bio je indeksiran u Google-u — adresa i sve. Pa se ne ide na Instagram,
+      nego se pretražuje <code>site:instagram.com</code>. Adresa je već u snippetu rezultata.
+      Ovde možeš da probaš na pravim rezultatima: napravi upite, otvori ih, vrati stranu ovamo.
+    </p>
+  </div>
+</header>
+
+<div class="wrap">
+
+<section>
+  <h2>1 — Šta tražiš</h2>
+  <div class="panel panel-pad">
+    <div class="fields">
+      <label><span class="lbl">Niša</span><input id="kw" value="med spa" placeholder="med spa, realtor"></label>
+      <label><span class="lbl">Grad</span><input id="loc" value="Austin TX" placeholder="Austin TX"></label>
+      <label><span class="lbl">Kako tražiti</span>
+        <span class="probes">
+          <label class="cb"><input type="checkbox" id="p-free" checked> free-mail <em>(6)</em></label>
+          <label class="cb"><input type="checkbox" id="p-role" checked> poslovne <em>(14)</em></label>
+          <label class="cb"><input type="checkbox" id="p-plain"> bez tokena <em>(1)</em></label>
+        </span>
+      </label>
+    </div>
+    <div class="controls"><button class="run" id="build">Napravi upite</button></div>
+  </div>
+</section>
+
+<section>
+  <h2>2 — Upiti <span id="qcount" style="color:var(--signal)"></span>
+    <span style="text-transform:none;letter-spacing:0;font-weight:400">— klikni „otvori" da vidiš prave rezultate</span></h2>
+  <div class="panel"><ol class="queries" id="queries"></ol></div>
+</section>
+
+<section>
+  <h2>3 — Vrati rezultate ovamo</h2>
+  <div class="steps">
+    <div class="step"><b>1</b><span>Klikni „otvori" gore — otvara se prava Google pretraga.</span></div>
+    <div class="step"><b>2</b><span>Na toj strani: <code>Ctrl+U</code> (izvorni kod) → <code>Ctrl+A</code> → <code>Ctrl+C</code>.</span></div>
+    <div class="step"><b>3</b><span>Nalepi ovde i klikni „Izvuci profile".</span></div>
+  </div>
+  <div class="panel panel-pad">
+    <textarea id="html" spellcheck="false" aria-label="Izvorni kod strane sa rezultatima"></textarea>
+    <div class="controls">
+      <button class="run" id="parse">Izvuci profile</button>
+      <button id="sample">Ubaci primer rezultata</button>
+    </div>
+    <p class="note" style="margin:12px 0 0">
+      Ovo je jedini korak koji stranica ne može sama: browser ne sme da dohvati google.com
+      sa drugog domena. Ekstenzija to radi umesto tebe — tamo je isti ovaj korak jedan klik.
+    </p>
+  </div>
+</section>
+
+<section>
+  <h2>4 — Profili</h2>
+  <div class="panel">
+    <div class="stats" id="stats"></div>
+    <div class="tablewrap"><table id="out"></table></div>
+  </div>
+</section>
+
+<section>
+  <h2>5 — CSV</h2>
+  <div class="panel">
+    <div class="panel-pad" style="border-bottom:1px solid var(--line);display:flex;gap:9px;flex-wrap:wrap">
+      <button id="copy">Kopiraj</button><button id="dl">Preuzmi .csv</button>
+    </div>
+    <pre class="csv" id="csv"></pre>
+  </div>
+</section>
+
+<section>
+  <h2>Šta se ovde dogodilo</h2>
+  <div class="steps">
+    <div class="step"><b>·</b><span><strong>Poslovne adrese</strong> (<code>"info@"</code>, <code>"hello@"</code>, <code>"bookings@"</code>…) su jedini način da se nađe firma na <strong>sopstvenom domenu</strong> — <code>hello@njihovsajt.com</code> nijedan free-mail upit nikad ne pogodi. Za US biznise to je i bolja polovina liste.</span></div>
+    <div class="step"><b>·</b><span>Zadržava se <strong>svaka</strong> adresa iz snippeta, bez obzira kojim upitom je profil pronađen. Ranije je filter bacao baš te poslovne adrese.</span></div>
+    <div class="step"><b>·</b><span>Svaki token je <strong>zaseban upit</strong>. Uzak upit pretraživač mnogo bolje rangira, i svaki dobija svoju stranu rezultata — 20 tokena znači 20 strana, ne jednu prepunu.</span></div>
+    <div class="step"><b>·</b><span>Naslov <code>Ime (@handle)</code> se cepa na ime i handle; handle iz naslova ima prednost nad onim iz URL-a.</span></div>
+    <div class="step"><b>·</b><span>Link na objavu (<code>/p/…</code>) nije profil i ne postaje lead.</span></div>
+    <div class="step"><b>·</b><span>Adrese se filtriraju na domene koje si tražio, pa <code>hello@salon.com</code> ne prolazi kad tražiš samo gmail.</span></div>
+    <div class="step"><b>·</b><span><code>logo@2x.png</code> i slično nikad ne prođu — isti filteri kao u actor-ima.</span></div>
+    <div class="step"><b>·</b><span>Profil bez adrese u snippetu ostaje u tabeli, ali actor ga podrazumevano baca (<code>requireEmail</code>).</span></div>
+  </div>
+  <div class="warnbox">
+    MX verifikacija ovde ne radi — browser nema DNS. Lokalno se pokreće i dodaje
+    <code>emailDeliverable</code> uz svaki red.
+  </div>
+</section>
+
+<footer>
+  Sve se računa u ovoj stranici, ništa se nigde ne šalje. Ekstenzija i actor rade isti posao
+  automatski — <code>Aplikacija.bat</code> za panel, <code>browser-extension</code> za ekstenziju.
+</footer>
+
+</div>
+
+<script type="module">
+// ─── emails.js ─────────────────────────────────────────────────
+/**
+ * E-mail harvesting.
+ *
+ * Everything here is pure and DOM-library agnostic (it takes a Cheerio instance
+ * plus the raw HTML), so it can be unit tested without spinning up a crawler.
+ *
+ * SHARED MODULE — byte-identical across every actor in this repo. Apify actors
+ * deploy as self-contained Docker build contexts, so each carries its own copy
+ * instead of reaching outside its directory. Edit one, then run
+ * `node scripts/check-shared-modules.mjs --fix` from the repo root to
+ * propagate; `npm test` at the root fails if the copies drift apart.
+ */
+
+/**
+ * Deliberately permissive — validation happens in `isPlausibleEmail`, not here.
+ *
+ * The local-part class is narrower than RFC 5322 allows on purpose: characters
+ * like `/` and `:` are legal in theory but in practice only ever show up when
+ * the regex is chewing through a URL, so excluding them costs nothing real and
+ * removes a whole class of false positives.
+ */
+const EMAIL_RE = /[A-Za-z0-9._%+'-]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+/g;
+
+/**
+ * `logo@2x.png`, `sprite@3x.webp` and friends match the e-mail shape perfectly.
+ * Anything whose last label is a file extension is an asset, not an address.
+ */
+const ASSET_EXTENSIONS = new Set([
+    'png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'svg', 'ico', 'bmp', 'tiff',
+    'css', 'js', 'mjs', 'cjs', 'json', 'xml', 'map', 'txt', 'md',
+    'woff', 'woff2', 'ttf', 'eot', 'otf',
+    'mp3', 'mp4', 'webm', 'ogg', 'wav', 'mov', 'avi',
+    'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'zip', 'gz', 'rar',
+    'php', 'html', 'htm', 'aspx', 'jsp',
+]);
+
+/** Tracking, error-reporting and CDN hosts that leak fake addresses into markup. */
+const BLOCKED_DOMAIN_PATTERNS = [
+    /(^|\.)sentry\.io$/i,
+    /(^|\.)ingest\.sentry\.io$/i,
+    /(^|\.)sentry-cdn\.com$/i,
+    /(^|\.)wixpress\.com$/i,
+    /(^|\.)wix\.com$/i,
+    /(^|\.)squarespace\.com$/i,
+    /(^|\.)godaddy\.com$/i,
+    /(^|\.)sentry\.wixpress\.com$/i,
+    /(^|\.)cloudflare\.com$/i,
+    /(^|\.)w3\.org$/i,
+    /(^|\.)schema\.org$/i,
+];
+
+/** Addresses that ship with themes, tutorials and lorem-ipsum blocks. */
+const PLACEHOLDER_LOCAL_PARTS = new Set([
+    'email', 'youremail', 'your-email', 'your_email', 'yourname',
+    'someone', 'somebody', 'username', 'user', 'name', 'firstname',
+    'lastname', 'test', 'example', 'sample', 'demo', 'placeholder',
+    'noreply', 'no-reply', 'donotreply', 'do-not-reply',
+]);
+
+const PLACEHOLDER_DOMAINS = new Set([
+    'example.com', 'example.org', 'example.net', 'example.edu',
+    'domain.com', 'yourdomain.com', 'your-domain.com', 'mydomain.com',
+    'email.com', 'address.com', 'website.com', 'yoursite.com',
+    'test.com', 'sample.com', 'company.com', 'yourcompany.com',
+    'sentry.io', 'localhost', 'gmail.co', 'mail.com',
+]);
+
+/** 32-hex-char local parts are Sentry public keys, not people. */
+const HEX_KEY_RE = /^[0-9a-f]{32,}$/i;
+
+const HTML_ENTITIES = {
+    '&#64;': '@', '&#064;': '@', '&#x40;': '@', '&commat;': '@', '&at;': '@',
+    '&#46;': '.', '&#046;': '.', '&#x2e;': '.', '&period;': '.', '&dot;': '.',
+    '&#45;': '-', '&#95;': '_', '&amp;': '&',
+};
+
+/**
+ * Cloudflare's e-mail protection stores the address XOR-encoded in hex, with the
+ * first byte acting as the key. Decoding it turns "[email&nbsp;protected]" back
+ * into a real address.
+ *
+ * @param {string} hex
+ * @returns {string|null}
+ */
+function decodeCloudflareEmail(hex) {
+    if (typeof hex !== 'string' || hex.length < 4 || hex.length % 2 !== 0) return null;
+    if (!/^[0-9a-fA-F]+$/.test(hex)) return null;
+
+    const key = parseInt(hex.slice(0, 2), 16);
+    let decoded = '';
+    for (let i = 2; i < hex.length; i += 2) {
+        decoded += String.fromCharCode(parseInt(hex.slice(i, i + 2), 16) ^ key);
+    }
+    return decoded;
+}
+
+/**
+ * Reverses the common "human readable, bot hostile" spellings of an address.
+ *
+ * @param {string} input
+ * @returns {string}
+ */
+function deobfuscate(input) {
+    let out = input;
+
+    for (const [entity, char] of Object.entries(HTML_ENTITIES)) {
+        out = out.split(entity).join(char);
+    }
+
+    // "name [at] example [dot] com", "name (at) example (dot) com", "name {AT} …"
+    out = out.replace(/\s*[[({<]\s*(?:at|@|apnasty)\s*[\])}>]\s*/gi, '@');
+    out = out.replace(/\s*[[({<]\s*(?:dot|punkt|tacka|točka)\s*[\])}>]\s*/gi, '.');
+
+    // Bare "name at example dot com" — only rewritten when the whole phrase
+    // matches, so ordinary prose containing "at" is left alone.
+    out = out.replace(
+        /\b([A-Za-z0-9._%+-]+)\s+(?:at|AT)\s+([A-Za-z0-9-]+(?:\s+(?:dot|DOT|punkt)\s+[A-Za-z0-9-]+)*)\s+(?:dot|DOT|punkt)\s+([A-Za-z]{2,24})\b/g,
+        (_match, local, domain, tld) => `${local}@${domain.replace(/\s+(?:dot|DOT|punkt)\s+/g, '.')}.${tld}`,
+    );
+
+    return out;
+}
+
+/**
+ * @param {string} email lower-cased candidate
+ * @param {Set<string>} extraBlockedDomains
+ * @returns {boolean}
+ */
+function isPlausibleEmail(email, extraBlockedDomains = new Set()) {
+    if (!email || email.length > 254) return false;
+
+    const atIndex = email.lastIndexOf('@');
+    if (atIndex < 1) return false;
+
+    const local = email.slice(0, atIndex);
+    const domain = email.slice(atIndex + 1);
+
+    if (!local || local.length > 64) return false;
+    if (local.startsWith('.') || local.endsWith('.') || local.includes('..')) return false;
+    if (HEX_KEY_RE.test(local)) return false;
+    if (PLACEHOLDER_LOCAL_PARTS.has(local)) return false;
+
+    const labels = domain.split('.');
+    if (labels.length < 2) return false;
+    if (labels.some((label) => !label || label.length > 63 || label.startsWith('-') || label.endsWith('-'))) return false;
+
+    const tld = labels[labels.length - 1];
+    if (!/^[a-z]{2,24}$/.test(tld)) return false;
+    if (ASSET_EXTENSIONS.has(tld)) return false;
+
+    if (PLACEHOLDER_DOMAINS.has(domain)) return false;
+    if (extraBlockedDomains.has(domain)) return false;
+    if (BLOCKED_DOMAIN_PATTERNS.some((pattern) => pattern.test(domain))) return false;
+
+    // A user-supplied entry blocks its subdomains too: "example.com" kills "mail.example.com".
+    for (const blocked of extraBlockedDomains) {
+        if (domain.endsWith(`.${blocked}`)) return false;
+    }
+
+    return true;
+}
+
+/**
+ * Pulls every candidate out of a blob of text and normalises it.
+ *
+ * @param {string} text
+ * @param {Set<string>} blockedDomains
+ * @returns {string[]}
+ */
+function matchEmails(text, blockedDomains) {
+    if (!text) return [];
+
+    const found = [];
+    for (const raw of text.match(EMAIL_RE) ?? []) {
+        // Trim leading separators the greedy local-part class may have swallowed.
+        const email = raw.replace(/^[.\-_+'%]+/, '').toLowerCase();
+        if (isPlausibleEmail(email, blockedDomains)) found.push(email);
+    }
+    return found;
+}
+
+/**
+ * Pulls addresses out of a plain string — a bio, a caption, a PDF's text layer.
+ *
+ * @param {string} text
+ * @param {object} [options]
+ * @param {boolean} [options.deobfuscate]
+ * @param {string[]} [options.blockedDomains]
+ * @returns {string[]} unique, sorted, lower-cased addresses
+ */
+function extractEmailsFromText(text, options = {}) {
+    const { deobfuscate: shouldDeobfuscate = true, blockedDomains = [] } = options;
+
+    const blocked = new Set(blockedDomains.map((d) => d.trim().toLowerCase()).filter(Boolean));
+    const prepared = shouldDeobfuscate ? deobfuscate(text ?? '') : (text ?? '');
+
+    return [...new Set(matchEmails(prepared, blocked))].sort();
+}
+
+/**
+ * Collects addresses from a loaded page.
+ *
+ * Sources, in descending order of confidence:
+ *   1. `mailto:` hrefs                     — an author's explicit declaration
+ *   2. Cloudflare-protected nodes          — deliberately hidden, always real
+ *   3. Visible text                        — very low noise
+ *   4. Raw HTML (opt-in)                   — JSON-LD, data attributes, inline JS
+ *
+ * @param {object} params
+ * @param {import('cheerio').CheerioAPI} params.$
+ * @param {string} params.html
+ * @param {object} [params.options]
+ * @param {boolean} [params.options.scanRawHtml]
+ * @param {boolean} [params.options.deobfuscate]
+ * @param {string[]} [params.options.blockedDomains]
+ * @returns {string[]} unique, sorted, lower-cased addresses
+ */
+function extractEmailsFromPage({ $, html, options = {} }) {
+    const {
+        scanRawHtml = true,
+        deobfuscate: shouldDeobfuscate = true,
+        blockedDomains = [],
+    } = options;
+
+    const blocked = new Set(blockedDomains.map((d) => d.trim().toLowerCase()).filter(Boolean));
+    const emails = new Set();
+    const add = (candidates) => candidates.forEach((email) => emails.add(email));
+
+    // 1. mailto: links — strip the ?subject=… tail and percent-decode.
+    $('a[href^="mailto:" i]').each((_i, el) => {
+        const href = $(el).attr('href') ?? '';
+        let address = href.replace(/^mailto:/i, '').split('?')[0].trim();
+        try {
+            address = decodeURIComponent(address);
+        } catch {
+            // Malformed percent-escapes: keep the raw value.
+        }
+        // A single mailto: may carry several comma-separated recipients.
+        for (const part of address.split(/[,;]/)) {
+            add(matchEmails(part, blocked));
+        }
+    });
+
+    // 2. Cloudflare e-mail protection.
+    if (shouldDeobfuscate) {
+        $('[data-cfemail]').each((_i, el) => {
+            const decoded = decodeCloudflareEmail($(el).attr('data-cfemail'));
+            if (decoded) add(matchEmails(decoded, blocked));
+        });
+        $('a[href*="/cdn-cgi/l/email-protection#"]').each((_i, el) => {
+            const hex = ($(el).attr('href') ?? '').split('#')[1];
+            const decoded = decodeCloudflareEmail(hex);
+            if (decoded) add(matchEmails(decoded, blocked));
+        });
+    }
+
+    // 3. Visible text.
+    const $body = $('body').clone();
+    $body.find('script, style, noscript, template').remove();
+    // Cheerio's .text() concatenates adjacent elements with nothing between
+    // them, so `<h1>Firma</h1><p>office@firma.rs</p>` reads as one run and
+    // yields "firmaoffice@firma.rs". Separating elements first keeps the
+    // rendered word boundaries intact.
+    $body.find('*').after(' ');
+    add(extractEmailsFromText($body.text(), { deobfuscate: shouldDeobfuscate, blockedDomains: [...blocked] }));
+
+    // 4. Raw HTML.
+    if (scanRawHtml && html) {
+        add(matchEmails(shouldDeobfuscate ? deobfuscate(html) : html, blocked));
+    }
+
+    return [...emails].sort();
+}
+
+// ─── social.js ─────────────────────────────────────────────────
+/**
+ * Social profile links.
+ *
+ * Pure and dependency-free on purpose: this module is imported by the actors
+ * *and* by the browser extension's service worker, where nothing from npm is
+ * available and there is no DOM to parse with.
+ *
+ * SHARED MODULE — byte-identical across every actor in this repo. Apify actors
+ * deploy as self-contained Docker build contexts, so each carries its own copy
+ * instead of reaching outside its directory. Edit one, then run
+ * `node scripts/check-shared-modules.mjs --fix` from the repo root to
+ * propagate; `npm test` at the root fails if the copies drift apart.
+ */
+
+/** Instagram paths that are features rather than handles. */
+const IG_RESERVED = new Set([
+    'p', 'reel', 'reels', 'explore', 'stories', 'tv', 'accounts', 'direct',
+    'about', 'legal', 'privacy', 'terms', 'developer', 'api', 'challenge',
+    'emails', 'session', 'oauth', 'web',
+]);
+
+/**
+ * Matches an Instagram profile URL anywhere in a blob of text or markup.
+ *
+ * The scheme is optional because free-text fields — a bio, a notes column —
+ * carry bare `instagram.com/handle` far more often than a full URL. The
+ * lookbehind is what keeps that from matching `notinstagram.com/handle`.
+ */
+const IG_URL_RE = /(?<![\w.-])(?:https?:\/\/)?(?:[a-z0-9-]+\.)*instagram\.com\/([A-Za-z0-9._]{1,30})(?:[/?#]|\b)/gi;
+
+/**
+ * @param {string} value a URL, absolute or protocol-relative
+ * @returns {string|null} lower-cased handle, or null when it is not a profile
+ */
+function instagramHandleFromUrl(value) {
+    if (!value) return null;
+
+    try {
+        const raw = String(value).trim();
+        const { hostname, pathname } = new URL(raw.startsWith('//') ? `https:${raw}` : raw);
+        if (!/(^|\.)instagram\.com$/i.test(hostname)) return null;
+
+        const [handle] = pathname.split('/').filter(Boolean);
+        if (!handle) return null;
+
+        const normalized = handle.toLowerCase();
+        if (IG_RESERVED.has(normalized)) return null;
+        // A handle is 1-30 of letters, digits, dot and underscore. Anything else
+        // is a path segment that happens to sit at the root.
+        if (!/^[a-z0-9._]{1,30}$/.test(normalized)) return null;
+        // All-dots or a leading dot is never a real handle.
+        if (/^\.+$/.test(normalized) || normalized.startsWith('.')) return null;
+
+        return normalized;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Pulls every Instagram handle out of raw markup.
+ *
+ * Regex rather than DOM traversal because the extension's service worker has no
+ * DOMParser, and because handles also appear outside `href` attributes — in
+ * JSON-LD blocks, `data-` attributes and inline scripts.
+ *
+ * @param {string} html
+ * @returns {string[]} unique, sorted handles
+ */
+function instagramHandlesFromHtml(html) {
+    if (!html) return [];
+
+    const handles = new Set();
+    for (const match of String(html).matchAll(IG_URL_RE)) {
+        const handle = instagramHandleFromUrl(`https://instagram.com/${match[1]}`);
+        if (handle) handles.add(handle);
+    }
+    return [...handles].sort();
+}
+
+// ─── igSearch.js ───────────────────────────────────────────────
+/**
+ * Finding Instagram profiles through a search engine instead of through
+ * Instagram.
+ *
+ * The trick the commercial "mass Instagram e-mail scraper" actors use, and it
+ * is a good one: a public Instagram bio is indexed by Google, e-mail and all.
+ * So `site:instagram.com "marketing" "new york" "@gmail.com"` returns profiles
+ * whose bio contains that address, and the address is sitting right there in
+ * the result snippet. Instagram is never contacted, so Instagram's rate limit —
+ * the wall that makes profile-by-profile scraping slow — simply does not apply.
+ *
+ * What you get is what the search engine indexed: bio text only, no follower
+ * counts, no private fields, and only profiles the engine happens to have
+ * crawled. That is a real ceiling, but it is a different ceiling.
+ *
+ * Pure and dependency-free, so the browser extension can use the same query
+ * builder and the same result parser the actor uses.
+ *
+ * SHARED MODULE — byte-identical across every actor in this repo. Apify actors
+ * deploy as self-contained Docker build contexts, so each carries its own copy
+ * instead of reaching outside its directory. Edit one, then run
+ * `node scripts/check-shared-modules.mjs --fix` from the repo root to
+ * propagate; `npm test` at the root fails if the copies drift apart.
+ */
+
+/**
+ * Free-mail domains, searched one at a time.
+ *
+ * Naming a domain in the query is what makes the search return profiles that
+ * publish an address at all rather than profiles that merely match the
+ * keyword — but on its own it only ever finds addresses on these six.
+ */
+const COMMON_EMAIL_DOMAINS = [
+    '@gmail.com', '@yahoo.com', '@hotmail.com', '@outlook.com', '@icloud.com', '@aol.com',
+];
+
+/**
+ * The other half of the coverage, and for business outreach the better half.
+ *
+ * A company with its own domain writes `hello@theirsite.com`, which no
+ * free-mail probe will ever match. Searching the *local part* — `"info@"` —
+ * finds it without having to know the domain, because the engine indexes the
+ * `@` as part of the word. These are the local parts businesses actually use.
+ */
+const COMMON_ROLE_PREFIXES = [
+    'info@', 'hello@', 'contact@', 'bookings@', 'booking@',
+    'sales@', 'office@', 'hi@', 'team@', 'support@',
+    'inquiries@', 'admin@', 'press@', 'help@',
+];
+
+/**
+ * How queries are built. Several can be combined; the results are merged.
+ *
+ * - `freeMail`   — one query per free-mail domain
+ * - `rolePrefix` — one query per business local part, catching custom domains
+ * - `plain`      — no address token at all: every profile matching the keyword,
+ *                  and whatever address happens to be in its snippet
+ */
+const PROBE_KINDS = ['freeMail', 'rolePrefix', 'plain'];
+
+/** Both address probes. Left out of the default is `plain`, which is far noisier. */
+const DEFAULT_PROBES = ['freeMail', 'rolePrefix'];
+
+/**
+ * @param {string} value
+ * @returns {string} quoted for a search engine, with inner quotes removed
+ */
+function phrase(value) {
+    return `"${String(value).replace(/"/g, '').trim()}"`;
+}
+
+/**
+ * Builds one query per keyword × probe.
+ *
+ * Splitting by probe rather than OR-ing them matters: engines rank a narrow
+ * query far better, and each query gets its own result page, so twenty probes
+ * means twenty pages of results rather than one crowded page.
+ *
+ * @param {object} params
+ * @param {string[]} params.keywords
+ * @param {string} [params.location]
+ * @param {string[]} [params.probes] any of PROBE_KINDS; defaults to DEFAULT_PROBES
+ * @param {string[]} [params.emailDomains] overrides the free-mail probe list
+ * @param {string[]} [params.rolePrefixes] overrides the local-part probe list
+ * @param {string} [params.site] the profile host to restrict to
+ * @returns {Array<{query: string, keyword: string, probe: string, token: string|null}>}
+ */
+function buildSearchQueries({
+    keywords = [],
+    location = '',
+    probes = DEFAULT_PROBES,
+    emailDomains,
+    rolePrefixes,
+    site = 'instagram.com',
+} = {}) {
+    const cleanKeywords = keywords
+        .map((keyword) => String(keyword ?? '').trim())
+        .filter(Boolean);
+    if (!cleanKeywords.length) return [];
+
+    const clean = (list) => list.map((item) => String(item ?? '').trim()).filter(Boolean);
+    const wanted = new Set(clean(probes).filter((probe) => PROBE_KINDS.includes(probe)));
+
+    const domains = emailDomains?.length ? clean(emailDomains) : COMMON_EMAIL_DOMAINS;
+    const prefixes = rolePrefixes?.length ? clean(rolePrefixes) : COMMON_ROLE_PREFIXES;
+
+    /** @type {Array<{probe: string, token: string|null}>} */
+    const tokens = [
+        ...(wanted.has('freeMail') ? domains.map((token) => ({ probe: 'freeMail', token })) : []),
+        ...(wanted.has('rolePrefix') ? prefixes.map((token) => ({ probe: 'rolePrefix', token })) : []),
+        ...(wanted.has('plain') ? [{ probe: 'plain', token: null }] : []),
+    ];
+
+    // No usable probe selected still means "search the keyword", rather than
+    // silently returning nothing.
+    const effective = tokens.length ? tokens : [{ probe: 'plain', token: null }];
+
+    const place = String(location ?? '').trim();
+    const queries = [];
+    const seen = new Set();
+
+    for (const keyword of cleanKeywords) {
+        for (const { probe, token } of effective) {
+            const parts = [`site:${site}`, phrase(keyword)];
+            if (place) parts.push(phrase(place));
+            if (token) parts.push(phrase(token));
+
+            const query = parts.join(' ');
+            if (seen.has(query)) continue;
+            seen.add(query);
+
+            queries.push({ query, keyword, probe, token: token ?? null });
+        }
+    }
+
+    return queries;
+}
+
+/**
+ * Words that can follow "Instagram" in a title without being anyone's handle.
+ * Without them, `Instagram Reels` reads as the user `reels`.
+ */
+const TITLE_STOPWORDS = new Set([
+    'p', 'reel', 'reels', 'explore', 'stories', 'tv', 'accounts', 'direct',
+    'photos', 'videos', 'posts', 'login', 'signup', 'help', 'search',
+]);
+
+/**
+ * Search engines render the profile title as `Full Name (@handle) • Instagram`
+ * or `Full Name (@handle) on Instagram`. The display name is the part before
+ * the parenthesis.
+ *
+ * @param {string} title
+ * @returns {{name: string|null, handleFromTitle: string|null}}
+ */
+function parseProfileTitle(title) {
+    const text = String(title ?? '').replace(/\s+/g, ' ').trim();
+    if (!text) return { name: null, handleFromTitle: null };
+
+    const match = text.match(/^(.*?)\s*\(@([A-Za-z0-9._]{1,30})\)/);
+    if (match) {
+        return { name: match[1].trim() || null, handleFromTitle: match[2].toLowerCase() };
+    }
+
+    // `Instagram · handle` — what a search result for a post or a reel looks
+    // like, where the URL names nobody. Matched on the ASCII run rather than on
+    // the separator, so an export read with the wrong code page
+    // (`Instagram聽路聽handle`) still resolves to the same handle. Anchored at
+    // both ends so a caption (`Ana on Instagram: "..."`) cannot match.
+    const collapsed = text.replace(/[^A-Za-z0-9._]+/g, ' ').replace(/\s+/g, ' ').trim();
+    const bare = collapsed.match(/^Instagram ([A-Za-z0-9._]{1,30})$/i);
+    if (bare && !TITLE_STOPWORDS.has(bare[1].toLowerCase())) {
+        return { name: null, handleFromTitle: bare[1].toLowerCase() };
+    }
+
+    // No handle in the title — strip the trailing site name and keep the rest.
+    const name = text.replace(/\s*[•|·\-–]\s*Instagram.*$/i, '').replace(/\s+on Instagram.*$/i, '').trim();
+    return { name: name || null, handleFromTitle: null };
+}
+
+/**
+ * Turns one search result into a lead.
+ *
+ * @param {object} result
+ * @param {string} result.url
+ * @param {string} [result.title]
+ * @param {string} [result.snippet] the indexed bio text — where the address is
+ * @param {string} [result.keyword]
+ * @param {object} helpers injected so this module stays dependency-free
+ * @param {(url: string) => string|null} helpers.instagramHandleFromUrl
+ * @param {(text: string) => string[]} helpers.extractEmailsFromText
+ * @param {object} [options]
+ * @param {string[]} [options.keepOnlyDomains] narrow the output to these domains
+ * @returns {object|null} null when the result is not a profile page
+ */
+function igLeadFromResult(result, helpers, options = {}) {
+    const { instagramHandleFromUrl, extractEmailsFromText } = helpers;
+    const { keepOnlyDomains = [] } = options;
+
+    const handle = instagramHandleFromUrl(result?.url ?? '');
+    const { name, handleFromTitle } = parseProfileTitle(result.title);
+
+    // A result whose URL is a post or a reel names nobody, but the title still
+    // does. Requiring the URL to resolve dropped those outright — on a real
+    // search export that is roughly a third of the rows.
+    const username = handleFromTitle ?? handle;
+    if (!username) return null;
+
+    const snippet = String(result.snippet ?? '').replace(/\s+/g, ' ').trim();
+
+    // Every address in the snippet is kept by default. Which domain was used to
+    // *find* the profile says nothing about which addresses are worth having —
+    // filtering by it threw away exactly the custom-domain business addresses
+    // that are the best leads here.
+    let emails = extractEmailsFromText(`${snippet} ${result.title ?? ''}`);
+
+    if (keepOnlyDomains.length) {
+        const wanted = keepOnlyDomains.map((domain) => String(domain).replace(/^@/, '').toLowerCase());
+        emails = emails.filter((email) => wanted.some((domain) => email.endsWith(`@${domain}`)));
+    }
+
+    return {
+        keyword: result.keyword ?? null,
+        username,
+        title: result.title ?? null,
+        name,
+        description: snippet || null,
+        url: `https://www.instagram.com/${username}/`,
+        email: emails[0] ?? null,
+        emails,
+    };
+}
+
+/**
+ * One row per address, matching the shape the commercial actors emit — a lead
+ * with two addresses becomes two rows.
+ *
+ * @param {object[]} leads
+ * @returns {object[]}
+ */
+function explodeByEmail(leads) {
+    return leads.flatMap((lead) => (lead.emails?.length
+        ? lead.emails.map((email) => ({ ...lead, email }))
+        : [lead]));
+}
+
+// ─── demo UI ──────────────────────────────────────────────────────────────
+const $ = (id) => document.getElementById(id);
+const SAMPLE = "<div id=\"search\">\n  <div data-hveid=\"1\"><a href=\"https://www.instagram.com/austinmedspa/\"><h3>Austin Med Spa (@austinmedspa) &bull; Instagram photos and videos</h3></a>\n    <div>4,182 Followers &middot; Med spa in Austin TX &middot; Botox, fillers &amp; facials &middot; Bookings: info@austinmedspa.com</div></div>\n  <div data-hveid=\"2\"><a href=\"https://www.instagram.com/glow.aesthetics.atx/\"><h3>Glow Aesthetics ATX (@glow.aesthetics.atx) on Instagram</h3></a>\n    <div>Austin&rsquo;s med spa &middot; Lip filler specialists &middot; hello@glowaesthetics.co &middot; DM to book</div></div>\n  <div data-hveid=\"3\"><a href=\"/url?q=https://www.instagram.com/radiantskin.atx/&amp;sa=U\"><h3>Radiant Skin Studio (@radiantskin.atx)</h3></a>\n    <div>Skincare studio &middot; Austin TX &middot; hello.radiant@gmail.com &middot; logo@2x.png</div></div>\n  <div data-hveid=\"4\"><a href=\"https://www.instagram.com/p/C8xYzAbCdEf/\"><h3>Austin Med Spa on Instagram: &quot;New year specials&quot;</h3></a>\n    <div>This is a post, not a profile &mdash; it must not become a lead.</div></div>\n  <div data-hveid=\"5\"><a href=\"https://www.instagram.com/thequietstudio/\"><h3>The Quiet Studio (@thequietstudio)</h3></a>\n    <div>Med spa &middot; Austin &middot; no contact details published</div></div>\n</div>";
+const helpers = { instagramHandleFromUrl, extractEmailsFromText };
+const COLUMNS = ['keyword', 'username', 'name', 'email', 'url'];
+
+const splitList = (value) => value.split(',').map((part) => part.trim()).filter(Boolean);
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g,
+  (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+let queries = [];
+let lastCsv = '';
+
+function buildQueries() {
+  queries = buildSearchQueries({
+    keywords: splitList($('kw').value),
+    location: $('loc').value.trim(),
+    probes: [
+      $('p-free').checked && 'freeMail',
+      $('p-role').checked && 'rolePrefix',
+      $('p-plain').checked && 'plain',
+    ].filter(Boolean),
+  });
+
+  $('qcount').textContent = queries.length
+    ? queries.length + (queries.length === 1 ? ' upit' : ' upita')
+    : '';
+
+  $('queries').innerHTML = queries.length
+    ? queries.map((entry) => {
+        const href = 'https://www.google.com/search?num=20&q=' + encodeURIComponent(entry.query);
+        return '<li><span class="q">' + escapeHtml(entry.query) + '</span>'
+          + '<span class="probe ' + entry.probe + '">' + entry.probe + '</span>'
+          + '<a class="open" href="' + href + '" target="_blank" rel="noopener">otvori ↗</a></li>';
+      }).join('')
+    : '<li><span class="note">Upiši bar jednu nišu.</span></li>';
+}
+
+/**
+ * Pulls {title, url, snippet} out of a pasted results page.
+ *
+ * Done with DOMParser rather than the actor's cheerio version — same selectors,
+ * but a page already has a parser and cheerio will not run here. Everything
+ * after this point is the shipped code.
+ */
+function readResults(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const out = [];
+  const seen = new Set();
+
+  for (const anchor of doc.querySelectorAll('a[href]')) {
+    const heading = anchor.querySelector('h3, h2');
+    if (!heading) continue;
+
+    let url = anchor.getAttribute('href') ?? '';
+    if (url.startsWith('/url?')) url = new URLSearchParams(url.slice(5)).get('q') ?? '';
+    if (!/^https?:\/\//.test(url) || seen.has(url)) continue;
+    seen.add(url);
+
+    const block = anchor.closest('div[data-hveid], div.g, li') ?? anchor.parentElement;
+    out.push({
+      title: heading.textContent.replace(/\s+/g, ' ').trim(),
+      url,
+      snippet: (block?.textContent ?? '').replace(/\s+/g, ' ').trim().slice(0, 500),
+    });
+  }
+  return out;
+}
+
+function parsePasted() {
+  const results = readResults($('html').value);
+  const keyword = splitList($('kw').value)[0] ?? null;
+
+  const leads = [];
+  const seen = new Set();
+  for (const result of results) {
+    // No output filter: every address in the snippet is kept.
+    const lead = igLeadFromResult({ ...result, keyword }, helpers);
+    if (!lead || seen.has(lead.username)) continue;
+    seen.add(lead.username);
+    leads.push(lead);
+  }
+
+  const withEmail = leads.filter((lead) => lead.email).length;
+  $('stats').innerHTML = [
+    [results.length, 'rezultata na strani'],
+    [leads.length, 'profila'],
+    [withEmail, 'sa adresom'],
+    [results.length - leads.length, 'odbačeno (objave, ostalo)'],
+  ].map(([value, label]) => '<div class="stat"><b>' + value + '</b><span>' + label + '</span></div>').join('');
+
+  $('out').innerHTML = leads.length
+    ? '<thead><tr>' + COLUMNS.map((c) => '<th>' + c + '</th>').join('') + '</tr></thead><tbody>'
+      + leads.map((lead) => '<tr>' + COLUMNS.map((column) => {
+          const value = lead[column];
+          const cls = column === 'email' && value ? ' class="mail"' : (value ? '' : ' class="dim"');
+          return '<td' + cls + '>' + escapeHtml(value || '—') + '</td>';
+        }).join('') + '</tr>').join('')
+      + '</tbody>'
+    : '<tbody><tr><td class="dim" style="padding:26px 16px">Ništa nije prepoznato. Da li si nalepio izvorni kod strane (Ctrl+U), a ne sam tekst?</td></tr></tbody>';
+
+  const cell = (value) => {
+    const text = String(value ?? '');
+    return /[",\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+  };
+  lastCsv = [COLUMNS.join(','), ...leads.map((lead) => COLUMNS.map((c) => cell(lead[c])).join(','))].join('\n') + '\n';
+  $('csv').textContent = lastCsv;
+}
+
+$('build').onclick = buildQueries;
+$('parse').onclick = parsePasted;
+$('sample').onclick = () => { $('html').value = SAMPLE; parsePasted(); };
+$('copy').onclick = async () => {
+  await navigator.clipboard.writeText(lastCsv);
+  $('copy').textContent = 'Kopirano';
+  setTimeout(() => { $('copy').textContent = 'Kopiraj'; }, 1500);
+};
+$('dl').onclick = () => {
+  const blob = new Blob(['\ufeff' + lastCsv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'instagram-leads.csv';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+};
+
+for (const id of ['kw', 'loc']) {
+  $(id).addEventListener('keydown', (event) => { if (event.key === 'Enter') buildQueries(); });
+}
+
+for (const id of ['p-free', 'p-role', 'p-plain']) $(id).addEventListener('change', buildQueries);
+
+buildQueries();
+$('html').value = SAMPLE;
+parsePasted();
+</script>

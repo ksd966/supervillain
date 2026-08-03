@@ -1,0 +1,147 @@
+{
+    "title": "Instagram E-mail Scraper",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "list": {
+            "title": "Paste your list here",
+            "type": "string",
+            "description": "The only field you need. Paste anything and it sorts itself out:\n\n- a CSV or TSV export straight from a scraper extension, headers and all\n- a list of profile URLs, one per line\n- a list of handles, with or without `@`\n\nPost and reel URLs (`/p/…`, `/reel/…`) are kept, not dropped: the handle is read out of the result title next to them. Repeats are removed.",
+            "editor": "textarea",
+            "default": ""
+        },
+        "sessionCookies": {
+            "title": "Session cookies (one per line)",
+            "type": "array",
+            "description": "The single biggest thing you can do for the yield. Logged out, Instagram returns almost nothing — no `business_email` at all — so without at least one cookie here most profiles come back empty.\n\nEach cookie is a separate budget of roughly 20 profiles per 30 minutes. Three cookies means the run switches instead of stopping when one hits the wall.\n\nChrome → F12 → Application → Cookies → `https://www.instagram.com` → copy the value of `sessionid`. Pasting `sessionid=…` or a whole cookie header works too.\n\n**The account whose cookie you use is the account that gets flagged. Use throwaways, never your main one.**",
+            "editor": "stringList",
+            "isSecret": true,
+            "default": []
+        },
+        "usernames": {
+            "title": "Usernames",
+            "type": "array",
+            "description": "Handles to scrape, with or without the leading `@`. Full profile URLs are accepted too. Merged with whatever the box above yields.",
+            "editor": "stringList",
+            "default": [],
+            "sectionCaption": "Other ways to give the list",
+            "sectionDescription": "Only useful when calling the actor from a script — pasting into the box above does the same thing."
+        },
+        "directUrls": {
+            "title": "Profile URLs",
+            "type": "array",
+            "description": "Instagram profile URLs — merged with the lists above and de-duplicated.",
+            "editor": "requestListSources",
+            "default": []
+        },
+        "sessionCookie": {
+            "title": "Session cookie (single, legacy)",
+            "type": "string",
+            "description": "The old single-cookie field. Still honoured and merged with the list above, so existing inputs keep working — for anything new, use the list.",
+            "editor": "textfield",
+            "isSecret": true,
+            "sectionCaption": "Authentication"
+        },
+        "enrichFromWebsite": {
+            "title": "Follow bio links to find e-mails",
+            "type": "boolean",
+            "description": "Most accounts never fill in the public business e-mail but do link to a site that lists one. Following that link does not touch Instagram's rate limit, so this is where most of the yield comes from.",
+            "default": true,
+            "sectionCaption": "E-mail extraction"
+        },
+        "maxWebsitePagesPerProfile": {
+            "title": "Max website pages per profile",
+            "type": "integer",
+            "description": "Landing page included. If it holds no address, the usual contact pages (`/contact`, `/kontakt`, `/impressum`, …) are tried next. Link-in-bio hubs like Linktree are expanded into their outbound links instead.",
+            "editor": "number",
+            "default": 3,
+            "minimum": 0,
+            "maximum": 20
+        },
+        "emailDomainBlocklist": {
+            "title": "Ignored e-mail domains",
+            "type": "array",
+            "description": "Added to the built-in list of tracker and placeholder domains. An entry blocks its subdomains too.",
+            "editor": "stringList",
+            "default": []
+        },
+        "onlyWithEmail": {
+            "title": "Only save profiles that have an e-mail",
+            "type": "boolean",
+            "description": "Keeps the dataset to usable leads. Turn it off when you want the profile data regardless.",
+            "default": false
+        },
+        "verifyEmailDomains": {
+            "title": "Verify addresses (MX + classification)",
+            "type": "boolean",
+            "description": "One cached DNS query per domain. Adds `emailDetails` to every profile: whether the domain accepts mail at all, and whether the address is a role account (`info@`), a free-mail box (`gmail.com`) or a disposable one.",
+            "default": true
+        },
+        "dropUndeliverable": {
+            "title": "Drop addresses whose domain has no mail server",
+            "type": "boolean",
+            "description": "Removes them from `emails` instead of only labelling them. Disposable providers are always dropped when verification is on.",
+            "default": false
+        },
+        "dropRoleAccounts": {
+            "title": "Drop role accounts",
+            "type": "boolean",
+            "description": "Removes `info@`, `office@`, `prodaja@` and similar. Off by default: for small businesses that is very often the only published address.",
+            "default": false
+        },
+        "requestDelaySecs": {
+            "title": "Delay between profiles (s)",
+            "type": "integer",
+            "description": "Instagram's limiter is a sliding window, so this does not raise the ceiling — it spreads the run out so a block arrives later and recovers cleanly. Below ~10 s you will hit the wall quickly.",
+            "editor": "number",
+            "default": 20,
+            "minimum": 0,
+            "maximum": 600,
+            "sectionCaption": "Rate limiting",
+            "sectionDescription": "The endpoint allows roughly 20 profiles per 30 minutes per IP. These settings decide how the run behaves when that limit is reached."
+        },
+        "rateLimitBackoffMins": {
+            "title": "Backoff after a block (min)",
+            "type": "integer",
+            "description": "How long to sit still after a 401/429. The observed window is about 29 minutes.",
+            "editor": "number",
+            "default": 30,
+            "minimum": 1,
+            "maximum": 180
+        },
+        "maxRateLimitRetries": {
+            "title": "Retries after a block",
+            "type": "integer",
+            "description": "How many times to wait-and-retry a single profile before writing it off.",
+            "editor": "number",
+            "default": 2,
+            "minimum": 0,
+            "maximum": 10
+        },
+        "stopAfterConsecutiveFailures": {
+            "title": "Stop after N failures in a row",
+            "type": "integer",
+            "description": "A run of failures means the IP is blocked or the session died. Stopping preserves the rest of your list for a later attempt.",
+            "editor": "number",
+            "default": 5,
+            "minimum": 1,
+            "maximum": 100
+        },
+        "proxyConfiguration": {
+            "title": "Proxy",
+            "type": "object",
+            "description": "The only way past the per-IP limit. Residential proxies work; datacenter ranges are largely burned on Instagram. Leave empty to run from your own IP.",
+            "editor": "proxy",
+            "default": {},
+            "sectionCaption": "Networking"
+        },
+        "requestTimeoutSecs": {
+            "title": "Request timeout (s)",
+            "type": "integer",
+            "editor": "number",
+            "default": 30,
+            "minimum": 5,
+            "maximum": 180
+        }
+    }
+}

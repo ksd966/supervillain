@@ -1,0 +1,40 @@
+{
+    "actorSpecification": 1,
+    "fields": {
+        "type": "object",
+        "properties": {
+            "name": { "type": "string" },
+            "category": { "type": "string" },
+            "address": { "type": "string" },
+            "phone": { "type": "string" },
+            "website": { "type": "string" },
+            "emails": { "type": "array", "items": { "type": "string" } },
+            "instagramHandles": { "type": "array", "items": { "type": "string" } },
+            "rating": { "type": "number" },
+            "source": { "type": "string" },
+            "scrapedAt": { "type": "string" }
+        }
+    },
+    "views": {
+        "overview": {
+            "title": "Leads",
+            "transformation": {
+                "fields": ["name", "emails", "phone", "website", "instagramHandles", "address", "category", "rating", "source"]
+            },
+            "display": {
+                "component": "table",
+                "properties": {
+                    "name": { "label": "Business", "format": "text" },
+                    "emails": { "label": "E-mails", "format": "array" },
+                    "phone": { "label": "Phone", "format": "text" },
+                    "website": { "label": "Website", "format": "link" },
+                    "instagramHandles": { "label": "Instagram", "format": "array" },
+                    "address": { "label": "Address", "format": "text" },
+                    "category": { "label": "Category", "format": "text" },
+                    "rating": { "label": "Rating", "format": "number" },
+                    "source": { "label": "Source", "format": "text" }
+                }
+            }
+        }
+    }
+}

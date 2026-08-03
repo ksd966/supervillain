@@ -1,0 +1,17 @@
+{
+    "name": "lead-normalizer",
+    "version": "0.1.0",
+    "type": "module",
+    "description": "Takes a messy export from any scraper and turns it into one clean, de-duplicated, verified CSV.",
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "scripts": {
+        "start": "node src/main.js",
+        "test": "node --test \"test/**/*.test.js\""
+    },
+    "dependencies": {
+        "apify": "^3.2.6",
+        "crawlee": "^3.13.0"
+    }
+}

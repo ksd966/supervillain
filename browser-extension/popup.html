@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<title>Lead Harvester</title>
+<style>
+  :root {
+    --bg: #11141a; --panel: #171b23; --panel-2: #1e232d; --line: #2a303c;
+    --text: #e8ecf2; --muted: #8b96a8; --accent: #5ed6a4; --accent-ink: #06281c;
+    --danger: #ff6b6b; --warn: #ffc107;
+  }
+  * { box-sizing: border-box; }
+  body {
+    width: 420px; max-height: 600px; margin: 0; background: var(--bg); color: var(--text);
+    font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 12px 14px; border-bottom: 1px solid var(--line); position: sticky; top: 0;
+    background: var(--bg); z-index: 5;
+  }
+  header h1 { font-size: 14px; margin: 0; font-weight: 600; }
+  .counts { color: var(--muted); font-size: 12px; }
+  .counts b { color: var(--accent); }
+
+  .bar { display: flex; gap: 6px; padding: 10px 14px; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
+  button {
+    padding: 8px 11px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--panel-2); color: var(--text); font: inherit; font-size: 12px; cursor: pointer;
+  }
+  button:hover:not(:disabled) { border-color: var(--accent); }
+  button:disabled { opacity: .45; cursor: default; }
+  button.go { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+  button.warn { color: var(--danger); }
+
+  #progress, #ig-progress {
+    display: none; padding: 8px 14px; font-size: 12px; color: var(--warn);
+    border-bottom: 1px solid var(--line); word-break: break-all;
+  }
+
+  ul { list-style: none; margin: 0; padding: 0; overflow-y: auto; max-height: 380px; }
+  li { padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  li .top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+  li .name { font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  li .host { color: var(--muted); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  li .mail { color: var(--accent); font-size: 12px; word-break: break-all; margin-top: 3px; }
+  li .ig { color: #c58af9; font-size: 12px; margin-top: 2px; }
+  li .pending { color: var(--muted); font-size: 11px; font-style: italic; margin-top: 3px; }
+  li .err { color: var(--danger); font-size: 11px; margin-top: 3px; }
+  li .x { background: none; border: 0; color: var(--muted); cursor: pointer; padding: 0 3px; font-size: 15px; line-height: 1; }
+
+  .empty { padding: 34px 20px; text-align: center; color: var(--muted); font-size: 12px; }
+  .empty b { display: block; color: var(--text); font-size: 13px; margin-bottom: 6px; }
+
+  .tabs { display: flex; border-bottom: 1px solid var(--line); }
+  .tabs button {
+    flex: 1; border: 0; border-radius: 0; background: none; padding: 11px 8px;
+    color: var(--muted); font-size: 12px; font-weight: 600; border-bottom: 2px solid transparent;
+  }
+  .tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+  .pane[hidden] { display: none; }
+
+  .search { padding: 12px 14px; border-bottom: 1px solid var(--line); display: grid; gap: 9px; }
+  .search .hint { color: var(--muted); font-size: 11px; line-height: 1.45; margin: 0; }
+  .search .row2 { display: grid; grid-template-columns: 1fr 84px; gap: 8px; }
+
+  details.settings { border-top: 1px solid var(--line); }
+  details.settings summary { padding: 10px 14px; cursor: pointer; color: var(--muted); font-size: 12px; }
+  .settings .body { padding: 0 14px 14px; }
+  label { display: block; margin-bottom: 9px; font-size: 12px; }
+  label span { display: block; color: var(--muted); margin-bottom: 4px; }
+  input[type=text], input[type=password], input[type=number] {
+    width: 100%; padding: 7px 9px; border-radius: 7px; border: 1px solid var(--line);
+    background: var(--panel-2); color: var(--text); font: inherit; font-size: 12px;
+  }
+  .inline { display: flex; align-items: center; gap: 8px; }
+  .inline input { width: 16px; height: 16px; accent-color: var(--accent); }
+  .note { color: var(--muted); font-size: 11px; margin: 8px 0 0; line-height: 1.45; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Lead Harvester</h1>
+  <div class="counts"><b id="c-mail">0</b> sa e-mailom / <span id="c-all">0</span> ukupno</div>
+</header>
+
+<div class="tabs" role="tablist">
+  <button id="tab-sites" role="tab" aria-selected="true">Sajtovi</button>
+  <button id="tab-ig" role="tab" aria-selected="false">Instagram po ključnoj reči</button>
+</div>
+
+<div class="pane" id="pane-sites">
+  <div class="bar">
+    <button class="go" id="scan-all">Izvuci kontakte</button>
+    <button id="scan-page">Skeniraj ovu stranu</button>
+    <button id="export">CSV</button>
+    <button id="to-panel">→ Panel</button>
+    <button class="warn" id="clear">Obriši</button>
+  </div>
+  <div id="progress"></div>
+  <ul id="list"></ul>
+</div>
+
+<div class="pane" id="pane-ig" hidden>
+  <div class="search">
+    <p class="hint">
+      Pretražuje <code>site:instagram.com "ključna reč" "grad"</code> uz token adrese i vadi
+      adrese iz <strong>snippeta</strong> — bio teksta koji Google već ima indeksiran.
+      Instagram se uopšte ne dira, pa nema ni njegovog rate limita.
+    </p>
+    <input type="text" id="ig-keywords" placeholder="ključne reči, zarezom: med spa, realtor">
+    <input type="text" id="ig-location" placeholder="grad (opciono): Austin TX">
+    <label class="inline"><input type="checkbox" id="ig-freemail" checked>
+      <span style="margin:0">Free-mail domeni <span style="color:var(--muted)">(@gmail.com, @yahoo.com… — 6 upita)</span></span></label>
+    <label class="inline"><input type="checkbox" id="ig-role" checked>
+      <span style="margin:0">Poslovne adrese <span style="color:var(--muted)">(info@, hello@, bookings@… — 14 upita)</span></span></label>
+    <label class="inline"><input type="checkbox" id="ig-plain">
+      <span style="margin:0">Bez tokena <span style="color:var(--muted)">(sve profile na ključnu reč — 1 upit)</span></span></label>
+    <div class="row2">
+      <button class="go" id="ig-run">Pretraži</button>
+      <input type="number" id="ig-pages" value="2" min="1" max="10" title="strana rezultata po upitu">
+    </div>
+    <p class="hint">
+      <strong>Poslovne adrese</strong> su jedini način da se nađe firma na sopstvenom domenu
+      (<code>hello@njihovsajt.com</code>) bez da unapred znaš taj domen — free-mail upiti je nikad
+      ne pogode. Zadržava se <strong>svaka</strong> nađena adresa, bez obzira kojim upitom je profil pronađen.
+      <br><br>
+      Otvara upite u pozadinskim tabovima i sam ih zatvara. Ne diraj browser dok radi.
+      Jedna ključna reč × 20 upita × 2 strane = 40 pretraga.
+    </p>
+  </div>
+  <div class="bar">
+    <button id="ig-export">CSV</button>
+    <button id="ig-panel">→ Panel</button>
+    <button class="warn" id="ig-clear">Obriši</button>
+  </div>
+  <div id="ig-progress"></div>
+  <ul id="ig-list"></ul>
+</div>
+
+<details class="settings">
+  <summary>Podešavanja</summary>
+  <div class="body">
+    <label class="inline"><input type="checkbox" id="s-auto"> <span style="margin:0">Automatski kupi rezultate sa pretrage</span></label>
+    <label><span>Adresa panela</span><input type="text" id="s-url" placeholder="http://localhost:8377"></label>
+    <label><span>Token panela</span><input type="password" id="s-token" placeholder="iz konzole panela"></label>
+    <label><span>Paralelnih zahteva</span><input type="number" id="s-conc" min="1" max="10"></label>
+    <label><span>Pauza između zahteva (ms)</span><input type="number" id="s-delay" min="0" max="10000"></label>
+    <button id="s-save">Sačuvaj</button>
+    <p class="note">
+      Zahtevi idu sa tvoje IP adrese i iz tvog browsera. Drži paralelnost nisko —
+      to je jedina razlika između „posetilac" i „bot" za većinu sajtova.
+    </p>
+  </div>
+</details>
+
+<script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scraper panel</title>
+
+<!-- Home-screen install on iOS. No service worker on purpose: this is a LAN
+     tool where a stale cache would show yesterday's run as today's. -->
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Scrapers">
+<meta name="theme-color" content="#11141a">
+
+<style>
+  :root {
+    --bg: #11141a; --panel: #171b23; --panel-2: #1e232d; --line: #2a303c;
+    --text: #e8ecf2; --muted: #8b96a8; --accent: #5ed6a4; --accent-ink: #06281c;
+    --danger: #ff6b6b; --warn: #ffc107;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    -webkit-text-size-adjust: 100%;
+  }
+  header {
+    position: sticky; top: 0; z-index: 10; background: rgba(17,20,26,.92);
+    backdrop-filter: blur(12px); border-bottom: 1px solid var(--line);
+    padding: calc(env(safe-area-inset-top) + 12px) 16px 12px; display: flex; align-items: center; gap: 10px;
+  }
+  header img { width: 28px; height: 28px; border-radius: 7px; }
+  header h1 { font-size: 17px; margin: 0; font-weight: 600; letter-spacing: -.01em; }
+  main { padding: 16px; max-width: 900px; margin: 0 auto; }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .tab {
+    flex: 0 0 auto; padding: 9px 14px; border-radius: 999px; border: 1px solid var(--line);
+    background: var(--panel); color: var(--muted); font-size: 14px; font-weight: 500; cursor: pointer;
+  }
+  .tab[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  .card h2 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+  .card p.blurb { margin: 0 0 14px; color: var(--muted); font-size: 13px; }
+
+  label { display: block; margin-bottom: 14px; }
+  label .name { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+  label .hint { display: block; font-size: 12px; color: var(--muted); margin-top: 5px; }
+  input[type=text], input[type=number], input[type=password], select, textarea {
+    width: 100%; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--panel-2); color: var(--text);
+    font: inherit; font-size: 16px; /* 16px stops iOS from zooming on focus */
+  }
+  textarea { min-height: 78px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .check { display: flex; align-items: flex-start; gap: 10px; }
+  .check input { width: 22px; height: 22px; margin: 0; flex: 0 0 auto; accent-color: var(--accent); }
+
+  details.advanced { margin: 4px 0 14px; }
+  details.advanced summary { cursor: pointer; color: var(--muted); font-size: 13px; padding: 8px 0; font-weight: 500; }
+  .section-label {
+    font-size: 11px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted);
+    font-weight: 700; margin: 16px 0 10px; padding-top: 12px; border-top: 1px solid var(--line);
+  }
+
+  button.primary {
+    width: 100%; padding: 14px; border: 0; border-radius: 12px; background: var(--accent);
+    color: var(--accent-ink); font: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
+  }
+  button.primary:disabled { opacity: .5; }
+  button.ghost {
+    padding: 9px 13px; border-radius: 9px; border: 1px solid var(--line);
+    background: var(--panel-2); color: var(--text); font: inherit; font-size: 14px; cursor: pointer;
+  }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .run { border-left: 3px solid var(--line); }
+  .run.running { border-left-color: var(--warn); }
+  .run.finished { border-left-color: var(--accent); }
+  .run.failed, .run.stopped { border-left-color: var(--danger); }
+  .run .meta { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .run .when { color: var(--muted); font-size: 12px; }
+  .badge { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--panel-2); color: var(--muted); }
+  .run.running .badge { background: rgba(255,193,7,.15); color: var(--warn); }
+  .run.finished .badge { background: rgba(94,214,164,.15); color: var(--accent); }
+  .run.failed .badge, .run.stopped .badge { background: rgba(255,107,107,.15); color: var(--danger); }
+
+  pre.log {
+    background: #0c0f14; border: 1px solid var(--line); border-radius: 10px; padding: 11px;
+    font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; color: #b9c4d4;
+    max-height: 260px; overflow: auto; margin: 12px 0 0; white-space: pre-wrap; word-break: break-word;
+  }
+  .stat { display: inline-block; margin-right: 16px; font-size: 13px; }
+  .stat b { font-size: 19px; display: block; font-weight: 700; }
+  .stat span { color: var(--muted); font-size: 12px; }
+
+  .tablewrap { overflow-x: auto; margin-top: 12px; -webkit-overflow-scrolling: touch; }
+  table { border-collapse: collapse; font-size: 13px; min-width: 100%; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  td.mail { color: var(--accent); }
+  .empty { color: var(--muted); font-size: 14px; text-align: center; padding: 26px 0; }
+  .toast {
+    position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom) + 18px);
+    background: var(--panel-2); border: 1px solid var(--line); color: var(--text);
+    padding: 11px 16px; border-radius: 999px; font-size: 14px; z-index: 50; box-shadow: 0 8px 28px rgba(0,0,0,.5);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <img src="/icon-192.png" alt="">
+  <h1>Scraper panel</h1>
+</header>
+
+<main>
+  <div class="tabs" id="tabs" role="tablist"></div>
+  <div id="form-host"></div>
+  <h2 style="font-size:14px;color:var(--muted);margin:22px 0 10px;text-transform:uppercase;letter-spacing:.06em;">Runs</h2>
+  <div id="runs"><p class="empty">Još nema pokrenutih poslova.</p></div>
+</main>
+
+<script type="module">
+const $ = (sel, root = document) => root.querySelector(sel);
+
+// The token arrives once in the URL, then lives in localStorage so the
+// home-screen icon opens straight into the panel. Stripping it from the URL
+// keeps it out of the address bar and browser history.
+const params = new URLSearchParams(location.search);
+if (params.get('token')) {
+  localStorage.setItem('panelToken', params.get('token'));
+  // Keep the hash: it names the tab to open, and dropping it here would undo
+  // every bookmark that points at a specific actor.
+  history.replaceState({}, '', location.pathname + location.hash);
+}
+const TOKEN = localStorage.getItem('panelToken') ?? '';
+
+async function api(path, options = {}) {
+  const response = await fetch(path, {
+    ...options,
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${TOKEN}`, ...(options.headers ?? {}) },
+  });
+  if (response.status === 401) { localStorage.removeItem('panelToken'); location.href = '/login'; return null; }
+  if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error ?? response.statusText);
+  return response.json();
+}
+
+function toast(message) {
+  const node = document.createElement('div');
+  node.className = 'toast';
+  node.textContent = message;
+  document.body.appendChild(node);
+  setTimeout(() => node.remove(), 3200);
+}
+
+let actors = [];
+let active = 0;
+
+/**
+ * Which fields show up front.
+ *
+ * Derived from the schema rather than from a list of names here: an Apify
+ * schema uses `sectionCaption` to start a new group, so everything before the
+ * first one is the actor's own idea of its main inputs. A hardcoded allowlist
+ * silently buried every field of any actor added later — which is exactly what
+ * happened.
+ *
+ * @param {object[]} fields
+ * @returns {number} index of the first sectioned field
+ */
+function primaryCount(fields) {
+  const first = fields.findIndex((field) => field.section);
+  return first === -1 ? fields.length : first;
+}
+
+function renderField(field) {
+  const id = `f-${field.name}`;
+  const label = document.createElement('label');
+
+  if (field.type === 'boolean') {
+    label.className = 'check';
+    label.innerHTML = `<input type="checkbox" id="${id}" data-name="${field.name}">
+      <span><span class="name">${field.title}</span>${field.description ? `<span class="hint">${field.description.split('\n')[0]}</span>` : ''}</span>`;
+    $('input', label).checked = Boolean(field.default);
+    return label;
+  }
+
+  let control;
+  if (field.enum) {
+    control = `<select id="${id}" data-name="${field.name}" data-kind="scalar">${
+      field.enum.map((value, index) => `<option value="${value}"${value === field.default ? ' selected' : ''}>${(field.enumTitles ?? field.enum)[index]}</option>`).join('')
+    }</select>`;
+  } else if (field.type === 'array') {
+    const value = Array.isArray(field.default)
+      ? field.default.map((item) => (typeof item === 'object' ? (item.url ?? JSON.stringify(item)) : item)).join('\n')
+      : '';
+    control = `<textarea id="${id}" data-name="${field.name}" data-kind="list" placeholder="jedan po redu">${value}</textarea>`;
+  } else if (field.type === 'object') {
+    control = `<textarea id="${id}" data-name="${field.name}" data-kind="json">${field.default && Object.keys(field.default).length ? JSON.stringify(field.default, null, 2) : ''}</textarea>`;
+  } else if (field.type === 'integer' || field.type === 'number') {
+    control = `<input type="number" id="${id}" data-name="${field.name}" data-kind="number" value="${field.default ?? ''}">`;
+  } else if (field.editor === 'textarea') {
+    control = `<textarea id="${id}" data-name="${field.name}" data-kind="scalar" rows="8" placeholder="nalepi ovde">${field.default ?? ''}</textarea>`;
+  } else {
+    control = `<input type="${field.secret ? 'password' : 'text'}" id="${id}" data-name="${field.name}" data-kind="scalar" value="${field.default ?? ''}">`;
+  }
+
+  const hint = field.description ? `<span class="hint">${field.description.split('\n')[0].replace(/\*\*/g, '')}</span>` : '';
+  label.innerHTML = `<span class="name">${field.title}${field.required ? ' *' : ''}</span>${control}${hint}`;
+  return label;
+}
+
+function renderForm() {
+  const actor = actors[active];
+  const host = $('#form-host');
+  host.innerHTML = '';
+
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `<h2>${actor.title}</h2><p class="blurb">${actor.blurb}</p>`;
+
+  const primary = document.createElement('div');
+  const advanced = document.createElement('details');
+  advanced.className = 'advanced';
+  advanced.innerHTML = '<summary>Ostala podešavanja</summary>';
+
+  const split = primaryCount(actor.fields);
+  let lastSection = null;
+
+  actor.fields.forEach((field, index) => {
+    if (index < split) { primary.appendChild(renderField(field)); return; }
+
+    // Carry the schema's own section headings through, so the advanced block
+    // stays navigable instead of being one long run of inputs.
+    if (field.section && field.section !== lastSection) {
+      lastSection = field.section;
+      const heading = document.createElement('div');
+      heading.className = 'section-label';
+      heading.textContent = field.section;
+      advanced.appendChild(heading);
+    }
+    advanced.appendChild(renderField(field));
+  });
+
+  card.append(primary);
+  if (advanced.childElementCount > 1) card.append(advanced);
+
+  const button = document.createElement('button');
+  button.className = 'primary';
+  button.textContent = 'Pokreni';
+  button.onclick = () => start(button);
+  card.append(button);
+
+  host.append(card);
+}
+
+function collectInput() {
+  const input = {};
+  for (const node of $('#form-host').querySelectorAll('[data-name]')) {
+    const name = node.dataset.name;
+
+    if (node.type === 'checkbox') { input[name] = node.checked; continue; }
+
+    const raw = node.value.trim();
+    if (!raw) continue;
+
+    if (node.dataset.kind === 'list') {
+      input[name] = raw.split('\n').map((line) => line.trim()).filter(Boolean);
+    } else if (node.dataset.kind === 'json') {
+      try { input[name] = JSON.parse(raw); } catch { throw new Error(`Polje "${name}" nije ispravan JSON.`); }
+    } else if (node.dataset.kind === 'number') {
+      input[name] = Number(raw);
+    } else {
+      input[name] = raw;
+    }
+  }
+  return input;
+}
+
+async function start(button) {
+  button.disabled = true;
+  try {
+    await api('/api/runs', { method: 'POST', body: JSON.stringify({ actorId: actors[active].id, input: collectInput() }) });
+    toast('Pokrenuto');
+    refresh();
+  } catch (error) {
+    toast(error.message);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+const openLogs = new Set();
+
+function renderRuns(list) {
+  const host = $('#runs');
+  if (!list.length) { host.innerHTML = '<p class="empty">Još nema pokrenutih poslova.</p>'; return; }
+
+  host.innerHTML = '';
+  for (const run of list) {
+    const card = document.createElement('div');
+    card.className = `card run ${run.status}`;
+
+    const started = new Date(run.startedAt).toLocaleTimeString('sr-RS');
+    card.innerHTML = `
+      <div class="meta">
+        <div><strong>${run.actorTitle}</strong> <span class="when">${started}</span></div>
+        <span class="badge">${run.status}</span>
+      </div>`;
+
+    const actions = document.createElement('div');
+    actions.className = 'row';
+    actions.style.marginTop = '12px';
+
+    const logButton = document.createElement('button');
+    logButton.className = 'ghost';
+    logButton.textContent = openLogs.has(run.id) ? 'Sakrij log' : 'Log';
+    logButton.onclick = () => { openLogs.has(run.id) ? openLogs.delete(run.id) : openLogs.add(run.id); refresh(); };
+    actions.append(logButton);
+
+    if (run.status === 'running') {
+      const stop = document.createElement('button');
+      stop.className = 'ghost';
+      stop.textContent = 'Zaustavi';
+      stop.onclick = async () => { await api(`/api/runs/${run.id}`, { method: 'DELETE' }); refresh(); };
+      actions.append(stop);
+    }
+
+    if (run.status !== 'running') {
+      for (const [label, path] of [['CSV (e-mailovi)', 'results.csv'], ['CSV (sve)', 'full.csv']]) {
+        const link = document.createElement('button');
+        link.className = 'ghost';
+        link.textContent = label;
+        link.onclick = () => download(`/api/runs/${run.id}/${path}`, `${run.actorId}-${run.id}.csv`);
+        actions.append(link);
+      }
+
+      const chain = document.createElement('button');
+      chain.className = 'ghost';
+      chain.textContent = '→ Instagram';
+      chain.onclick = () => chainToInstagram(run.id);
+      actions.append(chain);
+    }
+
+    card.append(actions);
+
+    if (openLogs.has(run.id)) {
+      const pre = document.createElement('pre');
+      pre.className = 'log';
+      pre.textContent = run.log.slice(-120).join('\n') || '(prazno)';
+      card.append(pre);
+      queueMicrotask(() => { pre.scrollTop = pre.scrollHeight; });
+    }
+
+    if (run.status !== 'running' && run.hasResults) loadPreview(run.id, card);
+
+    host.append(card);
+  }
+}
+
+const previewCache = new Map();
+
+async function loadPreview(id, card) {
+  if (!previewCache.has(id)) {
+    previewCache.set(id, api(`/api/runs/${id}/results`).then((data) => data?.rows ?? []).catch(() => []));
+  }
+  const rows = await previewCache.get(id);
+  if (!rows.length || !card.isConnected) return;
+
+  // `emails` is the array every actor writes; `email` is the single-address
+  // column lead-normalizer produces when it explodes rows. Counting only the
+  // first reported an exploded run as having found nothing.
+  const addressesOf = (row) => (row.emails?.length ? row.emails : [row.email, row.businessEmail].filter(Boolean));
+  const handleOf = (row) => row.instagram ?? row.username ?? (row.instagramAll ?? [])[0] ?? null;
+
+  const withEmail = rows.filter((row) => addressesOf(row).length).length;
+  const withHandle = rows.filter((row) => handleOf(row)).length;
+
+  const stats = document.createElement('div');
+  stats.style.marginTop = '14px';
+  stats.innerHTML = `
+    <span class="stat"><b>${rows.length}</b><span>rezultata</span></span>
+    <span class="stat"><b>${withEmail}</b><span>sa e-mailom</span></span>
+    <span class="stat"><b>${withHandle}</b><span>sa Instagramom</span></span>`;
+  card.append(stats);
+
+  const wrap = document.createElement('div');
+  wrap.className = 'tablewrap';
+  wrap.innerHTML = `<table><thead><tr><th>Naziv</th><th>E-mail</th><th>Instagram</th><th>Telefon</th><th>Sajt</th></tr></thead><tbody>${
+    rows.slice(0, 25).map((row) => {
+      const handle = handleOf(row);
+      return `<tr>
+      <td>${escapeHtml(row.name ?? row.fullName ?? row.username ?? row.title ?? '—')}</td>
+      <td class="mail">${escapeHtml(addressesOf(row).join(', ') || '—')}</td>
+      <td>${handle ? `@${escapeHtml(handle)}` : '—'}</td>
+      <td>${escapeHtml(row.phone ?? row.businessPhoneNumber ?? '—')}</td>
+      <td>${escapeHtml(row.website ?? row.externalUrl ?? row.url ?? '—')}</td>
+    </tr>`;
+    }).join('')
+  }</tbody></table>`;
+  card.append(wrap);
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+}
+
+async function download(path, filename) {
+  const response = await fetch(path, { headers: { authorization: `Bearer ${TOKEN}` } });
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** Carries the handles a Google run found straight into the Instagram form. */
+async function chainToInstagram(runId) {
+  const { handles } = await api(`/api/runs/${runId}/handles`) ?? { handles: [] };
+  if (!handles.length) { toast('Ovaj run nije našao nijedan Instagram handle.'); return; }
+
+  const index = actors.findIndex((actor) => actor.id === 'instagram-email-scraper');
+  if (index < 0) { toast('Instagram actor nije pronađen.'); return; }
+
+  selectActor(index);
+  // The paste box, not `usernames`: that one lives in the collapsed advanced
+  // block, so filling it would look like nothing happened.
+  const field = $('#form-host [data-name="list"]') ?? $('#form-host [data-name="usernames"]');
+  if (field) field.value = handles.join('\n');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  toast(`Prebačeno ${handles.length} handle-ova`);
+}
+
+/**
+ * Switching actors, and remembering it. The tab lands in the URL so a run you
+ * do every day can be bookmarked — and opened straight from the launcher —
+ * instead of being two clicks away from whatever tab happens to be first.
+ *
+ * @param {number} index
+ */
+function selectActor(index) {
+  active = index;
+  localStorage.setItem('panelActor', actors[index].id);
+  history.replaceState(null, '', `#${actors[index].id}`);
+  renderTabs();
+  renderForm();
+}
+
+function renderTabs() {
+  $('#tabs').innerHTML = '';
+  actors.forEach((actor, index) => {
+    const tab = document.createElement('button');
+    tab.className = 'tab';
+    tab.textContent = actor.title;
+    tab.setAttribute('role', 'tab');
+    tab.setAttribute('aria-selected', String(index === active));
+    tab.onclick = () => selectActor(index);
+    $('#tabs').append(tab);
+  });
+}
+
+async function refresh() {
+  const list = await api('/api/runs').catch(() => null);
+  if (list) renderRuns(list);
+}
+
+(async function boot() {
+  if (!TOKEN) { location.href = '/login'; return; }
+
+  actors = await api('/api/actors').catch(() => null);
+  if (!actors) return;
+  if (!actors.length) { $('#form-host').innerHTML = '<p class="empty">Nijedan actor nije pronađen pored panela.</p>'; return; }
+
+  const wanted = decodeURIComponent(location.hash.slice(1)) || localStorage.getItem('panelActor') || '';
+  const remembered = actors.findIndex((actor) => actor.id === wanted);
+  active = remembered >= 0 ? remembered : 0;
+
+  renderTabs();
+  renderForm();
+  refresh();
+  // Polling beats a socket here: a run's interesting output is a log tail that
+  // changes a few times a second at most, and this keeps the server dependency-free.
+  setInterval(refresh, 2000);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+    "name": "google-leads-scraper",
+    "version": "0.1.0",
+    "type": "module",
+    "description": "Finds businesses in a niche and a city via Google Maps or OpenStreetMap, then scrapes their sites for contact e-mails and Instagram handles.",
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "scripts": {
+        "start": "node src/main.js",
+        "test": "node --test \"test/**/*.test.js\""
+    },
+    "dependencies": {
+        "apify": "^3.2.6",
+        "cheerio": "^1.0.0",
+        "crawlee": "^3.13.0",
+        "playwright": "*"
+    }
+}

@@ -1,0 +1,13 @@
+{
+    "actorSpecification": 1,
+    "name": "instagram-email-scraper",
+    "title": "Instagram E-mail Scraper",
+    "description": "Collects public contact e-mails from Instagram profiles — the business e-mail, addresses written in the bio, and whatever the bio link leads to.",
+    "version": "0.1",
+    "buildTag": "latest",
+    "input": "./input_schema.json",
+    "dockerfile": "../Dockerfile",
+    "storages": {
+        "dataset": "./dataset_schema.json"
+    }
+}

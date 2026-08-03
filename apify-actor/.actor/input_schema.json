@@ -1,0 +1,181 @@
+{
+    "title": "Generic Web Scraper + E-mail Extractor",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "startUrls": {
+            "title": "Start URLs",
+            "type": "array",
+            "description": "Where the crawl begins. You can paste a list, upload a file or point to a Google Sheet.",
+            "editor": "requestListSources",
+            "prefill": [
+                {
+                    "url": "https://apify.com"
+                }
+            ]
+        },
+        "crawlerType": {
+            "title": "Crawler type",
+            "type": "string",
+            "description": "**HTTP (Cheerio)** is 10-50x faster and cheaper — use it whenever the content is in the raw HTML. Switch to **Browser (Playwright)** only for sites that render content with JavaScript.",
+            "editor": "select",
+            "default": "cheerio",
+            "enum": ["cheerio", "playwright"],
+            "enumTitles": ["HTTP (Cheerio) — fast", "Browser (Playwright) — renders JavaScript"]
+        },
+        "linkStrategy": {
+            "title": "Which links to follow",
+            "type": "string",
+            "description": "`same-domain` also follows subdomains, `same-hostname` does not. `all` crawls the whole internet — always pair it with URL globs and a request limit.",
+            "editor": "select",
+            "default": "same-domain",
+            "enum": ["same-domain", "same-hostname", "same-origin", "all", "none"],
+            "enumTitles": [
+                "Same domain (incl. subdomains)",
+                "Same hostname only",
+                "Same origin (protocol + host + port)",
+                "Any domain",
+                "Do not follow links (only Start URLs)"
+            ]
+        },
+        "includeUrlGlobs": {
+            "title": "Include URL globs",
+            "type": "array",
+            "description": "Only enqueue URLs matching these glob patterns, e.g. `https://example.com/blog/**`. Leave empty to allow everything permitted by the link strategy.",
+            "editor": "stringList",
+            "default": []
+        },
+        "excludeUrlGlobs": {
+            "title": "Exclude URL globs",
+            "type": "array",
+            "description": "Never enqueue URLs matching these patterns, e.g. `**/cart/**`, `**?*sort=*`.",
+            "editor": "stringList",
+            "default": []
+        },
+        "maxCrawlDepth": {
+            "title": "Max crawl depth",
+            "type": "integer",
+            "description": "Start URLs are depth 0. `2` means: start page → its links → their links, then stop enqueueing.",
+            "editor": "number",
+            "default": 2,
+            "minimum": 0,
+            "maximum": 20
+        },
+        "maxRequestsPerCrawl": {
+            "title": "Max pages",
+            "type": "integer",
+            "description": "Hard stop on the number of pages loaded. Your main cost guard — keep it low on the first run.",
+            "editor": "number",
+            "default": 100,
+            "minimum": 1
+        },
+        "extractFields": {
+            "title": "Fields to extract",
+            "type": "array",
+            "description": "One entry per output column. `selector` is any CSS selector.\n\n- `type`: `text` (default), `html`, `attr`, `exists`, `count`\n- `attr`: attribute name, required when `type` is `attr` (e.g. `href`, `content`, `src`)\n- `multiple`: `true` returns an array of every match instead of the first one\n\nURLs coming from `href`/`src` attributes are resolved to absolute form automatically.",
+            "editor": "json",
+            "prefill": [
+                { "name": "heading", "selector": "h1", "type": "text" },
+                { "name": "description", "selector": "meta[name=description]", "type": "attr", "attr": "content" }
+            ],
+            "default": []
+        },
+        "extractEmails": {
+            "title": "Extract e-mail addresses",
+            "type": "boolean",
+            "description": "Collects addresses from `mailto:` links, visible text, Cloudflare-obfuscated nodes and (optionally) the raw HTML.",
+            "default": true,
+            "sectionCaption": "E-mail extraction",
+            "sectionDescription": "Every page's addresses land in its dataset record. A de-duplicated list of all of them is also written to the key-value store as `EMAILS`."
+        },
+        "scanRawHtml": {
+            "title": "Also scan raw HTML",
+            "type": "boolean",
+            "description": "Finds addresses that never render on screen — JSON-LD blocks, `data-` attributes, inline scripts. Higher recall, slightly higher false-positive rate (the built-in filters remove asset filenames, Sentry DSNs and similar noise).",
+            "default": true
+        },
+        "deobfuscateEmails": {
+            "title": "De-obfuscate addresses",
+            "type": "boolean",
+            "description": "Decodes the usual dodges: `name [at] example [dot] com`, `&#64;` HTML entities and Cloudflare e-mail protection.",
+            "default": true
+        },
+        "emailDomainBlocklist": {
+            "title": "Ignored e-mail domains",
+            "type": "array",
+            "description": "Addresses on these domains are dropped. Your entries are added to the built-in list of tracker and placeholder domains.",
+            "editor": "stringList",
+            "default": [],
+            "prefill": ["example.com", "sentry.io"]
+        },
+        "waitForSelector": {
+            "title": "Wait for selector",
+            "type": "string",
+            "description": "Browser mode only — wait until this CSS selector appears before scraping. Useful for content loaded by XHR.",
+            "editor": "textfield",
+            "sectionCaption": "Browser options"
+        },
+        "waitForSelectorTimeoutSecs": {
+            "title": "Wait timeout (s)",
+            "type": "integer",
+            "description": "How long to wait for the selector above before scraping the page anyway.",
+            "editor": "number",
+            "default": 10,
+            "minimum": 1,
+            "maximum": 120
+        },
+        "proxyConfiguration": {
+            "title": "Proxy",
+            "type": "object",
+            "description": "Empty means crawl from this machine's own IP, which is what a local run wants. Filling it in asks for Apify Proxy, which needs a paid Apify account — locally that only makes every request hang until it times out.",
+            "editor": "proxy",
+            "default": {},
+            "sectionCaption": "Performance & networking"
+        },
+        "maxConcurrency": {
+            "title": "Max concurrency",
+            "type": "integer",
+            "description": "Upper bound on parallel requests. Lower it if the target starts returning 429s.",
+            "editor": "number",
+            "default": 10,
+            "minimum": 1,
+            "maximum": 200
+        },
+        "maxRequestRetries": {
+            "title": "Max retries per page",
+            "type": "integer",
+            "editor": "number",
+            "default": 3,
+            "minimum": 0,
+            "maximum": 10
+        },
+        "requestTimeoutSecs": {
+            "title": "Request timeout (s)",
+            "type": "integer",
+            "editor": "number",
+            "default": 45,
+            "minimum": 5,
+            "maximum": 360
+        },
+        "respectRobotsTxtFile": {
+            "title": "Respect robots.txt",
+            "type": "boolean",
+            "description": "Skip URLs the site disallows for crawlers. Leave this on unless you have a specific reason and the right to ignore it.",
+            "default": true
+        },
+        "saveHtml": {
+            "title": "Save page HTML",
+            "type": "boolean",
+            "description": "Adds the full HTML to every dataset record. Makes the dataset very large.",
+            "default": false,
+            "sectionCaption": "Output"
+        },
+        "saveText": {
+            "title": "Save page text",
+            "type": "boolean",
+            "description": "Adds the page's visible text to every dataset record.",
+            "default": false
+        }
+    },
+    "required": ["startUrls"]
+}

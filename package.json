@@ -1,0 +1,14 @@
+{
+    "name": "supervillain-scrapers",
+    "private": true,
+    "type": "module",
+    "description": "Local, free lead-generation toolkit: five Apify actors, a browser extension, and a control panel.",
+    "scripts": {
+        "check:shared": "node scripts/check-shared-modules.mjs",
+        "sync:shared": "node scripts/check-shared-modules.mjs --fix",
+        "install:all": "node scripts/ensure-deps.mjs",
+        "cleanup": "node scripts/cleanup.mjs",
+        "test": "node scripts/ensure-deps.mjs --check && npm run check:shared && npm --prefix apify-actor test && npm --prefix instagram-email-scraper test && npm --prefix google-leads-scraper test && npm --prefix lead-normalizer test && npm --prefix instagram-keyword-scraper test && npm run build:demo",
+        "build:demo": "node scripts/build-demo.mjs && node scripts/build-ig-demo.mjs"
+    }
+}

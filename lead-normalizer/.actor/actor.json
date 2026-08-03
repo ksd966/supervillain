@@ -1,0 +1,10 @@
+{
+    "actorSpecification": 1,
+    "name": "lead-normalizer",
+    "title": "Lead Normalizer",
+    "description": "Takes a messy export from any scraper — CSV, TSV, JSON, JSONL — and turns it into one clean, de-duplicated, verified CSV.",
+    "version": "0.1",
+    "buildTag": "latest",
+    "input": "./input_schema.json",
+    "dockerfile": "../Dockerfile"
+}

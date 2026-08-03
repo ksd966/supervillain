@@ -1,0 +1,10 @@
+{
+    "actorSpecification": 1,
+    "name": "instagram-keyword-scraper",
+    "title": "Instagram Keyword E-mail Scraper",
+    "description": "Finds Instagram profiles by keyword and location through a search engine, and reads the contact e-mail straight out of the indexed bio. Instagram itself is never contacted.",
+    "version": "0.1",
+    "buildTag": "latest",
+    "input": "./input_schema.json",
+    "dockerfile": "../Dockerfile"
+}

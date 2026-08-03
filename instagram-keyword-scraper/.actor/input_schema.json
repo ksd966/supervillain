@@ -1,0 +1,156 @@
+{
+    "title": "Instagram Keyword E-mail Scraper",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "keywords": {
+            "title": "Keywords",
+            "type": "array",
+            "description": "Niches to search for — `med spa`, `realtor`, `wedding photographer`. Each keyword is searched separately.",
+            "editor": "stringList",
+            "prefill": [
+                "med spa"
+            ],
+            "default": []
+        },
+        "location": {
+            "title": "Location",
+            "type": "string",
+            "description": "Optional. Added to every query as a phrase, so it matches profiles whose bio names the place — `Austin TX`, `Scottsdale`.",
+            "editor": "textfield",
+            "prefill": "Austin TX"
+        },
+        "probes": {
+            "title": "How to search",
+            "type": "array",
+            "description": "**Free-mail domains** finds addresses on gmail, yahoo and the rest — six queries. **Business local parts** searches `\"info@\"`, `\"hello@\"`, `\"bookings@\"` and similar, which is the only way to find a business on its *own* domain (`hello@theirsite.com`) without knowing that domain. **Keyword only** adds no address token: every matching profile, and whatever address happens to be in its snippet.\n\nBoth address probes are on by default. Leaving out the business ones limits you to free-mail addresses.",
+            "editor": "select",
+            "default": [
+                "freeMail",
+                "rolePrefix"
+            ],
+            "items": {
+                "type": "string",
+                "enum": [
+                    "freeMail",
+                    "rolePrefix",
+                    "plain"
+                ],
+                "enumTitles": [
+                    "Free-mail domains (@gmail.com, …)",
+                    "Business local parts (info@, hello@, …)",
+                    "Keyword only, no address token"
+                ]
+            }
+        },
+        "emailDomains": {
+            "title": "Free-mail domains to probe",
+            "type": "array",
+            "description": "Overrides the built-in free-mail probe list. These are used to *find* profiles; they no longer restrict which addresses are kept.",
+            "editor": "stringList",
+            "default": []
+        },
+        "rolePrefixes": {
+            "title": "Business local parts to probe",
+            "type": "array",
+            "description": "Overrides the built-in list: `info@`, `hello@`, `contact@`, `bookings@`, `sales@`, `office@`, `hi@`, `team@`, `support@`, `inquiries@`, `admin@`, `press@`, `help@`.",
+            "editor": "stringList",
+            "default": []
+        },
+        "keepOnlyDomains": {
+            "title": "Keep only these domains",
+            "type": "array",
+            "description": "Narrows the **output**. Empty means every address found is kept — including business addresses on their own domain, which is usually what you want.",
+            "editor": "stringList",
+            "default": []
+        },
+        "site": {
+            "title": "Site",
+            "type": "string",
+            "description": "The profile host to restrict the search to. `tiktok.com` and `twitter.com` work the same way.",
+            "editor": "textfield",
+            "default": "instagram.com"
+        },
+        "engine": {
+            "title": "Search engine",
+            "type": "string",
+            "description": "**DuckDuckGo** has a plain HTML endpoint with no CAPTCHA — the only one that works from a script for free. **Google** has a far better `site:` index but blocks datacenter IPs within a few queries; pick it only with residential proxies.\n\nFor Google without paying for anything, run the same searches from the browser extension instead: it searches from your own logged-in session and is never challenged.",
+            "editor": "select",
+            "default": "duckduckgo",
+            "enum": [
+                "duckduckgo",
+                "google"
+            ],
+            "enumTitles": [
+                "DuckDuckGo — free, never blocked",
+                "Google — better index, needs residential proxies"
+            ]
+        },
+        "pagesPerQuery": {
+            "title": "Result pages per query",
+            "type": "integer",
+            "editor": "number",
+            "default": 2,
+            "minimum": 1,
+            "maximum": 10
+        },
+        "maxEmails": {
+            "title": "Max addresses",
+            "type": "integer",
+            "description": "Stops once this many profiles carry an address. `0` means no limit.",
+            "editor": "number",
+            "default": 0,
+            "minimum": 0
+        },
+        "requireEmail": {
+            "title": "Only keep profiles with an address",
+            "type": "boolean",
+            "description": "A profile whose snippet holds no address is of little use here — the whole point is that the address is already in the search result.",
+            "default": true
+        },
+        "oneRowPerEmail": {
+            "title": "One row per address",
+            "type": "boolean",
+            "description": "A profile with two addresses becomes two rows. Matches the shape the commercial actors emit.",
+            "default": true
+        },
+        "verifyEmailDomains": {
+            "title": "Verify addresses (MX + classification)",
+            "type": "boolean",
+            "default": true,
+            "sectionCaption": "Verification"
+        },
+        "dropUndeliverable": {
+            "title": "Drop addresses whose domain has no mail server",
+            "type": "boolean",
+            "default": false
+        },
+        "delayMs": {
+            "title": "Delay between searches (ms)",
+            "type": "integer",
+            "editor": "number",
+            "default": 1500,
+            "minimum": 0,
+            "maximum": 60000,
+            "sectionCaption": "Networking"
+        },
+        "proxyConfiguration": {
+            "title": "Proxy",
+            "type": "object",
+            "description": "Not needed for DuckDuckGo. Close to mandatory for Google.",
+            "editor": "proxy",
+            "default": {}
+        },
+        "requestTimeoutSecs": {
+            "title": "Request timeout (s)",
+            "type": "integer",
+            "editor": "number",
+            "default": 30,
+            "minimum": 5,
+            "maximum": 180
+        }
+    },
+    "required": [
+        "keywords"
+    ]
+}
